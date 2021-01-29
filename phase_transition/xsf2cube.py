@@ -1,38 +1,5 @@
 #! /bin/sh
-""":"
-exec python $0 ${1+"$@"}
-"""
-# -*- coding: utf-8 -*-
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Data file in xsf format to CUBE converter (the case of CRYSTAL)
-#
-# Author: Eugene Roginskii
-#
-# xsf format description:
-# http://www.xcrysden.org/doc/XSF.html
-# CUBE format description
-# http://www.xcrysden.org/doc/XSF.html
-#
-#  Instructions to use with Jmol:
-# 1. Run Jmol
-# 2. Open Jmol console (File-> console)
-# 3. Run the command:  load "filename.cube"
-# Additionaly run the command:  isosurface s1 sign cyan yellow cutoff 1 "filename.cube" color translucent 0.45
-# where filename.cube is the filename given by parameter .cube
-
+# Santosh Kumar Radha srr70@case.edu
 
 def strType(var):
     try:
