@@ -36,6 +36,10 @@ export PATH=/usr/local/qe/bin:/usr/local/openmpi/bin:/usr/local/ucx/bin:/usr/loc
 export LD_LIBRARY_PATH=/usr/local/cuda/lib:/usr/local/cuda/lib64:/usr/local/fftw/lib:/opt/nvidia/hpc_sdk/Linux_x86_64/24.7/compilers/lib:${LD_LIBRARY_PATH:-}
 export PMIX_MCA_gds=hash
 export OMP_NUM_THREADS="${OMP_NUM_THREADS:-14}"
+# the NGC container entrypoint sets these, but a bare ssh shell does not;
+# without them mpirun refuses to run as root and every walker dies at launch
+export OMPI_ALLOW_RUN_AS_ROOT=1
+export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 PW_BIN="${PW_BIN:-pw.x}"
 MIN_WALKER_STEPS=1000
 
@@ -56,7 +60,9 @@ step_done() {  # $1 = output file
 }
 
 count_md_steps() {  # $1 = pw.out; cheap proxy, matches make_ensemble_scans.py
-  [ -f "$1" ] && grep -c "ATOMIC_POSITIONS" "$1" || echo 0
+  # NOTE: grep -c prints "0" itself on no match (exit 1), so a trailing
+  # "|| echo 0" would emit "0\n0" and break -ge comparisons
+  if [ -f "$1" ]; then grep -c "ATOMIC_POSITIONS" "$1" || true; else echo 0; fi
 }
 
 # ---------------------------------------------------- phase 1: MD walkers ---
