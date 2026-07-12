@@ -24,6 +24,15 @@ manifest_bands.json (run with run_bands.sh):
   I3: hydrate vdW spot-check, c = 9.9, delta = 0.00/0.30/0.50:
       SCF + vdw_corr = 'grimme-d3', compare E(delta) vs set G    3 SCF
 
+`--stage mobile` writes the manuscript-TODO job set J into jobs_mobile/ and
+manifest_mobile.json (run with run_mobile.sh): the mobile-water ADIABATIC
+E(delta).  All jobs are hydrate BFGS relaxations (c = 9.9, set-G ansatz):
+  J1: Na fully frozen at delta = 0.00-1.00 A (6 pts), CoO2 frozen,
+      all 12 H2O atoms free -> E_mobile(delta)                   6 relax
+  J2: J1 twin + vdw_corr = 'grimme-d3' (dispersion sensitivity)  6 relax
+  J3: joint-minimum search at delta = 0.30: waters free AND Na z
+      free (x,y pinned) -- is the joint minimum off-center?      1 relax
+
 stdlib + numpy only.
 """
 import argparse
@@ -751,9 +760,123 @@ def generate_bands(root):
           f"+ manifest_bands.json")
 
 
+# ----------------------------------------------------------- mobile stage ---
+# Set J (the manuscript's remaining TODO), written to jobs_mobile/ +
+# manifest_mobile.json, run via run_mobile.sh.
+#
+# Physics: the RIGID water cage (set G) bounds the Na runaway seen in vacuum
+# but still leaves a ~198 meV off-center well.  The manuscript claim under
+# test is that letting the water respond ADIABATICALLY -- i.e. fully relaxing
+# all 12 H2O atoms at each PINNED Na displacement delta -- flattens that
+# well.  E_mobile(delta) is the relaxed total energy at each pinned delta;
+# E_mobile(delta) - E_mobile(0) is the mobile-water potential, to be compared
+# against the rigid-cage curve from the set G hydrate SCF scan
+# (results_extra, Na_s3hyd_c9.9_d*).
+MOBILE_DIR = "jobs_mobile"
+DELTAS_J = [0.0, 0.15, 0.30, 0.50, 0.75, 1.00]
+DELTA_J3 = 0.30
+
+J1_NOTES = [
+    "! Set J (mobile-water adiabatic E(delta), manuscript TODO): same",
+    "! hydrate ansatz as set G (see G_NOTES in generate_inputs.py), but",
+    "! calculation='relax' (BFGS) with Na FULLY FROZEN (if_pos 0 0 0) at",
+    "! z = c/2 + delta while ALL 12 H2O atoms are free (if_pos 1 1 1); the",
+    "! CoO2 framework (3 Co + 6 lattice O) is frozen as in set I2.",
+    "! E_mobile(delta) = relaxed total energy at this pinned delta.  The",
+    "! rigid cage (set G) bounds the Na runaway but leaves a ~198 meV",
+    "! off-center well; the claim under test is that adiabatically",
+    "! relaxing the water at each Na position flattens that well.",
+]
+J2_NOTES = J1_NOTES + [
+    "! Set J2 twin: identical geometry and constraints, plus",
+    "! vdw_corr = 'grimme-d3' (DFT-D3) -> dispersion sensitivity of the",
+    "! adiabatic E_mobile(delta) curve.",
+]
+J3_NOTES = [
+    "! Set J3 (joint-minimum search): same hydrate relax as the set J1",
+    "! delta = 0.30 job (waters free, CoO2 frozen), but Na z is ALSO free",
+    "! (if_pos 0 0 1; x,y pinned to the Co-top column), starting",
+    "! off-center at delta = 0.30 A.  Tests whether the JOINT (Na + water)",
+    "! minimum is off-center at all: if Na slides back to z = c/2 the",
+    "! adiabatic well is not merely flattened but centered.",
+]
+
+# atoms_s3_hydrate order: 3 Co (0-2), 6 lattice O (3-8), Na (9), then 4x
+# (O,H,H) water (10-21).  Freeze CoO2 AND Na, free all 12 water atoms.
+IF_POS_J_PINNED = ([(0, 0, 0)] * 9) + [(0, 0, 0)] + ([(1, 1, 1)] * 12)
+# J3: as above but Na z free (x,y still pinned to the Co-top column).
+IF_POS_J_NAFREE = ([(0, 0, 0)] * 9) + [(0, 0, 1)] + ([(1, 1, 1)] * 12)
+
+J_RELAX_CONTROL = ["  forc_conv_thr = 1.0d-3", "  nstep = 100"]
+
+
+def generate_mobile(root):
+    jobs = []
+    counts = {}
+
+    def add(job):
+        jobs.append(job)
+        counts[job["set"]] = counts.get(job["set"], 0) + 1
+
+    el, c = "Na", 9.9
+    a = A_LAT[el] * np.sqrt(3.0)
+    species = ["Co", "O", "Na", "H"]
+
+    # --- J1/J2: adiabatic scan, Na pinned, waters relax (+- grimme-d3) ------
+    for vdw, tag, jset, notes in ((False, "", "J1", J1_NOTES),
+                                  (True, "vdw_", "J2", J2_NOTES)):
+        for d in DELTAS_J:
+            atoms = atoms_s3_hydrate(c, d, with_water=True)   # 22 atoms
+            name = f"mobile_{tag}{el}_s3hyd_c{c:.1f}_d{d:.2f}"
+            extra_system = ["  vdw_corr = 'grimme-d3'"] if vdw else None
+            text = pw_input("relax", el, a, c, atoms, KPTS_G,
+                            species=species, ions=True,
+                            if_pos=IF_POS_J_PINNED, notes=notes,
+                            extra_system=extra_system,
+                            extra_control=J_RELAX_CONTROL)
+            write_job(root, name, text, jobs_dir=MOBILE_DIR)
+            job = dict(name=name, set=jset, element=el, cell="s3", c=c,
+                       delta=d, water=True, na_constraint="frozen",
+                       type="relax", kpts=list(KPTS_G), nat=len(atoms))
+            if vdw:
+                job["vdw"] = "grimme-d3"
+            add(job)
+
+    # --- J3: joint minimum search, Na z free, off-center start --------------
+    d = DELTA_J3
+    atoms = atoms_s3_hydrate(c, d, with_water=True)
+    name = f"mobile_freeNa_{el}_s3hyd_c{c:.1f}_d{d:.2f}"
+    text = pw_input("relax", el, a, c, atoms, KPTS_G,
+                    species=species, ions=True,
+                    if_pos=IF_POS_J_NAFREE, notes=J3_NOTES,
+                    extra_control=J_RELAX_CONTROL)
+    write_job(root, name, text, jobs_dir=MOBILE_DIR)
+    add(dict(name=name, set="J3", element=el, cell="s3", c=c, delta=d,
+             water=True, na_constraint="z-free", type="relax",
+             kpts=list(KPTS_G), nat=len(atoms)))
+
+    manifest = dict(
+        pseudos=PSEUDOS, zval=ZVAL, a_lat=A_LAT, z_O=Z_O,
+        analyze=("E_mobile(delta) = final '!  total energy' of each set-J1 "
+                 "relax; E_mobile(delta) - E_mobile(0) is the mobile-water "
+                 "potential.  Compare against the rigid-cage curve "
+                 "E_hyd(delta) - E_hyd(0) from the set G hydrate SCF scan in "
+                 "results_extra (Na_s3hyd_c9.9_d*).  J2 (grimme-d3 twin) "
+                 "gives the dispersion sensitivity of the adiabatic curve; "
+                 "J3 (Na z free, off-center start) tests whether the joint "
+                 "Na+water minimum is off-center at all."),
+        jobs=jobs)
+    with open(os.path.join(root, "manifest_mobile.json"), "w") as f:
+        json.dump(manifest, f, indent=2)
+    per_set = ", ".join(f"{k}: {v}" for k, v in sorted(counts.items()))
+    print(f"wrote {len(jobs)} mobile-set jobs ({per_set}) "
+          f"+ manifest_mobile.json")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--stage", choices=["scf", "nscf", "extra", "bands"],
+    p.add_argument("--stage", choices=["scf", "nscf", "extra", "bands",
+                                       "mobile"],
                    default="scf")
     p.add_argument("--root", default=os.path.dirname(os.path.abspath(__file__)))
     args = p.parse_args()
@@ -763,6 +886,8 @@ def main():
         generate_extra(args.root)
     elif args.stage == "bands":
         generate_bands(args.root)
+    elif args.stage == "mobile":
+        generate_mobile(args.root)
     else:
         generate_nscf(args.root)
 
