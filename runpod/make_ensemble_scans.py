@@ -1,48 +1,55 @@
 #!/usr/bin/env python3
 """Pod-side stage M generator for the "cage-ensemble" set L/M.
 
-Run from runpod/ AFTER jobs_ensemble/md_cage/pw.out has finished (or made
-enough progress -- run_ensemble.sh gates this on >= 3000 MD steps):
+Run from runpod/ AFTER the set-L walker MDs (jobs_ensemble/md_w1..md_w4)
+have finished or progressed far enough (run_ensemble.sh gates this on
+>= 1000 MD steps per walker; walkers below the gate are skipped --
+survivors-only degradation):
 
     python3 make_ensemble_scans.py
 
-Parses the set-L Born-Oppenheimer MD trajectory (jobs_ensemble/md_cage/pw.out,
-water-only dynamics at Na delta = 0, see generate_inputs.py generate_ensemble
-docstring), discards the first 1000 steps as equilibration, takes 10 snapshots
-evenly spaced over the remainder, and for each snapshot writes 7 SCF inputs
-with the water atoms FROZEN at the snapshot coordinates and Na displaced to
-delta in {-0.45, -0.30, -0.15, 0.00, +0.15, +0.30, +0.45} A along c from the
-midplane (the CoO2 framework is taken from the original, static, input
-geometry). These 70 SCF jobs use the EXACT set-G electronic settings (K_POINTS
-6 6 2, conv_thr 1e-7, same 60/480 Ry cutoffs, mv 0.02 smearing, nspin=2 with
-the set-G starting_magnetization) for direct comparability with the rigid-cage
-(set G) and adiabatic (set J) results. Job dirs:
-jobs_ensemble/snap<NN>_d<+/-0.NN>/pw.in.
+For each SURVIVING walker, parses its Born-Oppenheimer MD trajectory
+(jobs_ensemble/md_w<K>/pw.out, water-only dynamics at Na delta = 0, see
+generate_inputs.py generate_ensemble), discards the first 400 steps as
+equilibration, takes 3 snapshots evenly spaced over the remainder (~steps
+600/900/1200 of a full 1200-step run), and for each snapshot writes 7 SCF
+inputs with the water atoms FROZEN at the snapshot coordinates and Na
+displaced to delta in {-0.45, -0.30, -0.15, 0.00, +0.15, +0.30, +0.45} A
+along c from the midplane (the CoO2 framework is taken from the original,
+static, input geometry). Full production run: 4 walkers x 3 snapshots x 7
+deltas = 84 SCF jobs, dirs jobs_ensemble/w<K>s<J>_d<+/-0.NN>/pw.in.
 
-Pure stdlib -- no numpy, no third-party deps (deliberately, even though numpy
-is available in the NGC image: the geometry math needed here is trivial
-fractional-coordinate arithmetic, so avoiding the import keeps this script
-robust to any pod/image quirk).
+These SCFs use the EXACT set-G electronic settings (K_POINTS 6 6 2,
+conv_thr 1e-7, same 60/480 Ry cutoffs, mv 0.02 smearing, nspin=2 with the
+set-G starting_magnetization) for direct comparability with the rigid-cage
+(set G) and adiabatic (set J) results. Warm restart: the delta != 0 inputs
+carry startingwfc = 'file' / startingpot = 'file'; run_ensemble.sh phase 3
+runs each snapshot unit on one GPU, delta = 0.00 first, then copies its
+./out (charge density + wavefunctions) into the remaining jobs of the unit
+in |delta|-increasing order. (pw.x falls back to the standard atomic guess
+with a warning if the files are absent, so a missing delta=0 out is a
+slowdown, not a failure.)
+
+Pure stdlib -- no numpy, no third-party deps (deliberately, even though
+numpy is available in the NGC image: the geometry math needed here is
+trivial fractional-coordinate arithmetic, so avoiding the import keeps this
+script robust to any pod/image quirk).
 """
 import json
-import math
 import os
 import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-MD_DIR = os.path.join(HERE, "jobs_ensemble", "md_cage")
-MD_IN = os.path.join(MD_DIR, "pw.in")
-MD_OUT = os.path.join(MD_DIR, "pw.out")
 ENSEMBLE_DIR = os.path.join(HERE, "jobs_ensemble")
 MANIFEST = os.path.join(HERE, "manifest_ensemble.json")
 
 BOHR = 0.529177210903  # Angstrom
 
-EQUIL_STEPS = 1000       # discard as equilibration
-N_SNAPSHOTS = 10          # evenly spaced over the remaining trajectory
+EQUIL_STEPS = 400         # discard per walker as equilibration
+N_SNAP_PER_WALKER = 3     # evenly spaced over the remaining trajectory
 DELTAS_M = [-0.45, -0.30, -0.15, 0.00, 0.15, 0.30, 0.45]  # Angstrom
-MIN_STEPS_REQUIRED = 3000  # must match run_ensemble.sh's phase-1 gate
+MIN_WALKER_STEPS = 1000   # must match run_ensemble.sh's phase-1 gate
 
 # Same electronic-structure constants as generate_inputs.py (set G), kept
 # self-contained here so this script has zero third-party dependencies.
@@ -65,10 +72,10 @@ ATOM_LINE_RE = re.compile(
 
 
 def parse_md_input(path):
-    """Return (a_ang, c_ang, species_order, atoms, if_pos) from the set-L
-    pw.in, where atoms = [(species, x, y, z), ...] in file order and if_pos
-    is a parallel list of (ix,iy,iz) ints (None entries default to (1,1,1),
-    but the set-L input always writes explicit flags)."""
+    """Return (a_ang, c_ang, species_order, atoms, if_pos) from a set-L
+    walker pw.in, where atoms = [(species, x, y, z), ...] in file order and
+    if_pos is a parallel list of (ix,iy,iz) ints (None entries default to
+    (1,1,1), but the set-L inputs always write explicit flags)."""
     with open(path) as f:
         txt = f.read()
     c1 = float(re.search(r"celldm\(1\)\s*=\s*([\d.eEdD+-]+)", txt).group(1))
@@ -110,7 +117,7 @@ def parse_md_input(path):
 def parse_md_trajectory(path, nat):
     """Return a list of snapshots, each a list of nat (species,x,y,z) tuples
     in crystal (fractional) coordinates, in trajectory order (one entry per
-    ATOMIC_POSITIONS block found, including the initial geometry)."""
+    ATOMIC_POSITIONS block found)."""
     with open(path) as f:
         txt = f.read()
     snapshots = []
@@ -134,9 +141,9 @@ def parse_md_trajectory(path, nat):
 
 
 def count_md_steps(path):
-    """Cheap step count: number of ATOMIC_POSITIONS markers (~= nstep + 1
-    for the initial geometry); matches run_ensemble.sh's phase-1 gate logic
-    so this script and the bash gate agree."""
+    """Cheap step count: number of ATOMIC_POSITIONS markers; matches
+    run_ensemble.sh's phase-1 gate logic so this script and the bash gate
+    agree."""
     if not os.path.exists(path):
         return 0
     with open(path) as f:
@@ -149,11 +156,23 @@ def nbnd_for(nelec):
     return nelec // 2 + max(8, nelec // 6)
 
 
-def pw_input_scf(a, c, species_order, atoms, delta, notes):
+def pw_input_scf(a, c, species_order, atoms, notes, warm=False):
     """SCF pw.in text, EXACT set-G electronic settings. `atoms` already has
-    Na at z = c/2 + delta and water at the frozen snapshot coordinates."""
+    Na at z = c/2 + delta and water at the frozen snapshot coordinates.
+    warm=True adds startingwfc/startingpot='file' (delta != 0 jobs; the
+    delta=0 ./out is copied in by run_ensemble.sh phase 3 before the run)."""
     nelec = sum(ZVAL[sp] for sp, *_ in atoms)
     nbnd = nbnd_for(nelec)
+    electrons = [
+        "&ELECTRONS",
+        "  conv_thr = 1.0d-7",
+        "  mixing_beta = 0.3",
+        "  mixing_mode = 'local-TF'",
+        "  electron_maxstep = 300",
+    ]
+    if warm:
+        electrons += ["  startingwfc = 'file'", "  startingpot = 'file'"]
+    electrons += ["/"]
     lines = [
         "&CONTROL",
         "  calculation = 'scf'",
@@ -178,14 +197,7 @@ def pw_input_scf(a, c, species_order, atoms, delta, notes):
         "  nspin = 2",
         "  starting_magnetization(1) = 0.3",
         "/",
-        "&ELECTRONS",
-        "  conv_thr = 1.0d-7",
-        "  mixing_beta = 0.3",
-        "  mixing_mode = 'local-TF'",
-        "  electron_maxstep = 300",
-        "/",
-        "ATOMIC_SPECIES",
-    ]
+    ] + electrons + ["ATOMIC_SPECIES"]
     for sp in species_order:
         lines.append(f"  {sp}  {MASS[sp]:.5f}  {PSEUDOS[sp]}")
     lines.extend(notes)
@@ -198,10 +210,6 @@ def pw_input_scf(a, c, species_order, atoms, delta, notes):
     return "\n".join(lines)
 
 
-def snapshot_name(idx):
-    return f"snap{idx:02d}"
-
-
 def delta_tag(d):
     if d > 0:
         return f"+{d:.2f}"
@@ -210,110 +218,121 @@ def delta_tag(d):
     return f"{0.0:.2f}"
 
 
-def main():
-    if not os.path.exists(MD_IN):
-        print(f"ERROR: {MD_IN} not found (run generate_inputs.py --stage "
-              "ensemble first)", file=sys.stderr)
-        return 1
-    if not os.path.exists(MD_OUT):
-        print(f"ERROR: {MD_OUT} not found (MD has not run yet)",
-              file=sys.stderr)
-        return 1
+def process_walker(k, jobs):
+    """Extract snapshots from walker k and write its set-M SCF inputs.
+    Returns the number of snapshots written (0 if the walker is skipped)."""
+    md_dir = os.path.join(ENSEMBLE_DIR, f"md_w{k}")
+    md_in = os.path.join(md_dir, "pw.in")
+    md_out = os.path.join(md_dir, "pw.out")
+    if not os.path.exists(md_in):
+        print(f"walker {k}: no pw.in, skip")
+        return 0
+    n_steps = count_md_steps(md_out)
+    if n_steps < MIN_WALKER_STEPS:
+        print(f"walker {k}: only {n_steps} steps (< {MIN_WALKER_STEPS}), "
+              "skip (survivors-only)")
+        return 0
 
-    n_steps = count_md_steps(MD_OUT)
-    print(f"MD trajectory: {n_steps} ATOMIC_POSITIONS blocks found in "
-          f"{MD_OUT}")
-    if n_steps < MIN_STEPS_REQUIRED:
-        print(f"ERROR: only {n_steps} steps (< {MIN_STEPS_REQUIRED} "
-              "required) -- MD did not progress far enough", file=sys.stderr)
-        return 1
-
-    a, c, species_order, atoms0, if_pos = parse_md_input(MD_IN)
+    a, c, species_order, atoms0, if_pos = parse_md_input(md_in)
     nat = len(atoms0)
     mobile_idx = [i for i, fp in enumerate(if_pos) if fp == (1, 1, 1)]
     na_idx = [i for i, (sp, *_) in enumerate(atoms0) if sp == "Na"]
     if len(na_idx) != 1:
-        print(f"ERROR: expected exactly 1 Na atom, found {len(na_idx)}",
-              file=sys.stderr)
-        return 1
+        print(f"walker {k}: ERROR expected exactly 1 Na, found "
+              f"{len(na_idx)}, skip", file=sys.stderr)
+        return 0
     na_idx = na_idx[0]
     na_x, na_y = atoms0[na_idx][1], atoms0[na_idx][2]
-    print(f"parsed md_cage/pw.in: nat={nat}, {len(mobile_idx)} mobile "
-          f"(water) atoms, Na at index {na_idx} (x={na_x:.6f}, "
-          f"y={na_y:.6f}), a={a:.4f} A, c={c:.4f} A")
 
-    snapshots = parse_md_trajectory(MD_OUT, nat)
-    print(f"parsed {len(snapshots)} full-nat trajectory snapshots from "
-          f"{MD_OUT}")
-    if len(snapshots) <= EQUIL_STEPS:
-        print(f"ERROR: only {len(snapshots)} parsed snapshots, <= "
-              f"{EQUIL_STEPS} equilibration steps to discard", file=sys.stderr)
-        return 1
+    snapshots = parse_md_trajectory(md_out, nat)
+    if len(snapshots) <= EQUIL_STEPS + 1:
+        print(f"walker {k}: only {len(snapshots)} parsed snapshots "
+              f"(<= {EQUIL_STEPS} equilibration), skip", file=sys.stderr)
+        return 0
+    last = len(snapshots) - 1
+    # 3 snapshots at ~1/3, 2/3, 3/3 of the post-equilibration trajectory
+    # (~steps 600/900/1200 of a full 1200-step run)
+    pick = sorted({EQUIL_STEPS + round((last - EQUIL_STEPS) * f)
+                   for f in (1.0 / 3.0, 2.0 / 3.0, 1.0)})
+    print(f"walker {k}: {n_steps} steps, {len(snapshots)} parsed blocks, "
+          f"snapshot indices {pick}")
 
-    kept = snapshots[EQUIL_STEPS:]
-    n_take = min(N_SNAPSHOTS, len(kept))
-    if n_take < N_SNAPSHOTS:
-        print(f"WARNING: only {len(kept)} post-equilibration snapshots "
-              f"available; taking {n_take} instead of {N_SNAPSHOTS}")
-    if n_take == 1:
-        pick_local = [0]
-    else:
-        pick_local = [round(i * (len(kept) - 1) / (n_take - 1))
-                      for i in range(n_take)]
-    picks = [(EQUIL_STEPS + j, kept[j]) for j in pick_local]
-
-    notes_template = [
-        "! Set M (cage-ensemble frozen-snapshot Na scan): water frozen at a",
-        "! thermal snapshot from the set-L 290 K Born-Oppenheimer MD "
-        "(jobs_ensemble/md_cage), Na rigidly displaced along c; CoO2 "
-        "framework from the original static set-G geometry. Exact set-G",
-        "! electronic settings (K_POINTS 6 6 2, conv_thr 1e-7) for direct",
-        "! comparability with the rigid-cage (set G) and adiabatic",
-        "! (set J) E(delta) curves.",
-    ]
-
-    jobs = []
-    for snap_i, (step_idx, snap_atoms) in enumerate(picks, start=1):
-        # sanity: species order in the trajectory block must match pw.in
+    n_written = 0
+    for sj, step_idx in enumerate(pick, start=1):
+        snap_atoms = snapshots[step_idx]
         mismatches = sum(1 for i in range(nat)
                          if snap_atoms[i][0] != atoms0[i][0])
         if mismatches:
-            print(f"WARNING: snapshot {snap_i} (step {step_idx}) has "
-                  f"{mismatches} species-order mismatches vs pw.in -- "
-                  "skipping", file=sys.stderr)
+            print(f"walker {k} snap {sj} (step {step_idx}): {mismatches} "
+                  "species-order mismatches vs pw.in, skip", file=sys.stderr)
             continue
+        unit = f"w{k}s{sj}"
         for d in DELTAS_M:
             new_atoms = []
             for i in range(nat):
                 sp = atoms0[i][0]
                 if i == na_idx:
-                    z = (c / 2.0 + d) / c
-                    new_atoms.append((sp, na_x, na_y, z))
+                    new_atoms.append((sp, na_x, na_y, (c / 2.0 + d) / c))
                 elif i in mobile_idx:
                     _, x, y, z = snap_atoms[i]
                     new_atoms.append((sp, x, y, z))
                 else:
                     new_atoms.append(atoms0[i])
-            notes = list(notes_template) + [
-                f"! snapshot {snap_i:02d}: MD trajectory index {step_idx} "
-                f"(step {step_idx} of {n_steps} parsed steps), delta = "
-                f"{d:+.2f} A."
+            notes = [
+                "! Set M (cage-ensemble frozen-snapshot Na scan): water",
+                f"! frozen at walker-{k} MD step {step_idx} (of {n_steps} "
+                "parsed; 290 K svr BOMD,",
+                "! jobs_ensemble/md_w*), Na rigidly displaced along c; CoO2",
+                "! framework from the original static set-G geometry. Exact",
+                "! set-G electronic settings (K_POINTS 6 6 2, conv_thr 1e-7)",
+                "! for direct comparability with the rigid-cage (set G) and",
+                "! adiabatic (set J) E(delta) curves. delta != 0 jobs warm-",
+                "! start from the unit's delta=0 charge density (out copied",
+                "! in by run_ensemble.sh phase 3).",
+                f"! unit {unit}: delta = {d:+.2f} A.",
             ]
-            text = pw_input_scf(a, c, species_order, new_atoms, d, notes)
-            name = f"{snapshot_name(snap_i)}_d{delta_tag(d)}"
+            text = pw_input_scf(a, c, species_order, new_atoms, notes,
+                                warm=(d != 0.0))
+            name = f"{unit}_d{delta_tag(d)}"
             job_dir = os.path.join(ENSEMBLE_DIR, name)
             os.makedirs(job_dir, exist_ok=True)
             with open(os.path.join(job_dir, "pw.in"), "w") as f:
                 f.write(text)
             jobs.append(dict(name=name, set="M", element="Na", cell="s3",
-                             c=c, delta=d, snapshot=snap_i,
+                             c=c, delta=d, walker=k, snapshot=sj, unit=unit,
                              md_step_index=step_idx, water=True,
                              type="scf", kpts=list(KPTS_M), nat=nat))
+        n_written += 1
+    return n_written
 
-    print(f"wrote {len(jobs)} set-M SCF jobs "
-          f"({len(picks)} snapshots x {len(DELTAS_M)} deltas)")
 
-    # update manifest_ensemble.json (append, keep the set-L md_cage entry)
+def main():
+    walker_ids = sorted(
+        int(m.group(1)) for m in
+        (re.match(r"md_w(\d+)$", n) for n in os.listdir(ENSEMBLE_DIR))
+        if m) if os.path.isdir(ENSEMBLE_DIR) else []
+    if not walker_ids:
+        print("ERROR: no jobs_ensemble/md_w* walkers found (run "
+              "generate_inputs.py --stage ensemble first)", file=sys.stderr)
+        return 1
+
+    jobs = []
+    n_snaps = 0
+    survivors = 0
+    for k in walker_ids:
+        n = process_walker(k, jobs)
+        if n > 0:
+            survivors += 1
+            n_snaps += n
+    if survivors == 0:
+        print("ERROR: no surviving walkers (all < "
+              f"{MIN_WALKER_STEPS} steps)", file=sys.stderr)
+        return 1
+
+    print(f"wrote {len(jobs)} set-M SCF jobs ({survivors} surviving "
+          f"walkers, {n_snaps} snapshots x {len(DELTAS_M)} deltas)")
+
+    # update manifest_ensemble.json (append, keep the set-L walker entries)
     if os.path.exists(MANIFEST):
         with open(MANIFEST) as f:
             manifest = json.load(f)
@@ -325,8 +344,8 @@ def main():
         if j["name"] not in existing_names:
             manifest.setdefault("jobs", []).append(j)
             n_new += 1
-    manifest["ensemble_md_steps_parsed"] = n_steps
-    manifest["ensemble_snapshots_used"] = len(picks)
+    manifest["ensemble_surviving_walkers"] = survivors
+    manifest["ensemble_snapshots_used"] = n_snaps
     with open(MANIFEST, "w") as f:
         json.dump(manifest, f, indent=2)
     print(f"manifest_ensemble.json updated (+{n_new} new job entries)")

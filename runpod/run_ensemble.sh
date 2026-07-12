@@ -1,26 +1,33 @@
 #!/usr/bin/env bash
-# GPU pipeline for the "cage-ensemble" set L/M.
-#   Phase 1: set L -- one Born-Oppenheimer MD job (jobs_ensemble/md_cage),
-#            water free / Na+CoO2 frozen, 290 K svr thermostat, run on ALL
-#            4 GPUs at once via mpirun -np 4 pw.x -nk 2 (falls back to -nk 1
-#            if pools misbehave).
-#   Phase 2: parse the MD trajectory and write the set-M frozen-snapshot Na
-#            scans (make_ensemble_scans.py; pod-side, needs the finished/
-#            far-enough-along MD output).
-#   Phase 3: run the 70 set-M SCF jobs through the flock 4-GPU pool, exactly
-#            like run_mobile.sh.
+# GPU pipeline for the "cage-ensemble" set L/M (4-walker design).
+#   Phase 1: set L -- FOUR independent Born-Oppenheimer MD walkers
+#            (jobs_ensemble/md_w1..md_w4), water free / Na+CoO2 frozen,
+#            290 K svr thermostat, nstep=1200 each, run CONCURRENTLY, one
+#            walker per GPU (CUDA_VISIBLE_DEVICES=$i, mpirun -np 1).
+#            Gate: each walker must reach >= 1000 steps; walkers below the
+#            gate are dropped (survivors-only). If NO walker survives, log
+#            "MD FAILED" and stop.
+#   Phase 2: parse the surviving trajectories and write the set-M
+#            frozen-snapshot Na scans (make_ensemble_scans.py; 3 snapshots
+#            per surviving walker at ~steps 600/900/1200, first 400
+#            discarded) -- up to 12 snapshot units x 7 deltas = 84 SCF.
+#   Phase 3: snapshot-unit warm-restart pool: each unit (w<K>s<J>, 7 SCFs)
+#            is one work item on one GPU. delta=0.00 runs first; its ./out
+#            (charge density + wavefunctions) is copied into each remaining
+#            job of the unit, which carry startingwfc/startingpot='file',
+#            in |delta|-increasing order. Full set-G production settings
+#            (K_POINTS 6 6 2, conv_thr 1e-7). out/ dirs are deleted as the
+#            unit completes (only pw.out is harvested; keeps the disk flat).
 # On completion of all jobs, writes the marker line "ENSEMBLE COMPLETE" to
-# ensemble.log (this file's own stdout, redirected by the caller/bootstrap).
+# stdout (redirected to run_ensemble.log by the bootstrap).
 #
 # Robustness: PMIX_MCA_gds=hash + /tmp/pmix* cleanup (stale PMIx sessions
-# wedge multi-rank mpirun launches across pod restarts), the PATH/
-# LD_LIBRARY_PATH exports used by every other run_*.sh in this repo, per-job
-# 'JOB DONE' checks (idempotent -- safe to re-run), and phase 1 verifies the
-# MD produced >= 3000 steps before proceeding (else logs "MD FAILED" and
-# stops -- phases 2/3 never run on a dead or barely-started MD).
-# Kill switch: create a file named STOP in this directory; the phase-3 pool
-# workers exit after their current job (phase 1's single MD job is NOT
-# interrupted by STOP -- kill it manually if needed).
+# wedge mpirun launches across pod restarts), the PATH/LD_LIBRARY_PATH
+# exports used by every other run_*.sh in this repo, per-job 'JOB DONE'
+# checks (idempotent -- safe to re-run). Kill switch: create a file named
+# STOP in this directory; the phase-3 pool workers exit after their current
+# unit (phase 1's MD walkers are NOT interrupted by STOP -- kill them
+# manually if needed).
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
@@ -30,7 +37,7 @@ export LD_LIBRARY_PATH=/usr/local/cuda/lib:/usr/local/cuda/lib64:/usr/local/fftw
 export PMIX_MCA_gds=hash
 export OMP_NUM_THREADS="${OMP_NUM_THREADS:-14}"
 PW_BIN="${PW_BIN:-pw.x}"
-MIN_MD_STEPS=3000
+MIN_WALKER_STEPS=1000
 
 rm -rf /tmp/pmix* 2>/dev/null || true
 
@@ -52,68 +59,92 @@ count_md_steps() {  # $1 = pw.out; cheap proxy, matches make_ensemble_scans.py
   [ -f "$1" ] && grep -c "ATOMIC_POSITIONS" "$1" || echo 0
 }
 
-# ------------------------------------------------------------- phase 1: MD --
-echo "== phase 1: set L Born-Oppenheimer MD (md_cage, all $NGPU GPUs) =="
-MD_DIR="jobs_ensemble/md_cage"
-# comma-joined GPU id list, no trailing comma (some `seq -s,` implementations
-# append a trailing separator, which would make CUDA_VISIBLE_DEVICES invalid)
-GPU_LIST=$(seq 0 $((NGPU - 1)) | paste -sd, -)
-if step_done "$MD_DIR/pw.out"; then
-  echo "  md_cage: already JOB DONE, skip"
-else
-  rm -rf /tmp/pmix* 2>/dev/null || true
-  echo "  md_cage: mpirun -np $NGPU pw.x -nk 2 start $(date +%H:%M:%S)"
-  ( cd "$MD_DIR" \
-    && CUDA_VISIBLE_DEVICES="$GPU_LIST" \
-       mpirun -np "$NGPU" "$PW_BIN" -nk 2 -input pw.in > pw.out 2>&1 )
-  if ! step_done "$MD_DIR/pw.out"; then
-    echo "  md_cage: -nk 2 did not finish cleanly, retrying with -nk 1"
-    rm -rf /tmp/pmix* 2>/dev/null || true
-    ( cd "$MD_DIR" \
-      && CUDA_VISIBLE_DEVICES="$GPU_LIST" \
-         mpirun -np "$NGPU" "$PW_BIN" -nk 1 -input pw.in > pw.out 2>&1 )
+# ---------------------------------------------------- phase 1: MD walkers ---
+echo "== phase 1: set L -- 4 BOMD walkers, one per GPU =="
+i=0
+for d in jobs_ensemble/md_w*/; do
+  name=$(basename "$d")
+  gpu=$((i % NGPU))
+  i=$((i + 1))
+  if step_done "$d/pw.out"; then
+    echo "  $name: already JOB DONE, skip"
+    continue
   fi
-fi
+  steps_now=$(count_md_steps "$d/pw.out")
+  if [ "$steps_now" -ge "$MIN_WALKER_STEPS" ]; then
+    echo "  $name: already has $steps_now steps (>= $MIN_WALKER_STEPS), skip"
+    continue
+  fi
+  echo "  $name: start on gpu$gpu $(date +%H:%M:%S)"
+  ( cd "$d" && CUDA_VISIBLE_DEVICES="$gpu" \
+      mpirun -np 1 "$PW_BIN" -nk 1 -input pw.in > pw.out 2>&1 ) &
+done
+wait
 
-MD_STEPS=$(count_md_steps "$MD_DIR/pw.out")
-echo "  md_cage: $MD_STEPS ATOMIC_POSITIONS blocks in pw.out (need >= $MIN_MD_STEPS)"
-if [ "$MD_STEPS" -lt "$MIN_MD_STEPS" ]; then
+SURVIVORS=0
+for d in jobs_ensemble/md_w*/; do
+  name=$(basename "$d")
+  steps=$(count_md_steps "$d/pw.out")
+  if [ "$steps" -ge "$MIN_WALKER_STEPS" ]; then
+    echo "  $name: $steps steps -- SURVIVOR"
+    SURVIVORS=$((SURVIVORS + 1))
+  else
+    echo "  $name: $steps steps (< $MIN_WALKER_STEPS) -- dropped"
+  fi
+done
+if [ "$SURVIVORS" -lt 1 ]; then
   echo "MD FAILED"
   exit 1
 fi
-echo "  md_cage: MD OK ($MD_STEPS steps) $(date +%H:%M:%S)"
+echo "  phase 1 OK: $SURVIVORS surviving walker(s) $(date +%H:%M:%S)"
 
 # --------------------------------------------------- phase 2: snapshot gen --
 echo "== phase 2: extract thermal snapshots + write set-M SCF inputs =="
-python3 make_ensemble_scans.py
-[ $? -eq 0 ] || { echo "ERROR: make_ensemble_scans.py failed"; exit 1; }
+python3 make_ensemble_scans.py || { echo "ERROR: make_ensemble_scans.py failed"; exit 1; }
 
-# -------------------------------------------- phase 3: set-M SCF job pool ---
-job_done() {  # $1 = job dir; set-M jobs are single-step (pw.in -> pw.out)
+# ---------------------------------- phase 3: warm-restart snapshot units ----
+job_done() {  # $1 = job dir
   step_done "$1/pw.out"
 }
 
-run_job() {  # $1 = gpu id, $2 = job name
-  local gpu="$1" name="$2" dir="jobs_ensemble/$2"
-  if job_done "$dir"; then echo "[gpu$gpu] $name: already done, skip"; return 0; fi
-  echo "[gpu$gpu] $name: pw.x scf start $(date +%H:%M:%S)"
-  ( cd "$dir" && CUDA_VISIBLE_DEVICES="$gpu" "$PW_BIN" -nk 1 -input pw.in > pw.out 2>&1 )
-  step_done "$dir/pw.out" \
-    || { echo "[gpu$gpu] $name: pw.x FAILED (see $dir/pw.out)"; return 1; }
-  echo "[gpu$gpu] $name: pw.x JOB DONE $(date +%H:%M:%S)"
+run_unit() {  # $1 = gpu id, $2 = unit name (w<K>s<J>); 7 SCFs, warm-restart
+  local gpu="$1" unit="$2"
+  local d0="jobs_ensemble/${unit}_d0.00"
+  # delta order: 0.00 first (produces the warm-start density), then
+  # |delta|-increasing
+  local tag dir
+  for tag in 0.00 +0.15 -0.15 +0.30 -0.30 +0.45 -0.45; do
+    dir="jobs_ensemble/${unit}_d${tag}"
+    [ -d "$dir" ] || continue
+    if job_done "$dir"; then echo "[gpu$gpu] ${unit}_d${tag}: already done, skip"; continue; fi
+    if [ "$tag" != "0.00" ] && [ -d "$d0/out" ]; then
+      rm -rf "$dir/out"
+      cp -r "$d0/out" "$dir/out"
+    fi
+    echo "[gpu$gpu] ${unit}_d${tag}: pw.x scf start $(date +%H:%M:%S)"
+    ( cd "$dir" && CUDA_VISIBLE_DEVICES="$gpu" "$PW_BIN" -nk 1 -input pw.in > pw.out 2>&1 )
+    if job_done "$dir"; then
+      echo "[gpu$gpu] ${unit}_d${tag}: JOB DONE $(date +%H:%M:%S)"
+    else
+      echo "[gpu$gpu] ${unit}_d${tag}: pw.x FAILED (see $dir/pw.out)"
+    fi
+    # free disk: the warm-start copies are large and only pw.out is harvested
+    [ "$tag" != "0.00" ] && rm -rf "$dir/out"
+  done
+  rm -rf "$d0/out"
 }
 
-run_pool() {  # $1 = file with one job name per line
+run_pool() {  # $1 = file with one unit name per line
   local queue="$1"
   [ -s "$queue" ] || { echo "  (queue empty)"; return 0; }
   local lock="$queue.lock"; : > "$lock"
   worker() {
-    local gpu="$1" name
+    local gpu="$1" unit
     while :; do
       [ -f STOP ] && { echo "[gpu$gpu] STOP file found, worker exiting"; break; }
-      name=$( { flock 9; head -n 1 "$queue"; sed -i '1d' "$queue"; } 9>>"$lock" )
-      [ -n "$name" ] || break
-      run_job "$gpu" "$name"
+      unit=$( { flock 9; head -n 1 "$queue"; sed -i '1d' "$queue"; } 9>>"$lock" )
+      [ -n "$unit" ] || break
+      run_unit "$gpu" "$unit"
     done
   }
   local g
@@ -122,17 +153,21 @@ run_pool() {  # $1 = file with one job name per line
   rm -f "$lock"
 }
 
-list_m_jobs() {  # set-M job names, manifest order
+list_units() {  # unique set-M snapshot units, manifest order
   python3 - <<'EOF'
 import json
+seen = []
 for j in json.load(open("manifest_ensemble.json"))["jobs"]:
-    if j.get("set") == "M":
-        print(j["name"])
+    u = j.get("unit")
+    if j.get("set") == "M" and u and u not in seen:
+        seen.append(u)
+print("\n".join(seen))
 EOF
 }
 
-echo "== phase 3: set M -- 70 frozen-snapshot Na SCF scans =="
-list_m_jobs > .queue_ensemble
+echo "== phase 3: set M -- frozen-snapshot Na scans (warm-restart units) =="
+list_units > .queue_ensemble
+echo "  $(wc -l < .queue_ensemble) snapshot units queued"
 run_pool .queue_ensemble
 [ -f STOP ] && { echo "stopped by STOP file"; exit 1; }
 
@@ -140,6 +175,11 @@ echo "== all ensemble jobs finished =="
 echo "Summary:"
 n_ok=0; n_bad=0
 for d in jobs_ensemble/*/; do
+  case "$(basename "$d")" in md_w*)
+    steps=$(count_md_steps "$d/pw.out")
+    [ "$steps" -ge "$MIN_WALKER_STEPS" ] || { n_bad=$((n_bad+1)); echo "  incomplete walker: $d ($steps steps)"; continue; }
+    n_ok=$((n_ok+1)); continue ;;
+  esac
   if job_done "$d"; then n_ok=$((n_ok+1)); else n_bad=$((n_bad+1)); echo "  incomplete: $d"; fi
 done
 echo "  $n_ok done, $n_bad incomplete"

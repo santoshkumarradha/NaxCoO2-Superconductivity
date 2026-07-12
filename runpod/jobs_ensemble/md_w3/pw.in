@@ -1,0 +1,88 @@
+&CONTROL
+  calculation = 'md'
+  prefix = 'pw'
+  outdir = './out'
+  pseudo_dir = '../../pseudo'
+  verbosity = 'high'
+  tprnfor = .true.
+  dt = 10.0
+  nstep = 1200
+/
+&SYSTEM
+  ibrav = 4
+  celldm(1) = 9.45271759
+  celldm(3) = 1.97914393
+  nat = 22
+  ntyp = 4
+  nbnd = 85
+  ecutwfc = 60.0
+  ecutrho = 480.0
+  occupations = 'smearing'
+  smearing = 'mv'
+  degauss = 0.02
+  nspin = 2
+  starting_magnetization(1) = 0.3
+/
+&ELECTRONS
+  conv_thr = 1.0d-5
+  mixing_beta = 0.3
+  mixing_mode = 'local-TF'
+  electron_maxstep = 300
+/
+&IONS
+  ion_dynamics = 'verlet'
+  ion_temperature = 'svr'
+  tempw = 290.0
+  pot_extrapolation = 'second_order'
+  wfc_extrapolation = 'second_order'
+/
+ATOMIC_SPECIES
+  Co  58.93300  Co.pbe-spn-kjpaw_psl.0.3.1.UPF
+  O  15.99900  O.pbe-n-kjpaw_psl.1.0.0.UPF
+  Na  22.98977  Na.pbe-spn-kjpaw_psl.1.0.0.UPF
+  H  1.00800  H.pbe-kjpaw_psl.1.0.0.UPF
+! Set L walker 3/4 (cage-ensemble MD, jobs_ensemble/md_w3): Born-Oppenheimer
+! MD of the set-G hydrate ansatz (see G_NOTES in generate_inputs.py)
+! at Na delta = 0 (z = c/2). The 4 waters start from a random rigid
+! rotation about their fixed O sites (seed 3, hydrogens only, all
+! contacts >= 2.0 A) so the 4 walkers decorrelate from step 0.
+! ONLY the 12 water atoms move: if_pos = 0 0 0 on every Co,
+! framework O, and Na atom; 1 1 1 on water O and H (same ordering/
+! mask as set J's IF_POS_J_PINNED). ion_dynamics = 'verlet',
+! ion_temperature = 'svr', tempw = 290 K, dt = 10 Ry a.u. (~0.48
+! fs), nstep = 1200 (~580 fs). K_POINTS 2 2 1, conv_thr 1e-5 and
+! second_order pot/wfc extrapolation purely for MD throughput --
+! NOT used for the set-M snapshot SCFs, which revert to the exact
+! set-G electronic settings (K_POINTS 6 6 2, conv_thr 1e-7).
+! Purpose: sample a thermal ensemble of cage configurations at
+! 290 K; set M (generated pod-side by make_ensemble_scans.py)
+! freezes 3 snapshots per surviving walker (first 400 steps
+! discarded) and rigidly scans Na through delta = -0.45..+0.45 A
+! at each -- the ensemble of E(delta) curves is the physical
+! (statistical, non-adiabatic) counterpart to the set-G rigid-cage
+! and set-J single-adiabatic-minimum curves.
+ATOMIC_POSITIONS crystal
+  Co  0.0000000000  0.0000000000  0.0000000000  0 0 0
+  Co  0.3333333333  0.6666666667  0.0000000000  0 0 0
+  Co  0.6666666667  0.3333333333  0.0000000000  0 0 0
+  O  0.3333333333  0.3333333333  0.0969696970  0 0 0
+  O  0.6666666667  0.0000000000  0.0969696970  0 0 0
+  O  0.0000000000  0.6666666667  0.0969696970  0 0 0
+  O  0.3333333333  0.0000000000  0.9030303030  0 0 0
+  O  0.6666666667  0.6666666667  0.9030303030  0 0 0
+  O  0.0000000000  0.3333333333  0.9030303030  0 0 0
+  Na  0.0000000000  0.0000000000  0.5000000000  0 0 0
+  O  0.3333333333  0.0000000000  0.3787878788  1 1 1
+  H  0.2626065516  0.7930279320  0.3492551658  1 1 1
+  H  0.3062308167  0.1001370476  0.3019244476  1 1 1
+  O  0.0000000000  0.3333333333  0.3787878788  1 1 1
+  H  0.8631270604  0.3842115080  0.4249058271  1 1 1
+  H  0.8993378097  0.2467835489  0.2946850468  1 1 1
+  O  0.3333333333  0.6666666667  0.6212121212  1 1 1
+  H  0.3639017528  0.5341025878  0.6811193193  1 1 1
+  H  0.5353374614  0.8079491291  0.5877313213  1 1 1
+  O  0.6666666667  0.3333333333  0.6212121212  1 1 1
+  H  0.4896607024  0.2438970752  0.5633408795  1 1 1
+  H  0.7530477409  0.5513488608  0.6104042730  1 1 1
+K_POINTS automatic
+  2 2 1 0 0 0

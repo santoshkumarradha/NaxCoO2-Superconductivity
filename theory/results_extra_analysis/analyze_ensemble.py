@@ -13,17 +13,22 @@ QENS). The physical Na potential is set by the INSTANTANEOUS cage
 configuration, drawn from a thermal ensemble, not the single deepest
 adiabatic minimum. Set L/M tests this directly:
 
-  SET L  runpod/results_ensemble/md_cage/pw.out          Born-Oppenheimer MD
-         of the set-G hydrate cell at 290 K (svr thermostat, dt=10 Ry a.u.,
-         nstep=4000, ~1.9 ps). Water free, Na + CoO2 frozen at delta = 0.
-  SET M  runpod/results_ensemble/snap<NN>_d<+/-0.NN>/pw.out   10 snapshots
-         (first 1000 MD steps discarded as equilibration, evenly spaced over
-         the remainder) x 7 Na displacements delta in
+  SET L  runpod/results_ensemble/md_w<K>/pw.out   FOUR independent 290 K
+         Born-Oppenheimer MD walkers of the set-G hydrate cell (svr
+         thermostat, dt=10 Ry a.u., nstep=1200 each, ~580 fs; different
+         random rigid water orientations at t=0, seeds 1-4). Water free,
+         Na + CoO2 frozen at delta = 0.
+  SET M  runpod/results_ensemble/w<K>s<J>_d<+/-0.NN>/pw.out   3 snapshots
+         per surviving walker (first 400 MD steps discarded as
+         equilibration, evenly spaced over the remainder, ~steps
+         600/900/1200) x 7 Na displacements delta in
          {-0.45,-0.30,-0.15,0.00,+0.15,+0.30,+0.45} A, water frozen at each
          snapshot's coordinates, exact set-G electronic settings (K_POINTS
-         6x6x2, conv_thr 1e-7) for direct comparability.
+         6x6x2, conv_thr 1e-7) for direct comparability. Legacy snap<NN>_d*
+         dirs from the single-trajectory design are also recognized.
 
-This script parses every snap*_d* pw.out, builds a per-snapshot E(delta)
+This script parses every w*s*_d* (and legacy snap*_d*) pw.out, builds a
+per-snapshot E(delta)
 curve (referenced to that snapshot's own delta=0, mirroring the set-J
 convention: the well SHAPE, not the large per-configuration energy offset,
 is the physically meaningful comparison), fits each to the quartic Landau
@@ -104,16 +109,17 @@ def delta_tag(d):
 
 
 def discover_snapshots(base: Path):
-    """Snapshot indices present under results_ensemble/, from dir names
-    snap<NN>_d*.  Robust to any subset actually harvested."""
+    """Snapshot-unit names present under results_ensemble/: walker-tagged
+    w<K>s<J>_d* (4-walker design) and legacy snap<NN>_d* (single-trajectory
+    design).  Robust to any subset actually harvested."""
     if not base.exists():
         return []
-    idxs = set()
+    units = set()
     for p in base.iterdir():
-        m = re.match(r"snap(\d+)_d", p.name)
+        m = re.match(r"(w\d+s\d+|snap\d+)_d", p.name)
         if m:
-            idxs.add(int(m.group(1)))
-    return sorted(idxs)
+            units.add(m.group(1))
+    return sorted(units)
 
 
 def quartic_fit(d, E_meV):
@@ -143,31 +149,31 @@ if not ENSEMBLE.exists():
         "Run the rsync harvest command first (see run_ensemble.sh / the "
         "campaign launch report), then re-run this script.")
 
-snap_idxs = discover_snapshots(ENSEMBLE)
-log(f"\nfound {len(snap_idxs)} snapshot indices under {ENSEMBLE}: {snap_idxs}")
+snap_units = discover_snapshots(ENSEMBLE)
+log(f"\nfound {len(snap_units)} snapshot units under {ENSEMBLE}: {snap_units}")
 
 per_snapshot = {}
-for si in snap_idxs:
+for si in snap_units:
     d_ok, E_abs = [], []
     for d in DELTAS_M:
-        p = ENSEMBLE / f"snap{si:02d}_d{delta_tag(d)}" / "pw.out"
+        p = ENSEMBLE / f"{si}_d{delta_tag(d)}" / "pw.out"
         r = read_out(p)
         if r is None:
-            log(f"  snap{si:02d} d={d:+.2f}: missing/unparsable pw.out, skip")
+            log(f"  {si} d={d:+.2f}: missing/unparsable pw.out, skip")
             continue
         E, done = r
         if not done:
-            log(f"  snap{si:02d} d={d:+.2f}: pw.out present but not JOB DONE, skip")
+            log(f"  {si} d={d:+.2f}: pw.out present but not JOB DONE, skip")
             continue
         d_ok.append(d)
         E_abs.append(E)
     if not d_ok:
-        log(f"  snap{si:02d}: no converged deltas, dropping snapshot")
+        log(f"  {si}: no converged deltas, dropping snapshot")
         continue
     d_ok = np.array(d_ok)
     E_abs = np.array(E_abs)
     if 0.0 not in d_ok:
-        log(f"  snap{si:02d}: missing its own delta=0.00 anchor, dropping "
+        log(f"  {si}: missing its own delta=0.00 anchor, dropping "
             "(no valid own-reference)")
         continue
     i0 = int(np.where(np.isclose(d_ok, 0.0))[0][0])
@@ -177,22 +183,36 @@ for si in snap_idxs:
                              E_abs_eV=E_abs.tolist(), n_deltas=len(d_ok),
                              fit=fit)
 
-log(f"\n{len(per_snapshot)}/{len(snap_idxs)} snapshots usable "
+log(f"\n{len(per_snapshot)}/{len(snap_units)} snapshots usable "
     "(have delta=0 anchor + >=1 other point).")
 
 if per_snapshot:
     log("")
-    log(f"{'snap':>6} {'n_d':>4} {'alpha(meV/A^2)':>16} {'beta(meV/A^4)':>15} "
+    log(f"{'snap':>8} {'n_d':>4} {'alpha(meV/A^2)':>16} {'beta(meV/A^4)':>15} "
         f"{'d_min(A)':>9} {'depth(meV)':>11}")
     for si, rec in sorted(per_snapshot.items()):
         f = rec["fit"]
         if f is None:
-            log(f"{si:6d} {rec['n_deltas']:4d} "
+            log(f"{si:>8} {rec['n_deltas']:4d} "
                 f"{'(< 4 pts, no fit)':>16}")
             continue
-        log(f"{si:6d} {rec['n_deltas']:4d} {f['alpha_meV_per_A2']:16.1f} "
+        log(f"{si:>8} {rec['n_deltas']:4d} {f['alpha_meV_per_A2']:16.1f} "
             f"{f['beta_meV_per_A4']:15.1f} {f['d_min_A']:9.3f} "
             f"{f['well_depth_meV']:11.1f}")
+
+    # per-walker mean alpha (walker-tagged units only)
+    by_walker = {}
+    for si, rec in per_snapshot.items():
+        m = re.match(r"w(\d+)s\d+$", si)
+        if m and rec["fit"]:
+            by_walker.setdefault(int(m.group(1)), []).append(
+                rec["fit"]["alpha_meV_per_A2"])
+    if by_walker:
+        log("")
+        for wk in sorted(by_walker):
+            vals = by_walker[wk]
+            log(f"  walker {wk}: mean alpha {np.mean(vals):8.1f} meV/A^2 "
+                f"over {len(vals)} snapshot(s)")
 
 # --- ensemble mean curve: average E(delta)-E(0) across snapshots at each ---
 # common delta (only snapshots that report that delta contribute).
@@ -291,7 +311,7 @@ else:
 
 # --- write outputs ------------------------------------------------------
 out = dict(
-    n_snapshots_found=len(snap_idxs),
+    n_snapshots_found=len(snap_units),
     n_snapshots_usable=len(per_snapshot),
     per_snapshot={str(k): v for k, v in per_snapshot.items()},
     mean_curve=mean_curve,

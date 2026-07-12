@@ -25,11 +25,12 @@
   "z_O": 0.96,
   "c": 9.9,
   "a": 5.002162732258917,
-  "analyze": "Set M (generated pod-side by make_ensemble_scans.py once the md_cage MD reaches >= 3000 steps) discards the first 1000 MD steps as equilibration, takes 10 snapshots evenly spaced over the remainder, and for each writes 7 SCF Na delta scans (delta = -0.45..+0.45 A step 0.15) with the water frozen at the snapshot coordinates and the exact set-G electronic settings. Compare the resulting ensemble of E(delta) curves against the rigid-cage set-G curve (results_extra/jobs_extra/Na_s3hyd_c9.9_d*) and the adiabatic set-J minimum (results_mobile).",
+  "analyze": "Set M (generated pod-side by make_ensemble_scans.py once each surviving walker reaches >= 1000 MD steps) discards the first 400 steps of each walker as equilibration, takes 3 snapshots per walker evenly spaced over the remainder (~steps 600/900/1200 of a full run), and for each snapshot writes 7 SCF Na delta scans (delta = -0.45..+0.45 A step 0.15) with the water frozen at the snapshot coordinates and the exact set-G electronic settings (warm-started from the snapshot's delta=0 charge density). Compare the resulting ensemble of E(delta) curves against the rigid-cage set-G curve (results_extra/jobs_extra/Na_s3hyd_c9.9_d*) and the adiabatic set-J minimum (results_mobile).",
   "jobs": [
     {
-      "name": "md_cage",
+      "name": "md_w1",
       "set": "L",
+      "walker": 1,
       "element": "Na",
       "cell": "s3",
       "c": 9.9,
@@ -38,14 +39,81 @@
       "na_constraint": "frozen",
       "type": "md",
       "kpts": [
-        3,
-        3,
+        2,
+        2,
         1
       ],
       "nat": 22,
-      "nstep": 4000,
+      "nstep": 1200,
       "dt_ryau": 10.0,
-      "tempw_K": 290.0
+      "tempw_K": 290.0,
+      "seed": 1
+    },
+    {
+      "name": "md_w2",
+      "set": "L",
+      "walker": 2,
+      "element": "Na",
+      "cell": "s3",
+      "c": 9.9,
+      "delta": 0.0,
+      "water": true,
+      "na_constraint": "frozen",
+      "type": "md",
+      "kpts": [
+        2,
+        2,
+        1
+      ],
+      "nat": 22,
+      "nstep": 1200,
+      "dt_ryau": 10.0,
+      "tempw_K": 290.0,
+      "seed": 2
+    },
+    {
+      "name": "md_w3",
+      "set": "L",
+      "walker": 3,
+      "element": "Na",
+      "cell": "s3",
+      "c": 9.9,
+      "delta": 0.0,
+      "water": true,
+      "na_constraint": "frozen",
+      "type": "md",
+      "kpts": [
+        2,
+        2,
+        1
+      ],
+      "nat": 22,
+      "nstep": 1200,
+      "dt_ryau": 10.0,
+      "tempw_K": 290.0,
+      "seed": 3
+    },
+    {
+      "name": "md_w4",
+      "set": "L",
+      "walker": 4,
+      "element": "Na",
+      "cell": "s3",
+      "c": 9.9,
+      "delta": 0.0,
+      "water": true,
+      "na_constraint": "frozen",
+      "type": "md",
+      "kpts": [
+        2,
+        2,
+        1
+      ],
+      "nat": 22,
+      "nstep": 1200,
+      "dt_ryau": 10.0,
+      "tempw_K": 290.0,
+      "seed": 4
     }
   ]
 }

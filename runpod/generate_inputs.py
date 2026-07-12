@@ -38,18 +38,25 @@ with run_zscan.sh): vacuum sqrt3 x sqrt3 Na_1/3CoO2 E(delta) scans at fixed
 c = 9.9 A and z_O = 0.90/1.02 A                              10 SCF
 
 `--stage ensemble` writes set L (the MD half of the "cage-ensemble" set L/M)
-into jobs_ensemble/md_cage/pw.in + manifest_ensemble.json (run pod-side with
-run_ensemble.sh):
-  L: Born-Oppenheimer MD of the set-G hydrate cell (sqrt3 x sqrt3, x = 1/3,
-     c = 9.9 A, 4 rigid-geometry waters, Na at delta = 0). ONLY the 12 water
-     atoms move (if_pos 0 0 0 on every Co/framework-O/Na, 1 1 1 on water);
-     ion_dynamics = 'verlet', ion_temperature = 'svr', tempw = 290 K,
-     dt = 10 Ry a.u. (~0.48 fs), nstep = 4000 (~1.9 ps). K_POINTS automatic
-     3 3 1, conv_thr = 1e-6, mixing local-TF, smearing mv 0.02, nspin = 2 as
-     in set G.                                                     1 MD job
-Set M (70 frozen-snapshot Na SCF scans) is generated POD-SIDE from the MD
-trajectory by runpod/make_ensemble_scans.py -- it is NOT part of this stage
-because it needs the finished MD output, which does not exist locally.
+into jobs_ensemble/md_w1..md_w4/pw.in + manifest_ensemble.json (run pod-side
+with run_ensemble.sh):
+  L: FOUR independent Born-Oppenheimer MD "walkers" of the set-G hydrate
+     cell (sqrt3 x sqrt3, x = 1/3, c = 9.9 A, 4 rigid-geometry waters, Na at
+     delta = 0), one per GPU. Each walker starts from a DIFFERENT random
+     rigid rotation of the 4 waters about their (fixed) O sites (seeds 1-4,
+     hydrogens only, all intermolecular contacts >= 2.0 A), so the walkers
+     decorrelate from step 0 instead of waiting out one long trajectory.
+     ONLY the 12 water atoms move (if_pos 0 0 0 on every Co/framework-O/Na,
+     1 1 1 on water); ion_dynamics = 'verlet', ion_temperature = 'svr',
+     tempw = 290 K, dt = 10 Ry a.u. (~0.48 fs), nstep = 1200 (~580 fs per
+     walker, ~2.3 ps aggregate). MD-throughput electronic settings:
+     K_POINTS 2 2 1, conv_thr = 1e-5, second_order pot/wfc extrapolation;
+     mixing local-TF, smearing mv 0.02, nspin = 2 as in set G.   4 MD jobs
+Set M (12 snapshots x 7 deltas = 84 frozen-snapshot Na SCF scans; 3
+snapshots per surviving walker, first 400 steps discarded) is generated
+POD-SIDE from the walker trajectories by runpod/make_ensemble_scans.py --
+it is NOT part of this stage because it needs the finished MD output, which
+does not exist locally.
 
 stdlib + numpy only.
 """
@@ -950,88 +957,171 @@ def generate_zscan(root):
 
 
 # ---------------------------------------------------------- ensemble stage --
-# Set L (thermal cage MD), written to jobs_ensemble/ + manifest_ensemble.json,
-# run via run_ensemble.sh.  Set M (70 frozen-snapshot Na SCF scans) is
-# generated POD-SIDE by make_ensemble_scans.py after the MD finishes; it is
-# NOT written here (the MD trajectory does not exist at generate-time).
+# Set L (thermal cage MD walkers), written to jobs_ensemble/ +
+# manifest_ensemble.json, run via run_ensemble.sh.  Set M (84 frozen-snapshot
+# Na SCF scans: 3 snapshots per surviving walker x 7 deltas) is generated
+# POD-SIDE by make_ensemble_scans.py after the MD finishes; it is NOT written
+# here (the trajectories do not exist at generate-time).
 #
 # Physics: set J showed that a single ADIABATIC (fully-relaxed) water cage is
 # the wrong statistical object -- the H-bond network has multiple local
 # minima spanning >= 0.4 eV at fixed Na, and Na (~200 fs mode) is fast against
 # H-bond reorganization (~ps). The physical Na potential is drawn from a
 # THERMAL ENSEMBLE of instantaneous cage configurations sampled by classical
-# BOMD at T = 290 K, not the single deepest adiabatic minimum. Set L runs
-# that MD (water free, Na + CoO2 frozen so Na cannot itself respond to the
-# ensemble -- this isolates the cage-configuration effect on the Na
-# potential); set M then freezes 10 thermal snapshots and re-scans Na
-# rigidly through each, exactly reproducing the set-G SCF protocol so the
-# resulting E(delta) curves are directly comparable to the rigid-cage (set G)
-# and adiabatic (set J) results.
+# BOMD at T = 290 K, not the single deepest adiabatic minimum. Set L samples
+# that ensemble with FOUR short independent walkers (different random rigid
+# water orientations at t = 0, seeds 1-4) instead of one long trajectory:
+# the walkers decorrelate immediately, use all 4 GPUs concurrently at
+# mpirun -np 1 each, and give 12 well-separated snapshots in ~1/4 the wall
+# time. Water free, Na + CoO2 frozen (Na cannot respond to the ensemble --
+# this isolates the cage-configuration effect on the Na potential); set M
+# then freezes 3 snapshots per walker and re-scans Na rigidly through each,
+# exactly reproducing the set-G SCF protocol so the resulting E(delta)
+# curves are directly comparable to the rigid-cage (set G) and adiabatic
+# (set J) results.
 ENSEMBLE_DIR = "jobs_ensemble"
-KPTS_L = (3, 3, 1)                     # coarse k-mesh, MD speed
+KPTS_L = (2, 2, 1)                     # coarse k-mesh, MD speed
 MD_DT = 10.0                            # Ry a.u. ~ 0.4838 fs/step
-MD_NSTEP = 4000                         # ~1.9 ps
+MD_NSTEP = 1200                         # ~580 fs per walker
 MD_TEMPW = 290.0                        # K, svr thermostat target
+N_WALKERS = 4                           # one per GPU
+MIN_CONTACT_L = 2.0                     # A, walker H-placement floor
 
-L_NOTES = [
-    "! Set L (cage-ensemble MD, jobs_ensemble/md_cage): Born-Oppenheimer MD",
-    "! of the set-G hydrate ansatz (see G_NOTES in generate_inputs.py) at",
-    "! Na delta = 0 (z = c/2). ONLY the 12 water atoms move: if_pos = 0 0 0",
-    "! on every Co, framework O, and Na atom; 1 1 1 on water O and H (same",
-    "! atom ordering/mask as set J's IF_POS_J_PINNED). ion_dynamics =",
-    "! 'verlet', ion_temperature = 'svr', tempw = 290 K, dt = 10 Ry a.u.",
-    "! (~0.48 fs), nstep = 4000 (~1.9 ps). K_POINTS coarsened to 3 3 1 and",
-    "! conv_thr loosened to 1e-6 purely for MD throughput -- NOT used for",
-    "! the set-M snapshot SCFs, which revert to the exact set-G electronic",
-    "! settings (K_POINTS 6 6 2, conv_thr 1e-7) for comparability.",
-    "! Purpose: sample a thermal ensemble of cage configurations at 290 K;",
-    "! set M (generated pod-side by make_ensemble_scans.py after this MD",
-    "! finishes) freezes 10 snapshots (first 1000 steps discarded as",
-    "! equilibration) and rigidly scans Na through delta = +/-0.45..0.00 A",
-    "! at each -- the ensemble of resulting E(delta) curves is the physical",
-    "! (statistical, non-adiabatic) counterpart to the set-G rigid-cage and",
-    "! set-J single-adiabatic-minimum curves.",
-]
+
+def _cart3(u, v, z_frac, a, c):
+    """Fractional (u, v, z) -> Cartesian 3-vector for the hexagonal cell."""
+    x, y = _cart_hex(u, v, a)
+    return np.array([x, y, z_frac * c])
+
+
+def _walker_waters(a, c, rng):
+    """4 rigid waters on the set-G O sites with RANDOM orientations (O fixed,
+    hydrogens only), every H >= MIN_CONTACT_L from every atom outside its own
+    molecule (min-image). Returns the 12 water atoms in the usual 4x(O,H,H)
+    order, or None if a molecule cannot be placed (caller restarts)."""
+    base = list(atoms_s3("Na", c, 0.0))                     # 10 fixed atoms
+    fixed_cart = [_cart3(u, v, z, a, c) for _, u, v, z in base]
+    a1 = np.array([a, 0.0, 0.0])
+    a2 = np.array([-a / 2.0, a * np.sqrt(3.0) / 2.0, 0.0])
+    a3 = np.array([0.0, 0.0, c])
+    shifts = [i * a1 + j * a2 + k * a3
+              for i in (-1, 0, 1) for j in (-1, 0, 1) for k in (-1, 0, 1)]
+
+    def min_img(p, q):
+        return min(np.linalg.norm(p - (q + s)) for s in shifts)
+
+    half = np.radians(ANG_HOH / 2.0)
+    lb, lt = R_OH * np.cos(half), R_OH * np.sin(half)
+    placed = []                                             # cartesian, all
+    water_atoms = []
+    for site, sgn in WATER_SITES:
+        x0, y0 = _cart_hex(site[0], site[1], a)
+        o = np.array([x0, y0, c / 2.0 + sgn * D_OW])
+        for _ in range(500):
+            b = rng.normal(size=3)
+            b /= np.linalg.norm(b)
+            e = rng.normal(size=3)
+            e -= e.dot(b) * b
+            n = np.linalg.norm(e)
+            if n < 1e-8:
+                continue
+            e /= n
+            hs = [o + lb * b + s * lt * e for s in (1.0, -1.0)]
+            ok = all(min_img(h, q) >= MIN_CONTACT_L
+                     for h in hs for q in fixed_cart + placed)
+            if ok:
+                break
+        else:
+            return None
+        placed.extend([o] + hs)
+        water_atoms.append(("O", *_frac_hex(o[0], o[1], a), o[2] / c))
+        for h in hs:
+            water_atoms.append(("H", *_frac_hex(h[0], h[1], a), h[2] / c))
+    return water_atoms
+
+
+def walker_atoms(c, seed):
+    """22-atom hydrate cell for MD walker `seed`: set-G framework + Na at
+    delta = 0 + 4 randomly-oriented rigid waters (deterministic per seed)."""
+    a = A_LAT["Na"] * np.sqrt(3.0)
+    rng = np.random.default_rng(seed)
+    for _ in range(50):
+        waters = _walker_waters(a, c, rng)
+        if waters is not None:
+            return list(atoms_s3("Na", c, 0.0)) + waters
+    raise RuntimeError(f"walker {seed}: no valid water placement found")
+
+
+def l_notes_walker(k):
+    return [
+        f"! Set L walker {k}/{N_WALKERS} (cage-ensemble MD, jobs_ensemble/"
+        f"md_w{k}): Born-Oppenheimer",
+        "! MD of the set-G hydrate ansatz (see G_NOTES in generate_inputs.py)",
+        "! at Na delta = 0 (z = c/2). The 4 waters start from a random rigid",
+        f"! rotation about their fixed O sites (seed {k}, hydrogens only, all",
+        "! contacts >= 2.0 A) so the 4 walkers decorrelate from step 0.",
+        "! ONLY the 12 water atoms move: if_pos = 0 0 0 on every Co,",
+        "! framework O, and Na atom; 1 1 1 on water O and H (same ordering/",
+        "! mask as set J's IF_POS_J_PINNED). ion_dynamics = 'verlet',",
+        "! ion_temperature = 'svr', tempw = 290 K, dt = 10 Ry a.u. (~0.48",
+        "! fs), nstep = 1200 (~580 fs). K_POINTS 2 2 1, conv_thr 1e-5 and",
+        "! second_order pot/wfc extrapolation purely for MD throughput --",
+        "! NOT used for the set-M snapshot SCFs, which revert to the exact",
+        "! set-G electronic settings (K_POINTS 6 6 2, conv_thr 1e-7).",
+        "! Purpose: sample a thermal ensemble of cage configurations at",
+        "! 290 K; set M (generated pod-side by make_ensemble_scans.py)",
+        "! freezes 3 snapshots per surviving walker (first 400 steps",
+        "! discarded) and rigidly scans Na through delta = -0.45..+0.45 A",
+        "! at each -- the ensemble of E(delta) curves is the physical",
+        "! (statistical, non-adiabatic) counterpart to the set-G rigid-cage",
+        "! and set-J single-adiabatic-minimum curves.",
+    ]
 
 
 def generate_ensemble(root):
     el, c = "Na", 9.9
     a = A_LAT[el] * np.sqrt(3.0)
-    atoms = atoms_s3_hydrate(c, 0.0, with_water=True)          # 22 atoms
-    assert len(atoms) == 22, f"expected 22 atoms, got {len(atoms)}"
     species = ["Co", "O", "Na", "H"]
-    # atoms_s3_hydrate order: 3 Co (0-2), 6 lattice O (3-8), Na (9), then 4x
-    # (O,H,H) water (10-21) -- reuse set J's frozen-cage/free-water mask.
-    if_pos = IF_POS_J_PINNED
-    text = pw_input(
-        "md", el, a, c, atoms, KPTS_L, species=species,
-        ions=True, if_pos=if_pos, notes=L_NOTES,
-        conv_thr="1.0d-6", ion_dynamics="verlet",
-        ion_extra=["  ion_temperature = 'svr'", f"  tempw = {MD_TEMPW:.1f}"],
-        extra_control=[f"  dt = {MD_DT:.1f}", f"  nstep = {MD_NSTEP}"],
-    )
-    name = "md_cage"
-    write_job(root, name, text, jobs_dir=ENSEMBLE_DIR)
-    job = dict(name=name, set="L", element=el, cell="s3", c=c, delta=0.0,
-               water=True, na_constraint="frozen", type="md",
-               kpts=list(KPTS_L), nat=len(atoms), nstep=MD_NSTEP,
-               dt_ryau=MD_DT, tempw_K=MD_TEMPW)
+    jobs = []
+    for k in range(1, N_WALKERS + 1):
+        atoms = walker_atoms(c, k)                          # 22 atoms
+        assert len(atoms) == 22, f"expected 22 atoms, got {len(atoms)}"
+        text = pw_input(
+            "md", el, a, c, atoms, KPTS_L, species=species,
+            ions=True, if_pos=IF_POS_J_PINNED, notes=l_notes_walker(k),
+            conv_thr="1.0d-5", ion_dynamics="verlet",
+            ion_extra=["  ion_temperature = 'svr'",
+                       f"  tempw = {MD_TEMPW:.1f}",
+                       "  pot_extrapolation = 'second_order'",
+                       "  wfc_extrapolation = 'second_order'"],
+            extra_control=[f"  dt = {MD_DT:.1f}", f"  nstep = {MD_NSTEP}"],
+        )
+        name = f"md_w{k}"
+        write_job(root, name, text, jobs_dir=ENSEMBLE_DIR)
+        jobs.append(dict(name=name, set="L", walker=k, element=el, cell="s3",
+                         c=c, delta=0.0, water=True, na_constraint="frozen",
+                         type="md", kpts=list(KPTS_L), nat=len(atoms),
+                         nstep=MD_NSTEP, dt_ryau=MD_DT, tempw_K=MD_TEMPW,
+                         seed=k))
     manifest = dict(
         pseudos=PSEUDOS, zval=ZVAL, a_lat=A_LAT, z_O=Z_O, c=c, a=a,
         analyze=("Set M (generated pod-side by make_ensemble_scans.py once "
-                 "the md_cage MD reaches >= 3000 steps) discards the first "
-                 "1000 MD steps as equilibration, takes 10 snapshots evenly "
-                 "spaced over the remainder, and for each writes 7 SCF Na "
-                 "delta scans (delta = -0.45..+0.45 A step 0.15) with the "
-                 "water frozen at the snapshot coordinates and the exact "
-                 "set-G electronic settings. Compare the resulting ensemble "
-                 "of E(delta) curves against the rigid-cage set-G curve "
+                 "each surviving walker reaches >= 1000 MD steps) discards "
+                 "the first 400 steps of each walker as equilibration, "
+                 "takes 3 snapshots per walker evenly spaced over the "
+                 "remainder (~steps 600/900/1200 of a full run), and for "
+                 "each snapshot writes 7 SCF Na delta scans (delta = "
+                 "-0.45..+0.45 A step 0.15) with the water frozen at the "
+                 "snapshot coordinates and the exact set-G electronic "
+                 "settings (warm-started from the snapshot's delta=0 "
+                 "charge density). Compare the resulting ensemble of "
+                 "E(delta) curves against the rigid-cage set-G curve "
                  "(results_extra/jobs_extra/Na_s3hyd_c9.9_d*) and the "
                  "adiabatic set-J minimum (results_mobile)."),
-        jobs=[job])
+        jobs=jobs)
     with open(os.path.join(root, "manifest_ensemble.json"), "w") as f:
         json.dump(manifest, f, indent=2)
-    print(f"wrote 1 ensemble MD job (set L, nat={len(atoms)}) "
+    print(f"wrote {len(jobs)} ensemble MD walkers (set L, nat=22 each) "
           f"+ manifest_ensemble.json")
 
 
