@@ -75,19 +75,26 @@
   % Linear vertex g1 = 0 (crossed); quadratic 1/2 chi delta^2 allowed.
   \begin{scope}[shift={(\Q,0)}]
     \panlab{-0.15}{(b)}
-    % --- mirror + odd displacement (upper) ---
+    % --- gallery-midplane mirror + odd (vertical, c-axis) displacement ---
+    % two thin horizontal CoO2 sheets with a dashed midplane (the mirror)
+    % between them; the sodium rattles VERTICALLY toward one sheet or the other.
+    \draw[coox,line width=1.1pt] (0.30,2.80) -- (2.10,2.80);   % upper CoO2 sheet
+    \draw[coox,line width=1.1pt] (0.30,1.90) -- (2.10,1.90);   % lower CoO2 sheet
     \draw[sec,line width=0.5pt,dashed,dash pattern=on 2pt off 1.6pt]
-      (1.35,1.85) -- (1.35,2.85);
-    \node[sec,font=\footnotesize,anchor=south] at (1.35,2.82) {mirror};
-    % ghost (-delta) and real (+delta) Na
-    \node[circle,draw=nadk,fill=na!35,line width=0.4pt,minimum size=5pt,
-      inner sep=0pt] at (0.72,2.2) {};
+      (0.30,2.35) -- (2.10,2.35);
+    % ion ghosted above (+delta) and below (-delta) the midplane
     \node[circle,draw=nadk,fill=na,line width=0.4pt,minimum size=5pt,
-      inner sep=0pt] at (1.98,2.2) {};
+      inner sep=0pt] at (1.05,2.58) {};
+    \node[circle,draw=na!45!white,fill=na!35,line width=0.4pt,minimum size=5pt,
+      inner sep=0pt] at (1.05,2.12) {};
+    % vertical double-headed arrow : delta (odd)
     \draw[sec,line width=0.5pt,{Latex[length=2.8pt]}-{Latex[length=2.8pt]}]
-      (0.9,2.2) -- (1.8,2.2);
-    \node[nadk,font=\footnotesize,anchor=north,inner sep=1.5pt] at (1.35,2.12)
+      (1.05,2.48) -- (1.05,2.22);
+    % labels sit on the midplane; white fill masks the dashed line behind them
+    \node[nadk,font=\footnotesize,anchor=east,inner sep=1.2pt,fill=white] at (0.92,2.35)
       {$\delta$ (odd)};
+    \node[sec,font=\footnotesize,anchor=west,inner sep=1.2pt,fill=white] at (1.55,2.35)
+      {mirror};
     % --- two vertices (lower) ---
     % linear vertex : forbidden
     \draw[eline] (0.15,0.85) -- (1.05,0.85);

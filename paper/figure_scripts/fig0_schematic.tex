@@ -72,13 +72,15 @@
           \node[elec] at (\ex,\hg-0.09){};
         }
       \fi
-      % Na ion (+ bistable ghost + double-well hop arrow)
+      % Na ion (+ bistable ghost + double-well rattle arrow).
+      % Displacement is along the c-axis (layer normal) => VERTICAL in side view:
+      % the ion rattles toward one CoO2 sheet or the other.
       \ifdim\disp pt>0pt
-        \node[naion,fill=na!35,draw=na!45!white] at (-\disp,0){};
-        \draw[<->,sec,line width=0.35pt] (-\disp+0.14,0) -- (\disp-0.14,0);
+        \node[naion,fill=na!35,draw=na!45!white] at (0,-\disp){};
+        \draw[<->,sec,line width=0.35pt] (0,-\disp+0.12) -- (0,\disp-0.12);
       \fi
-      \node[naion] at (\disp,0){};
-      \node[nadk,font=\footnotesize,anchor=south,inner sep=1pt] at (\disp,0.12){Na$^+$};
+      \node[naion] at (0,\disp){};
+      \node[nadk,font=\footnotesize,anchor=west,inner sep=1pt] at (0.14,\disp){Na$^+$};
     \end{scope}
   }
   % single 2DEG label (columns 2-3 share the carrier physics)
