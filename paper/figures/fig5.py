@@ -20,8 +20,9 @@ fits = S.load_well_fits()
 
 fig, ax = plt.subplots(figsize=(3.4, 3.5))
 
-# quantum-paraelectric (soft-mode) window: omega < 1 meV  (neutral shading)
-ax.axhspan(1e-3, 1.0, color="#e2e1db", alpha=0.9, lw=0, zorder=0)
+# quantum-paraelectric (soft-mode) window: omega < 1 meV  (very light neutral
+# shading with a thin dashed boundary line)
+ax.axhspan(1e-3, 1.0, color="#f1f0eb", lw=0, zorder=0)
 ax.axhline(1.0, color=S.C_MUT, lw=0.7, ls=(0, (4, 3)), alpha=0.8, zorder=1)
 ax.text(5.42, 0.0068, "quantum-paraelectric\n(soft-mode) window", ha="left",
         va="bottom", fontsize=7.6, color=S.C_SEC)
@@ -42,16 +43,29 @@ ax.legend(loc="upper right", handletextpad=0.4, fontsize=7.6)
 S.thin_spines(ax)
 
 # ---------------- inset: levels in the 6.9 A Na double well -------------
-# centre-right, dropped below the upper-right legend; opaque white background
-# masks the window shading beneath it.
+# centre-right, dropped below the upper-right legend. Clean-inset rules: a
+# padded opaque white card behind the WHOLE inset (axes + tick labels + axis
+# labels + title, so the window shading never shows through anywhere), plus a
+# complete square frame on the inset itself.
 r = fits[(fits.element == "Na") & (fits.cell == "1x1") & (fits.c == 6.9)].iloc[0]
 lv = qw[(qw.element == "Na") & (qw.cell == "1x1") & (qw.c == 6.9)
         & (qw.mass == "Na")].iloc[0]
 E0, E1, E2 = lv["E0_meV"], lv["E1_meV"], lv["E2_meV"]
 
-axi = ax.inset_axes([0.45, 0.37, 0.50, 0.37])
+import matplotlib.patches as mpatches
+# The card sits in the data-free pocket below the legend and above the
+# low-lying (c >= 7.5 A) curve segments; verified against the log-scale
+# curve positions so NO data point or curve segment is occluded.
+card = mpatches.FancyBboxPatch(
+    (0.475, 0.365), 0.515, 0.435, transform=ax.transAxes,
+    boxstyle="square,pad=0", facecolor="white", edgecolor="none",
+    zorder=5)
+ax.add_patch(card)
+
+axi = ax.inset_axes([0.565, 0.43, 0.41, 0.315])
 axi.set_facecolor("white")
 axi.patch.set_alpha(1.0)
+axi.set_zorder(6)
 dd = np.linspace(-0.95, 0.95, 300)
 V = S.vpoly(dd, r["a_q"], r["b_q"], r["g_q"]) * 1e3
 axi.plot(dd, V, color=S.C_INK, lw=1.1, zorder=3)
@@ -65,7 +79,7 @@ def level(E, col, lab, lw=1.3):
     else:
         x0, x1 = -0.2, 0.2
     axi.plot([x0, x1], [E, E], color=col, lw=lw, zorder=4)
-    axi.text(0.98, E, lab, transform=axi.get_yaxis_transform(), ha="right",
+    axi.text(0.94, E, lab, transform=axi.get_yaxis_transform(), ha="right",
              va="bottom", fontsize=7, color=S.C_INK)
 
 
@@ -77,8 +91,10 @@ axi.tick_params(labelsize=6.5, length=2)
 axi.set_xlabel(r"$\delta$ (Å)", fontsize=7, labelpad=1)
 axi.set_ylabel("meV", fontsize=7, labelpad=1)
 axi.set_title(r"$c=6.9$ Å Na double well", fontsize=7, pad=3)
-for s in ("top", "right"):
-    axi.spines[s].set_visible(False)
+for s in axi.spines.values():           # full square border
+    s.set_visible(True)
+    s.set_color(S.C_SEC)
+    s.set_linewidth(0.8)
 
 fig.subplots_adjust(left=0.155, right=0.97, top=0.97, bottom=0.135)
 S.save(fig, "fig5")

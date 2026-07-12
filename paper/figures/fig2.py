@@ -26,7 +26,8 @@ CG = np.linspace(5.5, 9.9, 400)
 
 # Aesthetic-sobriety palette: colour only on the data series (curves/markers);
 # every decorative element is neutral grey/black.
-C_SHADE = "#e2e1db"              # light-grey fill (SC window, polaronic zone)
+C_SHADE = "#e2e1db"              # light-grey fill (narrow SC-window band)
+C_SHADE_LT = "#f1f0eb"           # very light grey (large polaronic region)
 C_ANN = S.C_INK                  # annotation text: black
 C_ANN2 = S.C_SEC                 # secondary annotation text: ~40% grey
 
@@ -106,11 +107,13 @@ def draw_dome(ax, lw_line=1.8, band_lab=None, line_lab=None):
 
 draw_dome(axC, band_lab=r"$\gamma$ band (11$-$23 K)",
           line_lab=r"$T_c$ (Allen$-$Dynes)")
-# polaronic region: lambda > 2 -> SC killed  (neutral light-grey fill)
-axC.axvspan(LAM_C, 9.9, facecolor=C_SHADE, edgecolor="none", alpha=0.9,
-            zorder=1)
-axC.text(9.6, 21.5, r"polaronic ($\lambda>2$)",
-         ha="right", va="center", fontsize=8, color=C_ANN)
+# polaronic wall: lambda > 2 -> SC killed. No area fill (a fill covering
+# three-quarters of the panel reads as a bad background, not a region); the
+# wall is a thin grey boundary line at the lambda=2 crossing, labelled in
+# clear space above the inset.
+axC.axvline(LAM_C, color=S.C_MUT, lw=0.8, zorder=1)
+axC.text(6.92, 24.2, r"polaronic ($\lambda>2$), SC killed", fontsize=8,
+         color=C_ANN, ha="left", va="center")
 shade_window(axC)
 anchors(axC, star=True)
 # experimental SC anchor: distinct star marker at 9.9 A, Tc = 4.5 K (black)
@@ -128,22 +131,28 @@ S.panel_label(axC, "c")
 
 # --- zoom inset: the narrow SC dome is otherwise a hairline ---
 # placed over the (data-free) polaronic dead zone, right of the real dome
-# spike, with an opaque white background so the hatch never shows through.
-axz = axC.inset_axes([0.40, 0.32, 0.33, 0.52])
+# spike. Clean-inset rules: fully opaque white background, a complete square
+# frame on all four sides, drawn ABOVE the panel shading, and NO internal
+# shading (the parent's grey bands would only clutter the zoom); the lambda=2
+# wall is a single thin grey line, as in the parent.
+axz = axC.inset_axes([0.40, 0.30, 0.33, 0.54])
 axz.set_facecolor("white")
-axz.set_zorder(5)
+axz.set_zorder(6)
 axz.patch.set_alpha(1.0)
 draw_dome(axz, lw_line=1.6)
-axz.axvspan(LAM_C, 6.6, facecolor=C_SHADE, edgecolor="none", alpha=0.9)
-axz.axvspan(SC_LO, SC_HI, color=C_SHADE, alpha=0.9, lw=0)
+axz.axvline(LAM_C, color=S.C_MUT, lw=0.7)
 axz.set_xlim(6.28, 6.52)
 axz.set_ylim(0, 25)
-axz.set_title(r"dome (zoom), peak $T_c\!\approx\!14$ K", fontsize=7.5, pad=3)
+axz.text(0.5, 0.965, r"dome (zoom), peak $T_c\!\approx\!14$ K",
+         transform=axz.transAxes, ha="center", va="top", fontsize=7.5,
+         color=C_ANN)
 axz.tick_params(labelsize=7, length=2)
 axz.set_xticks([6.3, 6.4, 6.5])
 axz.set_yticks([0, 10, 20])
-for s in ("top", "right"):
-    axz.spines[s].set_visible(False)
+for s in axz.spines.values():           # full square border
+    s.set_visible(True)
+    s.set_color(S.C_SEC)
+    s.set_linewidth(0.8)
 axC.indicate_inset_zoom(axz, edgecolor=S.C_MUT, lw=0.7, alpha=0.8)
 
 for ax in axes:
