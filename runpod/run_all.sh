@@ -10,6 +10,7 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 
+export OMP_NUM_THREADS="${OMP_NUM_THREADS:-14}"
 PW_BIN="${PW_BIN:-pw.x}"
 DOS_BIN="${DOS_BIN:-dos.x}"
 
