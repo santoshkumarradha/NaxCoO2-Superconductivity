@@ -127,9 +127,16 @@ def thin_spines(ax, hide=("top", "right")):
 
 
 def save(fig, stem):
-    """Vector PDF + 300 dpi PNG, both into paper/figures/."""
-    fig.savefig(HERE / f"{stem}.pdf")
-    fig.savefig(HERE / f"{stem}.png", dpi=300)
+    """Vector PDF + 300 dpi PNG into the rendered-figures folder paper/figures/.
+
+    Scripts live in paper/figure_scripts/; the rendered artefacts that main.tex
+    consumes live in paper/figures/ (HERE.parent/"figures"), keeping source and
+    output in separate folders.
+    """
+    outdir = HERE.parent / "figures"
+    outdir.mkdir(exist_ok=True)
+    fig.savefig(outdir / f"{stem}.pdf")
+    fig.savefig(outdir / f"{stem}.png", dpi=300)
     plt.close(fig)
 
 

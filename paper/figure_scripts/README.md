@@ -4,12 +4,21 @@ Figures for the mechanism paper (PRL/PRB register). Everything here is generated
 from the real DFT / theory data under `runpod/`, `theory/`, and `spin_analysis/`
 — nothing is fabricated, and none of those source directories are modified.
 
+## Folder layout (sources vs rendered artefacts, kept separate)
+
+- `paper/figure_scripts/` — **sources**: every `figN.py`, the shared `_style.py`,
+  the two TikZ `.tex` figures, and this README.
+- `paper/figures/` — **rendered artefacts only**: the `figN.pdf`/`figN.png` that
+  `main.tex` consumes (`\graphicspath{{figures/}}`). `_style.save()` always writes
+  here (`HERE.parent/"figures"`), so running a script from `figure_scripts/` emits
+  its PDF+PNG into `figures/` and never clutters the source folder.
+
 ## Build
 
 ```sh
-# from this directory
+# from this directory (paper/figure_scripts/)
 PY=../../theory/.venv/bin/python
-$PY fig1.py && $PY fig2.py && $PY fig3.py && $PY fig4.py && $PY fig5.py
+for n in 1 2 3 4 5 6 7 8 9; do $PY fig$n.py; done   # -> ../figures/figN.{pdf,png}
 # LaTeX pieces (need pdflatex on PATH, e.g. /Library/TeX/texbin)
 pdflatex fig0_schematic.tex   && pdftocairo -png -r 300 -singlefile fig0_schematic.pdf   fig0_schematic
 pdflatex fig3_scoreboard.tex  && pdftocairo -png -r 300 -singlefile fig3_scoreboard.pdf  fig3_scoreboard
@@ -17,7 +26,8 @@ pdflatex fig3_scoreboard.tex  && pdftocairo -png -r 300 -singlefile fig3_scorebo
 
 Each figure is emitted as a **vector PDF** (for the manuscript) and a **300 dpi PNG**
 (for previews). `_style.py` holds the shared house style and the read-only data
-loaders imported by every `figN.py`.
+loaders imported by every `figN.py`. Figs 7–9 additionally import the read-only
+spectral parsers in `theory/spectral/spectral.py`.
 
 ## House style (shared, `_style.py`)
 
