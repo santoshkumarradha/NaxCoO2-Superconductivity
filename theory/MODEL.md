@@ -75,7 +75,17 @@ visibly missing at the largest |d| but irrelevant below ~0.4 eV). Full tables:
   −1.96 eV/Å²/Å. Well position grows to d0 = 1.21 Å, depth to 499 meV at c = 7.15 Å.
   At the monolayer-hydrate spacing 6.9 Å (within the DFT range!): depth ≈ 350 meV,
   d0 ≈ 1.03 Å — the Na well is already deep at the *non-superconducting* hydrate spacing.
-* β(c) is smooth and positive throughout (0.83 → 0.23 eV/Å⁴ for Na).
+* β(c) is smooth and positive throughout (0.83 → 0.23 eV/Å⁴ for Na). The apparent jump in
+  the LiCoO2 β(c) at c ≈ 5.2 Å (fig2) is a fit-range artifact, not physics: the DFT scans
+  switch there from |d| ≤ 0.5 Å (5 points) to |d| ≤ 1.2 Å (10–14 points), and with a d⁶
+  term missing the fitted β depends on the sampled range. α (the quantity used for c\*) is
+  continuous through the switch.
+* Experimental anchor lines (5.5 / 6.9 / 9.9 Å, and Tc = 4.5 K in the money plot) are drawn
+  on every panel that shares the spacing axis (fig2–fig5 and the money plot). No other
+  experimental values are marked because none exist for these observables: α and the double
+  well are not directly measured, no interlayer-2DEG carrier density has been reported
+  (ARPES sees only Co-derived bands — listed as a falsifier in §7), and no soft Na-mode
+  spectrum has been published for the hydrate.
 
 **Key DFT coincidence** (this is the empirical linchpin of the whole story): the Bader
 charge on Li has a minimum at c = 5.29 Å and rises steadily beyond it (0.0133 → 0.0251 e,

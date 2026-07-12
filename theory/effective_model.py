@@ -512,6 +512,27 @@ def coupling_vs_c(cgrid: np.ndarray, fits: pd.DataFrame, gal: GalleryMap,
 # ======================================================================
 # 6. FIGURES
 # ======================================================================
+ANCHORS = (  # experimental CoO2-CoO2 spacings (task-provided anchors)
+    (5.55, "anhydrous (no SC)", C_GRAY),
+    (6.9, "1-layer hydrate (no SC)", C_GRAY),
+    (9.9, "2-layer hydrate (SC 4.5 K)", C_RED),
+)
+
+
+def mark_anchors(ax, labels=True):
+    """Experimental spacing anchors on a Na-axis panel (only those inside
+    the current x-range)."""
+    x0, x1 = ax.get_xlim()
+    for c, lab, col in ANCHORS:
+        if x0 <= c <= x1:
+            ax.axvline(c, color=col, ls="--", lw=0.9, alpha=0.6, zorder=0)
+            if labels:
+                ax.text(c, 0.03, " " + lab, transform=ax.get_xaxis_transform(),
+                        fontsize=6.0, color=col, ha="right", va="bottom",
+                        rotation=90)
+    ax.set_xlim(x0, x1)
+
+
 def fig_potential_fits(scans_li, fits_li, scans_na, fits_na):
     fig, axes = plt.subplots(1, 2, figsize=(9.2, 3.6), sharey=True)
     for ax, scans, fits, cmap, name in (
@@ -557,6 +578,8 @@ def fig_landau_parameters(fits_li, cs_li, fits_na, cs_na):
     axes[1, 1].set_ylabel("well depth (meV)")
     for ax in axes[1]:
         ax.set_xlabel(r"CoO$_2$–CoO$_2$ spacing $c$ (Å)")
+    for ax in axes.flat:   # experimental Na-system anchors on the shared axis
+        mark_anchors(ax, labels=False)
     fig.suptitle(r"Landau parameters of $V(d;c)=\alpha d^2+\beta d^4$ (repo DFT)",
                  fontsize=10.5)
     fig.tight_layout()
@@ -601,6 +624,7 @@ def fig_quantum_wells(fits_na, qt_na_na, qt_na_li, qt_li_li, cs_na, cs_li):
     ax.set_xlabel(r"$c$ (Å)")
     ax.set_ylabel(r"$\hbar\omega_{\rm eff}=\hbar^2/2M\langle d^2\rangle_0$ (meV)")
     ax.legend(fontsize=7)
+    mark_anchors(ax, labels=False)
     # bottom middle: level gaps
     ax = fig.add_subplot(gs[1, 1])
     ax.semilogy(qt_na_na["c"], qt_na_na["gap02_meV"], "o-", ms=3.5, lw=1.4,
@@ -614,6 +638,7 @@ def fig_quantum_wells(fits_na, qt_na_na, qt_na_li, qt_li_li, cs_na, cs_li):
     ax.set_ylabel("level spacing (meV)")
     ax.legend(fontsize=7.5)
     ax.set_title("Na mass, NaCoO$_2$ wells", fontsize=9)
+    mark_anchors(ax, labels=True)
     # bottom right: <d^2>
     ax = fig.add_subplot(gs[1, 2])
     ax.plot(qt_na_na["c"], qt_na_na["d2_A2"], "o-", ms=3.5, lw=1.4,
@@ -624,6 +649,7 @@ def fig_quantum_wells(fits_na, qt_na_na, qt_na_li, qt_li_li, cs_na, cs_li):
     ax.set_xlabel(r"$c$ (Å)")
     ax.set_ylabel(r"$\langle d^2\rangle_0$ (Å$^2$)")
     ax.legend(fontsize=7.5)
+    mark_anchors(ax, labels=False)
     fig.suptitle("Quantized alkali double-well mode (finite differences, exact parity)",
                  fontsize=10.5)
     fig.tight_layout()
@@ -653,6 +679,7 @@ def fig_charge_map(bader, gal, c_on_li, cs_li, cs_na, dq):
     ax.set_ylabel(r"$\delta(c)$ (eV)")
     ax.set_title("Mapped on-site splitting", fontsize=9.5)
     ax.legend(fontsize=7.5)
+    mark_anchors(ax, labels=False)
     ax = axes[2]
     ax.plot(cg, gal.n_cm2(cg), color=C_BLUE, lw=1.6, label="model $q(c)/A_{cell}$")
     ax.plot(bader["c"] + (cs_na - cs_li), dq / gal.A_cell * 1e16, "o", ms=4,
@@ -661,6 +688,7 @@ def fig_charge_map(bader, gal, c_on_li, cs_li, cs_na, dq):
     ax.set_ylabel(r"$n_{\rm 2DEG}$ (e/cm$^2$)")
     ax.set_title("2DEG density turn-on", fontsize=9.5)
     ax.legend(fontsize=7.5)
+    mark_anchors(ax, labels=True)
     fig.tight_layout()
     fig.savefig(FIGDIR / "fig4_charge_turnon.png", bbox_inches="tight")
     plt.close(fig)
@@ -692,6 +720,7 @@ def fig_coupling(res_mid, res_lo, res_hi, cs_na, cmax_dft):
     ax.set_xlabel(r"$c$ (Å)")
     ax.set_ylabel(r"$\lambda$")
     ax.legend(fontsize=6.8)
+    mark_anchors(ax, labels=False)
     ax = axes[2]
     ax.plot(res_mid.c, res_mid.hw_02 * 1e3, lw=1.7, color=C_BLUE,
             label=r"$\hbar\Omega = E_2-E_0$")
@@ -703,6 +732,7 @@ def fig_coupling(res_mid, res_lo, res_hi, cs_na, cmax_dft):
     ax.set_xlabel(r"$c$ (Å)")
     ax.set_ylabel("mode energy (meV)")
     ax.legend(fontsize=7.5)
+    mark_anchors(ax, labels=True)
     fig.tight_layout()
     fig.savefig(FIGDIR / "fig5_coupling.png", bbox_inches="tight")
     plt.close(fig)
