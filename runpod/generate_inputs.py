@@ -23,7 +23,7 @@ BOHR = 0.529177210903  # Angstrom
 A_LAT = {"Na": 2.888, "Li": 2.82}     # in-plane lattice constant, Angstrom
 C_LIST = [5.5, 6.9, 8.4, 9.9]         # CoO2 plane-to-plane spacing, Angstrom
 DELTAS_A = [0.0, 0.15, 0.30, 0.50, 0.75, 1.00]  # off-center displacement, Ang
-DELTAS_B = [0.0, 0.50]
+DELTAS_B = [0.0, 0.25, 0.5, 0.75]
 Z_O = 0.96                             # O height above Co plane, Angstrom
 
 PSEUDOS = {
@@ -55,7 +55,7 @@ def atoms_1x1(element, c, delta):
     return [("Co", 0.0, 0.0, 0.0),
             ("O", 1 / 3, 2 / 3, zo),
             ("O", 2 / 3, 1 / 3, 1.0 - zo),
-            (element, 1 / 3, 2 / 3, za)]
+            (element, 0.0, 0.0, za)]  # Co-top site (lowest-energy, SciPost Fig.5 pos.1)
 
 
 def atoms_s3(element, c, delta):
@@ -73,7 +73,7 @@ def atoms_s3(element, c, delta):
     for base, z in (((1 / 3, 1 / 3), zo), ((1 / 3, 0.0), 1.0 - zo)):
         for ox, oy in offs:
             atoms.append(("O", (base[0] + ox) % 1.0, (base[1] + oy) % 1.0, z))
-    atoms.append((element, 1 / 3, 1 / 3, za))  # image of primitive (1/3,2/3)
+    atoms.append((element, 0.0, 0.0, za))  # Co-top site
     return atoms
 
 

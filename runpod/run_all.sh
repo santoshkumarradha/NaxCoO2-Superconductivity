@@ -10,6 +10,8 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 
+export PATH=/usr/local/qe/bin:/usr/local/openmpi/bin:/usr/local/ucx/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda/lib:/usr/local/cuda/lib64:/usr/local/fftw/lib:/opt/nvidia/hpc_sdk/Linux_x86_64/24.7/compilers/lib:$LD_LIBRARY_PATH
 export OMP_NUM_THREADS="${OMP_NUM_THREADS:-14}"
 PW_BIN="${PW_BIN:-pw.x}"
 DOS_BIN="${DOS_BIN:-dos.x}"
@@ -93,4 +95,5 @@ for d in jobs/*/; do
   if job_done "$d"; then n_ok=$((n_ok+1)); else n_bad=$((n_bad+1)); echo "  incomplete: $d"; fi
 done
 echo "  $n_ok done, $n_bad incomplete"
-echo "Next: bash bader_setup.sh   (Bader charges), then rsync results back."
+bash bader_setup.sh > bader.log 2>&1 && echo "BADER OK"
+echo "ALL COMPLETE (scf+nscf+dos+bader)"
