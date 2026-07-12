@@ -18,13 +18,13 @@ S.use_house_style()
 qw = S.load_quantum()
 fits = S.load_well_fits()
 
-fig, ax = plt.subplots(figsize=(3.4, 3.15))
+fig, ax = plt.subplots(figsize=(3.4, 3.5))
 
 # quantum-paraelectric (soft-mode) window: omega < 1 meV
 ax.axhspan(1e-3, 1.0, color=S.C_BLUE, alpha=0.07, lw=0, zorder=0)
 ax.axhline(1.0, color=S.C_BLUE, lw=0.7, ls=(0, (4, 3)), alpha=0.6, zorder=1)
 ax.text(5.42, 0.0068, "quantum-paraelectric\n(soft-mode) window", ha="left",
-        va="bottom", fontsize=6.6, color=S.C_BLUE)
+        va="bottom", fontsize=7.6, color=S.C_BLUE)
 
 for (el, cell), st in S.SERIES.items():
     q = qw[(qw.element == el) & (qw.cell == cell) & (qw.mass == el)]
@@ -38,16 +38,20 @@ ax.set_ylim(5e-3, 60)
 ax.set_xlabel(r"CoO$_2$$-$CoO$_2$ spacing  $c$  (Å)")
 ax.set_ylabel(r"$\hbar\omega_{\mathrm{eff}}=\hbar^2/2M\langle\delta^2"
               r"\rangle_0$  (meV)")
-ax.legend(loc="upper right", handletextpad=0.4)
+ax.legend(loc="upper right", handletextpad=0.4, fontsize=7.6)
 S.thin_spines(ax)
 
 # ---------------- inset: levels in the 6.9 A Na double well -------------
+# centre-right, dropped below the upper-right legend; opaque white background
+# masks the window shading beneath it.
 r = fits[(fits.element == "Na") & (fits.cell == "1x1") & (fits.c == 6.9)].iloc[0]
 lv = qw[(qw.element == "Na") & (qw.cell == "1x1") & (qw.c == 6.9)
         & (qw.mass == "Na")].iloc[0]
 E0, E1, E2 = lv["E0_meV"], lv["E1_meV"], lv["E2_meV"]
 
-axi = ax.inset_axes([0.395, 0.40, 0.44, 0.40])
+axi = ax.inset_axes([0.45, 0.37, 0.50, 0.37])
+axi.set_facecolor("white")
+axi.patch.set_alpha(1.0)
 dd = np.linspace(-0.95, 0.95, 300)
 V = S.vpoly(dd, r["a_q"], r["b_q"], r["g_q"]) * 1e3
 axi.plot(dd, V, color=S.C_INK, lw=1.1, zorder=3)
@@ -62,18 +66,17 @@ def level(E, col, lab, lw=1.3):
         x0, x1 = -0.2, 0.2
     axi.plot([x0, x1], [E, E], color=col, lw=lw, zorder=4)
     axi.text(0.98, E, lab, transform=axi.get_yaxis_transform(), ha="right",
-             va="bottom", fontsize=5.8, color=col)
+             va="bottom", fontsize=7, color=col)
 
 
 level(E2, S.C_YELL, r"$E_2$")
 level(E0, S.C_BLUE, r"$E_0,E_1$")   # near-degenerate tunnelling doublet
-axi.set_ylim(V.min() - 8, 34)
+axi.set_ylim(V.min() - 8, 40)
 axi.set_xlim(-1.0, 1.0)
-axi.tick_params(labelsize=5.6, length=2)
-axi.set_xlabel(r"$\delta$ (Å)", fontsize=6, labelpad=1)
-axi.set_ylabel("meV", fontsize=6, labelpad=1)
-axi.text(0.0, 23, r"$c=6.9$ Å Na double well", ha="center", va="bottom",
-         fontsize=6.2, color=S.C_INK)
+axi.tick_params(labelsize=6.5, length=2)
+axi.set_xlabel(r"$\delta$ (Å)", fontsize=7, labelpad=1)
+axi.set_ylabel("meV", fontsize=7, labelpad=1)
+axi.set_title(r"$c=6.9$ Å Na double well", fontsize=7, pad=3)
 for s in ("top", "right"):
     axi.spines[s].set_visible(False)
 

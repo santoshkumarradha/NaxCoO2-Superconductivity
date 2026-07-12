@@ -49,17 +49,15 @@ axA.axhline(0, color=S.C_INK, lw=0.8, zorder=2)
 shade_window(axA)
 anchors(axA)
 axA.annotate(r"$c^\ast_{\mathrm{Na}}\!\approx\!6.40$ Å", xy=(6.40, 0),
-             xytext=(7.15, 1.35), fontsize=7, color=S.C_BLUE,
+             xytext=(7.15, 1.35), fontsize=8, color=S.C_BLUE,
              arrowprops=dict(arrowstyle="->", color=S.C_BLUE, lw=0.7))
 axA.set_ylim(-1.2, 3.4)
 axA.set_ylabel(r"$\alpha$  (eV/Å$^2$)")
-axA.legend(loc="upper right", ncol=1, handletextpad=0.4)
+axA.legend(loc="upper right", ncol=1, handletextpad=0.4, fontsize=8)
 S.thin_spines(axA)
 S.panel_label(axA, "a")
-axA.text(SC_LO - 0.02, 3.05, "double well\n" r"$\alpha<0$", ha="right",
-         va="top", fontsize=6.6, color=S.C_SEC)
-axA.text(SC_HI + 0.05, -0.55, r"$\alpha<0$ (soft)", ha="left",
-         va="center", fontsize=6.6, color=S.C_SEC)
+axA.text(SC_LO - 0.02, 3.05, "double well\n" r"($\alpha<0$)", ha="right",
+         va="top", fontsize=8, color=S.C_SEC)
 
 # ------------------------------------------------- (b) 2DEG turn-on: N(0)
 # Single axis (no dual scale): DFT N(0) is the direct carrier-turn-on measure.
@@ -72,11 +70,11 @@ for (el, cell), st in S.SERIES.items():
     axB.plot(r["c"], r["N0"], st["marker"] + "-", ms=6, lw=1.6,
              color=st["color"], mfc=st["color"], mew=0, zorder=4)
     lx, ly, lha = lab[(el, cell)]
-    axB.text(lx, ly, st["label"], color=st["color"], fontsize=7,
+    axB.text(lx, ly, st["label"], color=st["color"], fontsize=8,
              ha=lha, va="center", fontweight="bold")
 axB.axhline(0.10, color=S.C_RED, ls=":", lw=1.0, zorder=2)
-axB.text(5.55, 0.24, "2DEG gate  " r"$N(0){=}0.1$", ha="left", va="bottom",
-         fontsize=6.6, color=S.C_RED)
+axB.text(7.35, 0.30, "2DEG gate  " r"$N(0){=}0.1$", ha="left", va="bottom",
+         fontsize=7.6, color=S.C_RED)
 shade_window(axB)
 anchors(axB)
 axB.set_ylim(-0.12, 4.3)
@@ -84,7 +82,7 @@ axB.set_ylabel(r"DFT $N(0)$" "\n" r"(states eV$^{-1}$ cell$^{-1}$ spin$^{-1}$)")
 S.thin_spines(axB)
 S.panel_label(axB, "b")
 axB.annotate("2DEG switches on", xy=(6.55, 0.9), xytext=(6.75, 2.3),
-             fontsize=7, color=S.C_INK, ha="left",
+             fontsize=8, color=S.C_INK, ha="left",
              arrowprops=dict(arrowstyle="->", color=S.C_INK, lw=0.8))
 
 # ---------------------------------------------------------------- (c) Tc dome
@@ -105,42 +103,48 @@ draw_dome(axC, band_lab=r"$\gamma$ band (11$-$23 K)",
 # polaronic region: lambda > 2 -> SC killed
 axC.axvspan(LAM_C, 9.9, facecolor="none", edgecolor=S.C_CRIT, lw=0.0,
             hatch="////", alpha=0.5, zorder=1)
-axC.text(8.75, 22.5, "polaronic self-trapping\n" r"($\lambda>2$) $-$ SC killed",
-         ha="center", va="center", fontsize=7.5, color=S.C_CRIT)
+axC.text(9.6, 21.5, "polaronic self-trapping\n" r"($\lambda>2$) $-$ SC killed",
+         ha="right", va="center", fontsize=8, color=S.C_CRIT)
 shade_window(axC)
 anchors(axC, star=True)
 # experimental SC anchor: star at 9.9 A, Tc = 4.5 K
 axC.plot(9.9, 4.5, marker="*", ms=16, color=S.C_RED, mec="white", mew=0.6,
          zorder=6)
 axC.annotate("Takada 2003\n" r"expt. $T_c=4.5$ K", xy=(9.82, 4.7),
-             xytext=(9.0, 11.5), fontsize=7, color=S.C_RED, ha="center",
+             xytext=(9.15, 10.5), fontsize=8, color=S.C_RED, ha="center",
              arrowprops=dict(arrowstyle="->", color=S.C_RED, lw=0.9))
 axC.set_ylim(0, 26)
 axC.set_ylabel(r"$T_c$  (K)")
 axC.set_xlabel(r"CoO$_2$$-$CoO$_2$ spacing  $c$  (Å)")
-axC.legend(loc="upper left", handletextpad=0.5, borderaxespad=0.4)
+axC.legend(loc="upper left", handletextpad=0.5, borderaxespad=0.4, fontsize=8)
 S.thin_spines(axC)
 S.panel_label(axC, "c")
 
 # --- zoom inset: the narrow SC dome is otherwise a hairline ---
-axz = axC.inset_axes([0.25, 0.30, 0.28, 0.50])
+# placed over the (data-free) polaronic dead zone, right of the real dome
+# spike, with an opaque white background so the hatch never shows through.
+axz = axC.inset_axes([0.40, 0.32, 0.33, 0.52])
+axz.set_facecolor("white")
+axz.set_zorder(5)
+axz.patch.set_alpha(1.0)
 draw_dome(axz, lw_line=1.6)
 axz.axvspan(LAM_C, 6.6, facecolor="none", edgecolor=S.C_CRIT, lw=0.0,
             hatch="////", alpha=0.5)
 axz.axvspan(SC_LO, SC_HI, color=S.C_YELL, alpha=0.14, lw=0)
 axz.set_xlim(6.28, 6.52)
 axz.set_ylim(0, 25)
-axz.set_title(r"dome (zoom), peak $T_c\!\approx\!14$ K", fontsize=6.6, pad=2)
-axz.tick_params(labelsize=6, length=2)
+axz.set_title(r"dome (zoom), peak $T_c\!\approx\!14$ K", fontsize=7.5, pad=3)
+axz.tick_params(labelsize=7, length=2)
 axz.set_xticks([6.3, 6.4, 6.5])
+axz.set_yticks([0, 10, 20])
 for s in ("top", "right"):
     axz.spines[s].set_visible(False)
-axC.indicate_inset_zoom(axz, edgecolor=S.C_MUT, lw=0.7, alpha=0.7)
+axC.indicate_inset_zoom(axz, edgecolor=S.C_MUT, lw=0.7, alpha=0.8)
 
 axC.text(0.5, -0.30,
          r"$9.9$ Å reconciliation requires water softening of the Na well "
          r"(prediction, untested)",
-         transform=axC.transAxes, ha="center", va="top", fontsize=7.2,
+         transform=axC.transAxes, ha="center", va="top", fontsize=8,
          color=S.C_SEC, style="italic")
 
 for ax in axes:

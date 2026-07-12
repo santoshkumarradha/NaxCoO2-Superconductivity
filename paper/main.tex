@@ -9,6 +9,20 @@
 \usepackage{bm}
 \usepackage[T1]{fontenc}
 
+% --- table (scoreboard, Table I) ---
+% NB: revtex4-2 in this TeX build conflicts with the array/tabularx packages
+% ("Extra \or" in the column preamble), so the scoreboard is a plain booktabs
+% tabular with fixed p{} column widths.
+\usepackage{booktabs}
+\usepackage{pifont}
+\definecolor{good}{HTML}{0A8A0A}
+\definecolor{amber}{HTML}{C98500}
+\definecolor{sec}{HTML}{52514E}
+% verdict glyph macros (colour + word; never colour alone)
+\newcommand{\vok}{{\color{good}\ding{51}}\ \textbf{\color{good}explained}}
+\newcommand{\vpred}{{\color{amber}$\blacktriangle$}\ \textbf{\color{amber}prediction}}
+\newcommand{\srcref}[1]{\,{\footnotesize\itshape\color{sec}(#1)}}
+
 \graphicspath{{figures/}}
 
 % ---------------------------------------------------------------------------
@@ -157,7 +171,7 @@ Figure~\ref{fig:money} collects the three signatures on one axis, and it is the 
 rest of the paper points back at: the {Landau} coefficient $\alpha(c)$ crossing zero, the
 carrier density $N(0)$ switching on, and---built on top of them---the superconducting dome
 we come to next. Two warnings belong here, not later. First, beyond about $7$~\AA{} the
-``double well'' is no longer really a double well: the energy is still falling at the largest
+``double well'' is no longer truly a double well: the energy is still falling at the largest
 displacement we sampled, which means the sodium is sliding toward a bound site on one {CoO$_2$}
 layer and the calculation has not reached the minimum. Those depths are lower bounds, and we
 mark them as such. Second, the well depths themselves carry a large systematic, discussed in
@@ -285,9 +299,10 @@ layers $9.9$~\AA{} apart~\cite{Jorgensen2003}. That is far outside the dome we c
 when we compute the sodium well at $9.9$~\AA{} without water, we do not find a soft symmetric
 rattler at all: the energy falls all the way to the largest displacement we sampled, meaning
 the sodium is not centred but bound hard against one {CoO$_2$} sheet. The static picture puts
-the one superconducting compound in the dead polaronic regime. A lesser paper would leave
-this in a supplement. It is the most important number here, and it has, we believe, a single
-cause: the calculation holds the water still, and the water does not hold still.
+the one superconducting compound in the dead polaronic regime. It would be convenient to
+relegate this to a supplement; it is instead the most important number in the paper, and it
+has, we believe, a single cause: the calculation holds the water still, and the water does not
+hold still.
 
 Consider what is actually in that gallery. At $9.9$~\AA{} the water bilayer fills nearly
 four-fifths of the space between the sheets, and it is a hydrogen-bonded network, not a rigid
@@ -319,7 +334,7 @@ problem, and we say plainly that the mechanism stands or falls on it.
 \label{sec:consequences}
 % ===========================================================================
 
-A mechanism is worth only what it forbids and predicts. Figure~\ref{fig:score} lays the
+A mechanism is worth only what it forbids and predicts. Table~\ref{tab:score} lays the
 picture against the experimental record fact by fact; here we take the consequences one at a
 time.
 
@@ -401,17 +416,41 @@ they do here. Each is one experiment, and each is stated so it can fail.
   \label{fig:spin}
 \end{figure}
 
-% ---- FIG 3: scoreboard (wide) ----
-\begin{figure*}[t]
-  \centering
-  \figorbox{fig3_scoreboard}{fig3}{0.86\textwidth}
+% ---- TABLE I: scoreboard (wide) ----
+\begin{table*}[t]
   \caption{The mechanism against the record. Six established facts about {Na$_x$CoO$_2\cdot y$H$_2$O}
   and what the soft-mode, charge-bifurcation picture makes of each: five are explained by the
   static calculation, and one---the superconductivity of the bilayer hydrate at $9.9$~\AA---is
   a prediction contingent on water re-softening the sodium well (Sec.~\ref{sec:difficulty}). The
   one-line reason for each verdict is given.}
-  \label{fig:score}
-\end{figure*}
+  \label{tab:score}
+  \renewcommand{\arraystretch}{1.35}%
+  \begin{tabular}{@{}p{5.2cm}p{2.9cm}p{8.8cm}@{}}
+    \toprule
+    \textbf{Experimental fact} & \textbf{Our verdict} & \textbf{Why it follows}\\
+    \midrule
+    Anhydrous ($5.5$\,\AA) is not SC\srcref{Foo 2003} & \vok &
+      $\alpha>0$: a single stiff well ($\hbar\omega\!\approx\!30$\,meV) with
+      $N(0)\!\approx\!0$---no interlayer gas, and nothing to pair.\\
+    Monolayer hydrate ($6.9$\,\AA) is not SC\srcref{Foo 2003} & \vok &
+      Past the window: $\lambda\!\approx\!20\!\gg\!2$, so the sodium self-traps
+      into a polaron and pairing is killed.\\
+    Bilayer hydrate ($9.9$\,\AA) is SC, $T_c\!=\!4.5$\,K\srcref{Takada 2003}
+      & \vpred &
+      The bare geometry is polaronic here; superconductivity needs water to
+      soften the sodium well back into the window---untested.\\
+    No superconducting Li analogue & \vok &
+      $c^{\ast}_{\mathrm{Li}}\!\le\!5.5$\,\AA\ and the lighter mass make a
+      stiffer mode; Li never enters the soft-mode window.\\
+    Magnetic phase borders the dome\srcref{Sakurai 2015} & \vok &
+      The local moment turns on exactly at the $\alpha<0$ well transition
+      (Fig.~\ref{fig:spin}), one step in from the dome.\\
+    Superconducting $T_c$ is only a few K\srcref{Takada 2003} & \vok &
+      Allen--Dynes with the DFT $\omega_{\mathrm{eff}}$ and $\lambda$ gives a
+      peak $T_c\!\approx\!14$\,K (band $11$--$23$)---the right scale.\\
+    \bottomrule
+  \end{tabular}
+\end{table*}
 
 % ===========================================================================
 \section{Inadequacies of the calculation}

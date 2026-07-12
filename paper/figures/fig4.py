@@ -35,12 +35,12 @@ s3 = mag[(mag.alkali == "Na") & (mag.cell == "s3")]["abs_mag_muB"]
 ax.axhspan(s3.min(), s3.max(), color=S.C_YELL, alpha=0.16, lw=0, zorder=0)
 ax.text(9.85, s3.max(), r"Na $\sqrt{3}$: LSDA over-polarised," "\n"
         r"$|m|\!\approx\!$const (excluded)", ha="right", va="top",
-        fontsize=6.0, color="#9a7a00")
+        fontsize=7.0, color="#9a7a00")
 
 # --- well-transition band (consistent with Fig. 2) ---
 ax.axvspan(6.35, 6.45, color=S.C_SEC, alpha=0.12, lw=0, zorder=0)
 ax.text(6.31, 1.55, "well transition", ha="right", va="center", rotation=90,
-        fontsize=6.6, color=S.C_SEC)
+        fontsize=7.2, color=S.C_SEC)
 
 for el in ("Na", "Li"):
     st = S.SERIES[(el, "1x1")]
@@ -49,19 +49,20 @@ for el in ("Na", "Li"):
     ax.plot(cs, mean, st["marker"] + "-", ms=5.5, lw=1.4, color=st["color"],
             mfc=st["color"], mew=0, zorder=4, label=st["label"])
 
-ax.annotate("moment switches on\n" r"at $\alpha<0$", xy=(6.98, 0.30),
-            xytext=(7.7, 0.10), fontsize=6.6, color=S.C_SEC, ha="center",
+ax.annotate("moment switches on\n" r"at $\alpha<0$", xy=(6.99, 0.34),
+            xytext=(7.95, 0.06), fontsize=7.2, color=S.C_SEC, ha="center",
             arrowprops=dict(arrowstyle="->", color=S.C_SEC, lw=0.7))
-ax.text(9.85, 1.72, r"gallery moment"
+ax.text(9.85, 1.66, r"gallery moment"
         "\n" r"antiparallel to Co"
-        "\n" r"($m_{\mathrm{alkali}}\!<\!0$)", fontsize=6.4, color=S.C_MUT,
+        "\n" r"($m_{\mathrm{alkali}}\!<\!0$)", fontsize=7.2, color=S.C_MUT,
         va="center", ha="right", style="italic", linespacing=1.4)
 
 ax.set_xlim(5.3, 10.0)
 ax.set_ylim(-0.05, 2.82)
 ax.set_xlabel(r"CoO$_2$$-$CoO$_2$ spacing  $c$  (Å)")
 ax.set_ylabel(r"cell moment  $\langle|m|\rangle$  ($\mu_B$)")
-ax.legend(loc="lower left", bbox_to_anchor=(0.035, 0.66), handletextpad=0.4)
+ax.legend(loc="lower left", bbox_to_anchor=(0.035, 0.62), handletextpad=0.4,
+          fontsize=7.6)
 S.thin_spines(ax)
 
 fig.subplots_adjust(left=0.145, right=0.97, top=0.97, bottom=0.145)

@@ -99,12 +99,16 @@ message legible; $N(0)$ is the direct 2DEG measure and $n_{\rm 2D}$ merely corro
 
 ## Figure 3 — Theory vs experiment scoreboard  (`fig3_scoreboard.tex` — native LaTeX table)
 
-**Delivered as a real LaTeX table**, not an image: `fig3_scoreboard.tex` (booktabs +
-tabularx). Copy the block between the two `TABLE BODY` markers into a `table`/`table*`
-float in the manuscript; it inherits the manuscript fonts and needs only
-`xcolor[table]`, `booktabs`, `tabularx`, `array`, `amssymb`, `pifont`. A standalone
-PDF/PNG (`fig3_scoreboard.pdf/.png`) is provided for preview. (`fig3.py` renders an
-equivalent raster version if a bitmap is ever needed, but the table above is canonical.)
+**Delivered as a real LaTeX table**, not an image. The standalone `fig3_scoreboard.tex`
+(booktabs + tabularx, `standalone` class) is kept for preview and renders
+`fig3_scoreboard.pdf/.png`. **In the manuscript it is now Table~I** (`\label{tab:score}`),
+built directly in `main.tex` as a `table*` float with a plain **booktabs** `tabular` and
+fixed `p{}` column widths — *not* tabularx. This is deliberate: `revtex4-2` in the current
+TeX build conflicts with the `array`/`tabularx` packages ("Extra \or" in the column
+preamble), so those are not loaded in the manuscript; only `booktabs` + `pifont` are.
+Rules are `\toprule`/`\midrule`/`\bottomrule` (no vertical rules); verdict glyphs carry a
+colour *and* a word (green check "explained" / amber triangle "prediction"). (`fig3.py`
+renders an equivalent raster version if a bitmap is ever needed, but the table is canonical.)
 
 **Provenance:** verdicts summarise the mechanism results; $\lambda\approx20$ at 6.9 Å is
 the canonical `theory/MODEL.md` value; anchors cite Foo *et al.* (2003) and
