@@ -56,5 +56,6 @@ for d in jobs/*/; do
     && rm -f valence.pp total.pp ) \
     && { echo "$name: ACF.dat written"; n=$((n+1)); } \
     || echo "$name: FAILED (see $d/pp_*.out, $d/bader.out)"
+rm -f "$d"/*.cube "$d"/out/*.wfc* 2>/dev/null
 done
 echo "bader analysis complete for $n new job(s)"

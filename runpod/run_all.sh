@@ -108,6 +108,6 @@ for d in jobs/*/; do
   if job_done "$d"; then n_ok=$((n_ok+1)); else n_bad=$((n_bad+1)); echo "  incomplete: $d"; fi
 done
 echo "  $n_ok done, $n_bad incomplete"
-bash bader_setup.sh > bader.log 2>&1 && echo "BADER OK"
 bash verify_convergence.sh > setd.log 2>&1
+bash bader_setup.sh > bader.log 2>&1 && echo "BADER OK"
 echo "ALL COMPLETE (scf+nscf+dos+bader+setd)"
