@@ -7,6 +7,32 @@
 \usepackage[T1]{fontenc}
 \usepackage{booktabs}
 \usepackage{placeins}
+\usepackage{xcolor}
+
+% ---------------------------------------------------------------------------
+% Link colors, from the house figure palette (figure_scripts/_style.py):
+% dark ink variants of the muted steel-blue / slate / bronze family, chosen
+% dark enough to read as text on white (pastel fills are too light for glyphs).
+%   housecite = RAMP_BLUE[2]  #1c5cab  (dark step of the mechanism steel blue)
+%   houselink = RAMP_BLUE[3]  #0d366b  (darkest slate blue of the same ramp)
+%   houseurl  = EDGE_SSTAR    #8a6100  (muted amber/bronze edge stroke)
+% ---------------------------------------------------------------------------
+\definecolor{housecite}{HTML}{1C5CAB}
+\definecolor{houselink}{HTML}{0D366B}
+\definecolor{houseurl}{HTML}{8A6100}
+
+% hyperref must be the last package loaded (RevTeX 4-2 has native support).
+\usepackage[colorlinks=true,
+            linkcolor=houselink,
+            citecolor=housecite,
+            urlcolor=houseurl,
+            breaklinks=true]{hyperref}
+
+% Prefix every PDF destination name (and every link that references one) so
+% the supplement's destinations cannot collide with main.tex's identically
+% named ones (cite.*, equation.*, page.*, ...) when the two PDFs are merged
+% into main_with_sm.pdf.
+\renewcommand*{\HyperDestNameFilter}[1]{supplement.#1}
 
 \graphicspath{{figures/}}
 
@@ -24,7 +50,7 @@
 
 \begin{document}
 
-\title{Supplemental Material for: Interlayer electron gas and sodium bistability as the origin of superconductivity in Na$_x$CoO$_2\cdot y$H$_2$O}
+\title{Supplemental Material for: Interlayer origin of superconductivity in Na$_x$CoO$_2\cdot y$H$_2$O}
 
 \author{Santosh Kumar Radha}
 \affiliation{Agentfield AI}
@@ -323,8 +349,11 @@ order-of-magnitude estimate rather than a precise value.
 \section{The Fermi surface and the ARPES comparison}
 \label{sec:fermi}
 
-The band structure of Sec.~\ref{sec:electronic} shows the gallery band crossing $E_F$; this section
-compares the resulting Fermi surface with the photoemission measurement available for comparison.
+The band structure of Sec.~\ref{sec:electronic} shows the gallery band crossing $E_F$; this
+section compares the resulting Fermi surface with experiment. No photoemission exists for the
+hydrate itself, which dehydrates under the ultrahigh vacuum the measurement requires, so the
+comparison is necessarily with the anhydrous parent, and its logic deserves a precise statement:
+it validates a footprint, not a band identity.
 
 Figure~\ref{fig:fermi} is the Fermi surface at $c=9.9$~\AA: the spectral function
 $A(\mathbf{k},E_F)$ in the $k_z=0$ plane of the Na $1\times1$ hexagonal Brillouin zone, from the
@@ -335,7 +364,14 @@ Angle-resolved photoemission on the anhydrous parent Na$_{0.73}$CoO$_2$~\cite{Ge
 same topology: a single $a_{1g}$ barrel around $\Gamma$ with measured $k_F\approx0.65$--0.70
 \AA$^{-1}$, and no $e_g'$ pockets, the $e_g'$ band sitting $\approx85$~meV below $E_F$. Our barrel is
 sodium- rather than cobalt-derived and the composition differs, so the comparison concerns topology
-and size rather than band identity; the two barrels are of comparable radius. The measured $a_{1g}$
+and size rather than band identity; the two barrels are of comparable radius. In the present
+picture, then, hydration exchanges the orbital character of the barrel, cobalt for sodium, while
+nearly preserving its size, and a topology-level measurement cannot distinguish the two. The
+comparison establishes two facts: the $e_g'$ pockets required by several in-sheet pairing
+proposals are absent already in the parent, and the discriminating test of the gallery band is a
+character-resolved measurement, the light-polarization or photon-energy dependence of the barrel's
+spectral weight on freshly hydrated crystals, which should find sodium rather than cobalt weight.
+The measured $a_{1g}$
 velocities, $v_F\approx0.3$ and 0.6~eV\,\AA{} along $\Gamma$--K and $\Gamma$--M respectively, lie
 roughly a factor of two below the band-theory value, a renormalization not captured by the
 self-energy-free Kohn--Sham map (see also Sec.~\ref{sec:correlations}).
@@ -762,9 +798,11 @@ of reasoning by which the mechanism accounts for it.
     H/D and $^{16}$O/$^{18}$O nulls & passed & \cite{Jin2003,Yokoi2008} &
       The pairing boson is the sodium mode; the water mass enters only through the anharmonicity
       of the confinement.\\
-    Single $\Gamma$ barrel, no $e_g'$ pockets & matched & \cite{Geck2007} &
-      The gallery band yields one electron barrel; $k_F\approx0.7$\,\AA$^{-1}$ implied by the
-      returned Bader charge matches (Secs.~\ref{sec:fermi} and \ref{sec:electronic}).\\
+    $\Gamma$-barrel footprint, no $e_g'$ pockets & matched & \cite{Geck2007} &
+      Measured on the anhydrous parent (the hydrate dehydrates in vacuum). The gallery barrel
+      reproduces the footprint ($k_F\approx0.7$\,\AA$^{-1}$) with sodium rather than cobalt
+      character; character-resolved photoemission on the hydrate is the discriminating test
+      (Secs.~\ref{sec:fermi} and \ref{sec:electronic}).\\
     \bottomrule
   \end{tabular}
 \end{table*}

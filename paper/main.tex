@@ -6,6 +6,26 @@
 \usepackage{bm}
 \usepackage[T1]{fontenc}
 \usepackage{booktabs}
+\usepackage{xcolor}
+
+% ---------------------------------------------------------------------------
+% Link colors, from the house figure palette (figure_scripts/_style.py):
+% dark ink variants of the muted steel-blue / slate / bronze family, chosen
+% dark enough to read as text on white (pastel fills are too light for glyphs).
+%   housecite = RAMP_BLUE[2]  #1c5cab  (dark step of the mechanism steel blue)
+%   houselink = RAMP_BLUE[3]  #0d366b  (darkest slate blue of the same ramp)
+%   houseurl  = EDGE_SSTAR    #8a6100  (muted amber/bronze edge stroke)
+% ---------------------------------------------------------------------------
+\definecolor{housecite}{HTML}{1C5CAB}
+\definecolor{houselink}{HTML}{0D366B}
+\definecolor{houseurl}{HTML}{8A6100}
+
+% hyperref must be the last package loaded (RevTeX 4-2 has native support).
+\usepackage[colorlinks=true,
+            linkcolor=houselink,
+            citecolor=housecite,
+            urlcolor=houseurl,
+            breaklinks=true]{hyperref}
 
 \graphicspath{{figures/}}
 
@@ -23,8 +43,7 @@
 
 \begin{document}
 
-\title{Interlayer electron gas and sodium bistability as the origin of
-superconductivity in Na$_x$CoO$_2\cdot y$H$_2$O}
+\title{Interlayer origin of superconductivity in Na$_x$CoO$_2\cdot y$H$_2$O}
 
 \author{Santosh Kumar Radha}
 \affiliation{Agentfield AI}
@@ -35,30 +54,31 @@ superconductivity in Na$_x$CoO$_2\cdot y$H$_2$O}
 \date{\today}
 
 \begin{abstract}
-Anhydrous Na$_x$CoO$_2$ is a paramagnetic metal at all measured temperatures, yet intercalating a
-bilayer of water between its CoO$_2$ sheets produces a superconductor with $T_c\approx4.5$~K, and
-two decades of theoretical work confined to the CoO$_2$ sheet have not yielded an accepted
-mechanism. Using density-functional calculations motivated by our earlier prediction of a
+At the compositions from which its hydrate is prepared, anhydrous Na$_x$CoO$_2$ is a paramagnetic
+metal at all measured temperatures, yet intercalating a bilayer of water between its CoO$_2$
+sheets produces a superconductor with $T_c\approx4.5$~K, and two decades of theoretical work,
+largely confined to the CoO$_2$ sheet, have not yielded an accepted mechanism. Using density-functional calculations motivated by our earlier prediction of a
 topological two-dimensional electron gas at cobaltate surfaces, we show that hydration reproduces
 that surface electronic structure in the bulk. Expanding the interlayer gallery beyond a critical
 spacing $c^\ast\approx6.4$~\AA{} has two simultaneous consequences: a two-dimensional electron gas
 condenses on the sodium plane, and the sodium site potential bifurcates from a single stiff well
-into a shallow double well. The gas supplies the carriers and the quantized anharmonic mode the
-pairing boson; an Allen--Dynes treatment of the parity-allowed quadratic coupling yields a
+into a shallow double well. The gas supplies the carriers, the quantized anharmonic mode supplies the
+pairing boson, and an Allen--Dynes treatment of the parity-allowed quadratic coupling yields a
 superconducting dome (peak $T_c\approx14$~K, range 11--23~K) bounded by a carrier-depleted wall
 below $c^\ast$ and a polaronic wall above it, correctly excluding both the anhydrous compound and
 the monolayer hydrate. The superconducting bilayer hydrate, at $c=9.9$~\AA, lies beyond this
 static window: there the water cage rebinds the sodium, adiabatic relaxation deepens rather than
 flattens the well, and the required softening must therefore be statistical and dynamical rather
-than adiabatic---a conclusion consistent with the null H/D and $^{16}$O/$^{18}$O isotope shifts.
+than adiabatic, a conclusion consistent with the null H/D and $^{16}$O/$^{18}$O isotope shifts.
 The pairing thus resides in the hydrated gallery rather than in the CoO$_2$ sheets.
 \end{abstract}
 
 \maketitle
 
 The discovery of superconductivity in the bilayer hydrate Na$_x$CoO$_2\cdot y$H$_2$O
-($T_c\approx4.5$~K)~\cite{Takada2003} posed a question that remains open after two decades.
-Anhydrous Na$_x$CoO$_2$ is a paramagnetic metal down to the lowest measured temperatures, and
+($T_c\approx4.5$~K)~\cite{Takada2003} posed a question that remains open after two decades. The
+anhydrous compound at the same composition ($x\approx0.3$) is a paramagnetic metal down to the
+lowest measured temperatures, and
 superconductivity appears only when a bilayer of water is intercalated between the CoO$_2$ sheets;
 no accepted mechanism explains why the water is essential~\cite{MazinJohannes2005}.
 
@@ -66,7 +86,7 @@ First-principles studies addressed this question early and reached a consistentl
 verdict: with the water held static, hydration leaves the CoO$_2$-derived electronic structure
 essentially unchanged beyond the expected effects of lattice
 expansion~\cite{JohannesSingh2004,MarianettiKotliarCeder2004,Arita2005}. These calculations share
-two assumptions---that the relevant physics resides within the CoO$_2$ sheet, and that the water
+two assumptions: that the relevant physics resides within the CoO$_2$ sheet, and that the water
 is inert.
 
 Our starting point lies outside the sheet. In earlier work on the layered cobaltates we showed
@@ -78,7 +98,8 @@ show that hydration opens the same gallery in the bulk. Beyond a critical interl
 charge held by the oxygen planes returns to the gallery as the predicted two-dimensional gas, and
 at the same spacing the sodium site potential, previously a single stiff well, bifurcates into a
 shallow double well. The former supplies carriers, the latter a soft anharmonic mode that mediates
-their pairing, and a superconducting dome occupies the window between the two instabilities. In
+their pairing, and a superconducting dome occupies the window in which the gas is present and the
+sodium is soft but not yet self-trapped. In
 this picture the superconductivity of the hydrate resides not in the CoO$_2$ sheets but in the
 gallery between them, which is why it appears only upon hydration.
 
@@ -91,10 +112,11 @@ gallery between them, which is why it appears only upon hydration.
   there is no pairing; within the calculated window the well bifurcates at the same spacing at
   which the 2DEG condenses, and the even overtone of the quantized well supplies the pairing
   boson; at 9.9~\AA{},
-  outside the static window, the water itself resoftens the sodium potential (Fig.~4). Bottom
-  row: the bilayer hydrate in detail---the four-water cage, the sodium's $c$-axis displacement
+  outside the static window, the water itself resoftens the sodium potential
+  (Fig.~\ref{fig:water}). Bottom
+  row: the bilayer hydrate in detail, showing the four-water cage, the sodium's $c$-axis displacement
   $\delta$, and the interlayer 2DEG, whose density is centred on the sodium plane and envelops
-  the ion (the band is 91\% Na in character; see Fig.~3).}
+  the ion (the band is 91\% Na in character; see Fig.~\ref{fig:gallery}).}
   \label{fig:schematic}
 \end{figure}
 
@@ -110,7 +132,8 @@ total energy of the off-centre sodium at each spacing $c$ (methods and convergen
 SM~S1~\cite{Note1}; well data and fits, SM~S2). The sign of $\alpha$
 identifies the regime: positive at $c=5.5$~\AA{} ($\alpha=+2.5$~eV/\AA$^2$, a single stiff well),
 negative by $c=6.9$~\AA{} ($\alpha=-0.5$~eV/\AA$^2$, a double well), with the crossing at
-$c^\ast_{\rm Na}\approx6.40$~\AA. The Fermi-level density of states $N(0)$ tracks the same
+$c^\ast_{\rm Na}\approx6.40$~\AA{} (full-coverage cell; the physical $x=1/3$ cell shifts the
+crossing by only $\approx0.2$~\AA, SM~S2). The Fermi-level density of states $N(0)$ tracks the same
 crossing, increasing by a factor of 30 between 5.5 and 6.9~\AA{} and saturating beyond it, and the
 Bader charge returned to the sodium grows monotonically from 0 to $0.58\,e$ over the same range.
 That charge corresponds to an areal density $n_{\rm 2D}\approx8\times10^{14}$~cm$^{-2}$, whose
@@ -121,12 +144,12 @@ holds the ion centred; opening the gallery returns the electron to the sodium, w
 into the interlayer gas, and the ion, no longer bound by the bond, becomes bistable. That the
 charge, not the spacing itself, is the agent is shown by two controls (SM~S12): adding
 $0.1$--$0.3\,e$ per formula unit to the closed (5.5~\AA) gallery through a compensating
-background (lithium cell) fills the same interlayer band and softens the well at fixed lattice
+background (lithium cell) fills the analogous interlayer band and softens the well at fixed lattice
 constants, and the well stiffness responds directly to the oxygen-height channel that carries the
 transfer, $d\alpha/dz_{\rm O}\approx-0.52$~eV/\AA$^2$ per~\AA.
 
-Figure~2 collects the three signatures---$\alpha(c)$, $N(0)$, and the superconducting dome
-constructed from them---on a common axis with a broken scale spanning all four measured spacings.
+Figure~\ref{fig:money} collects $\alpha(c)$, $N(0)$, and the superconducting dome constructed from them on a
+common axis with a broken scale spanning all four measured spacings.
 Inserting $\lambda(c)$, the boson energy, and $N(0)$ into the Allen--Dynes formula (coupling model
 below, $\mu^\ast=0.10$; carrier gate and polaron cut, SM~S1) yields a dome pinned just above
 $c^\ast$,
@@ -134,10 +157,11 @@ with peak $T_c\approx14$~K, that correctly excludes both non-superconducting anc
 anhydrous compound falls on the carrier-depleted side and the monolayer hydrate beyond the
 polaronic wall. Two systematics bound these numbers: holding the oxygen planes at fixed height
 carries a well-depth uncertainty of about $\pm50\%$, which changes neither the sign of $\alpha$
-nor any verdict in Table~I, and the peak $T_c$ of 14~K (range 11--23~K, against the observed
+nor any verdict in Table~\ref{tab:score}, and the peak $T_c$ of 14~K (range 11--23~K, against the observed
 4.5~K) fixes an order of magnitude rather than a precise value. Photoemission on the parent finds
-bands narrower than ours by roughly a factor of two, raising $N(0)$ and lowering the coupling
-estimate in proportion, so the dome is, if anything, conservative.
+bands narrower than the Kohn--Sham ones by roughly a factor of two; that correction raises $N(0)$
+and with it $\lambda$, so the existence of the dome does not rest on an inflated coupling. The
+direction of this and every other correlation correction is catalogued in SM~S10.
 
 % ---- FIG 2: money plot (single column, broken axis, three panels) ----
 \begin{figure}[t]
@@ -151,24 +175,30 @@ estimate in proportion, so the dome is, if anything, conservative.
   (left) and the $\lambda=2$ polaronic wall (vertical line), beyond which pairing is suppressed.
   Dashed verticals mark the anchors at 5.5, 6.9, and 9.9~\AA: the anhydrous parent and the
   monolayer hydrate fall on the walls and are correctly non-superconducting; the bilayer hydrate
-  (star, $T_c=4.5$~K) lies outside the static window, a discrepancy resolved in Fig.~4.}
+  (star, $T_c=4.5$~K) lies outside the static window, a discrepancy resolved in
+  Fig.~\ref{fig:water}.}
   \label{fig:money}
 \end{figure}
 
-\textit{The gallery band.} The band structure exhibits the same crossing directly. Figure~3 tracks
+\textit{The gallery band.} The band structure exhibits the same crossing directly.
+Figure~\ref{fig:gallery} tracks
 the Kohn--Sham spectral weight along $\Gamma$--M--K--$\Gamma$ at three spacings, with the sodium
 character drawn as a blue fatband. At $c=5.5$~\AA{} the sodium band lies approximately 2~eV above
 $E_F$ and carries no weight there; by $c=9.9$~\AA{} a band of 91\% sodium character has descended
-through $E_F$---the interlayer gas predicted at the surface~\cite{RadhaLambrecht2021}, now
+through $E_F$; it is the interlayer gas predicted at the surface~\cite{RadhaLambrecht2021}, now
 realized in the bulk gallery. The resulting Fermi surface (SM~S4) is a single electron barrel
-around $\Gamma$ with no $e_g'$ pockets, matching in topology and approximate $k_F$ what
-angle-resolved photoemission finds on the anhydrous parent~\cite{Geck2007} (the compositions
-differ, so we compare topology and size rather than band identity). A further comparison is
-suggestive: the parent shows a low-energy kink onsetting near 26~meV~\cite{Geck2007}, close to
-the $\hbar\omega_{\rm eff}\approx23$~meV confined sodium mode predicted for the open gallery. The
-parent's gallery is closed, so we do not identify the two; the coincidence instead motivates
-photoemission on freshly hydrated crystals in search of a 20--30~meV self-energy feature on the
-gallery band itself.
+around $\Gamma$ with no $e_g'$ pockets. The hydrate itself has never been measured, because it
+dehydrates under ultrahigh vacuum, so the only reference is the anhydrous parent, where
+photoemission finds a Co-derived $a_{1g}$ barrel of nearly the same $k_F$ and likewise no $e_g'$
+pockets~\cite{Geck2007}. The comparison carries two messages. The absence of the $e_g'$ pockets,
+on which several in-sheet pairing proposals were built, is an experimental fact already at the
+parent level. And in the present picture hydration exchanges the orbital identity of the
+barrel, cobalt for 91\% sodium, while nearly preserving its footprint, so the two Fermi
+surfaces are indistinguishable at the level of topology and size, one reason the gallery band
+could escape notice. The discriminating test is therefore orbital character: photoemission on
+freshly hydrated crystals should find the barrel rebuilt from sodium weight, together with a
+20--30~meV self-energy feature from the confined sodium mode (the parent shows a kink onsetting
+near 26~meV~\cite{Geck2007}; its gallery is closed, so we do not identify the two).
 
 % ---- FIG 3: the gallery band (ARPES-comparable, wide) ----
 \begin{figure*}[t]
@@ -187,7 +217,7 @@ gallery band itself.
 \textit{The pairing window.} The remaining ingredient is the coupling of this band to the sodium
 mode. The two bands sharing the gallery electron, alkali
 $sp_z$ and CoO$_2$, form the SSH-type pair of our earlier surface model~\cite{RadhaLambrecht2021},
-split by the same Bader charge that fills the gallery band in Fig.~2(b). The sodium displacement
+split by the same Bader charge that fills the gallery band in Fig.~\ref{fig:money}(b). The sodium displacement
 $\delta$ is odd under reflection through the gallery midplane, so the linear electron--phonon
 coupling vanishes identically at the symmetric point (verified at several $k_z$). The leading
 coupling is quadratic: the displaced ion admixes the band of opposite parity, polarizing its own
@@ -208,7 +238,8 @@ $N(0)\to0$ and pairing fails for lack of carriers. Well above it, or whenever th
 in a single well, the ion self-traps while $\hbar\Omega$ remains near 20~meV, so $\lambda$ exceeds
 2 and pairing is suppressed in the polaronic regime instead. Between the two walls the quantized
 well is soft, its effective zero-point frequency collapsing from 30~meV in the stiff single well
-to a fraction of a meV in the double well (SM~S6), and the Allen--Dynes dome of Fig.~2(c)
+to a fraction of a meV in the double well (SM~S6), and the Allen--Dynes dome of
+Fig.~\ref{fig:money}(c)
 occupies the resulting window, 6.35--6.45~\AA, with neither the monolayer nor the bilayer anchor
 inside it. The position of the bilayer hydrate is the central difficulty, which we address next.
 
@@ -223,7 +254,8 @@ the lattice dynamics, and it indicates that the water must be treated dynamicall
 
 We constructed the bilayer solvation cage that neutron diffraction finds around the
 sodium~\cite{Jorgensen2003,Lynn2003}, four rigid H$_2$O per cell, and recomputed $E(\delta)$
-against the same cell with the water removed (construction, SM~S7). Figure~4(a) shows the
+against the same cell with the water removed (construction, SM~S7).
+Figure~\ref{fig:water}(a) shows the
 result. Without water the potential remains unstable; with the rigid cage the sodium is rebound
 into a double well with a confined mode at $\hbar\omega_{\rm eff}\approx23$~meV, finite and
 positive where the bare mode was imaginary. Allowing the same four waters to relax at each sodium
@@ -232,7 +264,7 @@ position does not flatten this well but deepens it, from 199~meV (frozen cage) t
 trend. Adiabatically relaxed water therefore binds the sodium more strongly, not less. The
 softening must instead be sought in the width of the cage-configurational ensemble: at fixed
 $\delta$ the hydrogen-bond network presents a spread of local minima at least 0.4~eV wide
-[Fig.~4(a), amber band], and the relevant time scales are well separated---the sodium mode has a
+[Fig.~\ref{fig:water}(a), amber band], and the relevant time scales are well separated: the sodium mode has a
 period near 200~fs, while the network reorganizes on the picosecond scale measured by quasielastic
 neutron scattering~\cite{Jalarvo2008}. Fast on the time scale of the cage, the sodium samples the
 softer instantaneous members of this ensemble rather than following the adiabatic surface to its
@@ -272,15 +304,15 @@ static site splitting.
 \textit{Consequences.} Lithium cobaltate, the same structure with a lighter gallery ion, has never
 been observed to superconduct, and the present picture requires this. Its well crosses into the
 double-well regime only at the smallest spacing we sampled, where it is only 4~meV deep while the
-lithium zero-point energy is 8.8~meV, so the ion remains delocalized across both minima---a
+lithium zero-point energy is 8.8~meV, so the ion remains delocalized across both minima, a
 quantum paraelectric with no soft anharmonic mode available for pairing. A heavier gallery ion
 should shift the threshold outward: for potassium the crossing moves to
 $c^\ast_{\rm K}\approx6.75$~\AA, ordering Li~$<$~Na~$<$~K with ionic size, a prediction for
 hydrated K$_x$CoO$_2$. Immediately above the carrier onset the gallery band is narrow enough to be
 Stoner-polarized, producing a thin magnetic strip adjacent to the dome (SM~S8); this accounts
 for the observed proximity of magnetism to the superconducting phase and suggests that the
-conflicting NMR results---triplet pairing inferred from powder samples, singlet from single
-crystals---reflect where each sample lies relative to the Stoner boundary rather than a genuine
+conflicting NMR results, triplet pairing inferred from powder samples and singlet from single
+crystals, reflect where each sample lies relative to the Stoner boundary rather than a genuine
 contradiction.
 
 The same charge return leaves a valence fingerprint: a site-specific probe (Co $L$-edge, NQR) and
@@ -289,8 +321,9 @@ the gallery is open, distinct from the larger valence offsets produced by an oxo
 reservoir~\cite{Milne2004}. Electrostatic gating of a LiCoO$_2$ film should fill the gallery to
 $n_{\rm 2D}\approx4\times10^{14}$~cm$^{-2}$ while the light ion remains centred, a test of the
 carriers in isolation from the pairing mode, the experimental counterpart of the gating control
-above (SM~S12). Na$_2$CoSe$_2$O~\cite{Cheng2024}, which superconducts at 6.3~K through its own
-Co--Se network with no occupied gallery band, provides the negative control the picture requires.
+above (SM~S12). Na$_2$CoSe$_2$O~\cite{Cheng2024} superconducts at 6.3~K through its Co--Se
+network; we find its gallery band unoccupied, so it demonstrates the distinction the picture
+requires: a cobaltate can superconduct without the gallery, but then not through it (SM~S12).
 The pairing state favored here is a time-reversal-symmetric singlet $s_\pm$ spanning the gallery
 gas and the $a_{1g}$ pocket, and the measurements that eliminated the principal in-sheet
 proposals leave it intact: the $e_g'$ pockets on which the triplet and $f$-wave states were
@@ -306,7 +339,8 @@ water-vibration glue~\cite{Jin2003,Yokoi2008}. The gallery mechanism is consiste
   calculation; ``passed'' is a pre-existing null result the mechanism requires; ``matched'' is a
   computed quantity against a measured one. The asterisk marks the one contingent entry: the
   static geometry at 9.9~\AA{} is polaronic, and the required softening is the dynamical water
-  effect of Fig.~4 (SM~S7). Line-by-line derivations and the comparison with competing proposals
+  effect of Fig.~\ref{fig:water} (SM~S7). Line-by-line derivations and the comparison with
+  competing proposals
   are given in SM~S9.}
   \label{tab:score}
   \renewcommand{\arraystretch}{1.12}%
@@ -322,15 +356,15 @@ water-vibration glue~\cite{Jin2003,Yokoi2008}. The gallery mechanism is consiste
     Magnetic phase borders the dome~\cite{Sakurai2015} & explained\\
     Singlet--triplet NMR conflict~\cite{Sakurai2015} & explained\\
     H/D and $^{16}$O/$^{18}$O nulls~\cite{Jin2003,Yokoi2008} & passed\\
-    Single $\Gamma$ barrel, no $e_g'$ pockets~\cite{Geck2007} & matched\\
+    $\Gamma$-barrel footprint, no $e_g'$ pockets~\cite{Geck2007} & matched\\
     \bottomrule
   \end{tabular}
 \end{table}
 
 \textit{Outlook.} Five measurements, listed roughly in order of increasing difficulty, would test
 the mechanism directly: inelastic neutron scattering or low-frequency Raman scattering for the
-soft, dynamical $\sim$20~meV sodium mode in the fresh hydrate; photoemission on hydrated crystals
-for the gallery band and its 20--30~meV self-energy feature; x-ray absorption or NQR for the
+soft, dynamical $\sim$20~meV sodium mode in the fresh hydrate; character-resolved photoemission on hydrated crystals for the sodium
+weight of the barrel and its 20--30~meV self-energy feature; x-ray absorption or NQR for the
 valence split; electrostatic gating of LiCoO$_2$ films for gallery carriers with the ion left
 centred; and hydrated K$_x$CoO$_2$ at the predicted 6.75~\AA{} threshold. On the theoretical side,
 the decisive calculation is a finite-temperature ab initio or path-integral molecular-dynamics
