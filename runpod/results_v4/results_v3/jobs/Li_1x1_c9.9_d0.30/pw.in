@@ -1,0 +1,40 @@
+&CONTROL
+  calculation = 'scf'
+  prefix = 'pw'
+  outdir = './out'
+  pseudo_dir = '../../pseudo'
+  verbosity = 'high'
+  tprnfor = .true.
+/
+&SYSTEM
+  ibrav = 4
+  celldm(1) = 5.32902767
+  celldm(3) = 3.51063830
+  nat = 4
+  ntyp = 3
+  nbnd = 24
+  ecutwfc = 60.0
+  ecutrho = 480.0
+  occupations = 'smearing'
+  smearing = 'mv'
+  degauss = 0.02
+  nspin = 2
+  starting_magnetization(1) = 0.3
+/
+&ELECTRONS
+  conv_thr = 1.0d-7
+  mixing_beta = 0.3
+  mixing_mode = 'local-TF'
+  electron_maxstep = 300
+/
+ATOMIC_SPECIES
+  Co  58.93300  Co.pbe-spn-kjpaw_psl.0.3.1.UPF
+  O  15.99900  O.pbe-n-kjpaw_psl.1.0.0.UPF
+  Li  6.94100  Li.pbe-s-kjpaw_psl.1.0.0.UPF
+ATOMIC_POSITIONS crystal
+  Co  0.0000000000  0.0000000000  0.0000000000
+  O  0.3333333333  0.6666666667  0.0969696970
+  O  0.6666666667  0.3333333333  0.9030303030
+  Li  0.0000000000  0.0000000000  0.5303030303
+K_POINTS automatic
+  8 8 3 0 0 0
