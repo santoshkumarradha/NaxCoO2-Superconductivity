@@ -1,0 +1,879 @@
+\documentclass[aps,10pt,preprint,superscriptaddress,floatfix]{revtex4-2}
+
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage[T1]{fontenc}
+\usepackage{booktabs}
+\usepackage{placeins}
+
+\graphicspath{{figures/}}
+
+\newcommand{\figorbox}[3]{%
+  \IfFileExists{figures/#1.pdf}{\includegraphics[width=#3]{#1}}%
+  {\IfFileExists{figures/#2.pdf}{\includegraphics[width=#3]{#2}}%
+  {\fbox{\parbox[c][0.32\linewidth][c]{0.94#3}{\centering\ttfamily\small
+   [figure \detokenize{#1} pending]}}}}%
+}
+
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\theequation}{S\arabic{equation}}
+
+\begin{document}
+
+\title{Supplemental Material for: Why sodium cobaltate superconducts only when it is wet}
+
+\author{Santosh Kumar Radha}
+% TODO confirm affiliation
+\affiliation{TODO}
+
+\author{Walter R. L. Lambrecht}
+% TODO confirm
+\affiliation{Department of Physics, Case Western Reserve University, Cleveland, Ohio 44106-7079, USA}
+
+\date{\today}
+
+\maketitle
+
+This document is the engine room of the Letter. It carries the data, the derivations, and the
+checks that the four-page format could only summarize, in the same order the Letter argues them:
+methods, the well transition, the coupling model, the electronic evidence for the gallery band,
+the water, the magnetism, the pairing state, the correlations we have not treated, the design rule
+and its one counterexample, and the predictions that reach beyond this one compound.
+
+\FloatBarrier
+\section{Methods}
+\label{sec:methods}
+
+Every number quoted in the Letter comes from one of the calculation sets described here, in enough
+detail that any of them can be checked or repeated without consulting the code. Table
+\ref{tab:inventory} gives the inventory; the rest of this section gives the settings.
+
+\emph{Code and functional.} All total energies are spin-polarized density-functional calculations
+in the PBE generalized-gradient approximation, using projector-augmented-wave (PAW)
+pseudopotentials from pslibrary, run in Quantum ESPRESSO 7.3.1 (GPU build). Plane-wave cutoffs are
+60~Ry (wavefunctions) and 480~Ry (density) throughout. Electronic self-consistency uses
+Marzari--Vanderbilt cold smearing of 0.02~Ry, local Thomas--Fermi charge mixing with mixing\_beta
+$=0.3$, and a convergence threshold conv\_thr~$=10^{-7}$~Ry for all production total-energy scans;
+the single exception is the Born--Oppenheimer molecular-dynamics stage (set~L,
+Sec.~\ref{sec:water}), where conv\_thr is loosened to $10^{-6}$~Ry purely for throughput and every
+other setting matches set~G. Every calculation is spin-polarized (nspin~$=2$); a direct
+nspin~$=1$ vs.\ nspin~$=2$ check is reported below, and the local-spin-density over-polarization
+that separately affects the $\sqrt3\times\sqrt3$ magnetic moments is discussed in
+Sec.~\ref{sec:correlations}.
+
+\emph{Cells.} The full-coverage $1\times1$ cell ($x=1$, one alkali per formula unit) is used for
+the main displacement scans, in-plane lattice constants $a=2.888$~\AA{} (Na), $2.82$~\AA{} (Li),
+and $2.90$~\AA{} (K; an ansatz upper estimate bracketing the experimental $2.84$--$2.87$~\AA{}
+range for K$_x$CoO$_2$), with cell areas 7.22, 6.89, and $7.28$~\AA$^2$ respectively. The physical
+$\sqrt3\times\sqrt3$ cell ($x=1/3$, $a=5.00$~\AA, area $21.67$~\AA$^2$) checks that the transition
+survives at the real sodium content. Four CoO$_2$--CoO$_2$ spacings are computed for each series,
+$c=5.5,\,6.9,\,8.4,\,9.9$~\AA, bracketing the anhydrous, monolayer-hydrate, and bilayer-hydrate
+structures actually reported. The alkali sits on the Co-top in-plane site (the lowest-energy
+registry found in the earlier surface work~\cite{RadhaLambrecht2021}) at $z=c/2+\delta$; the oxygen
+height above the Co plane is held fixed at $z_O=0.96$~\AA{} for every spacing and every $\delta$,
+the largest systematic in the calculation (below).
+
+\emph{$k$-meshes.} $8\times8\times3$ for the $1\times1$ displacement scans, $6\times6\times3$ for
+the $\sqrt3\times\sqrt3$ scans, $6\times6\times2$ (Gamma-centered) for the explicit-water cell
+(set~G/J/L, Sec.~\ref{sec:water}), and a dense $24\times24\times8$ mesh for the
+non-self-consistent eigenvalues that feed $N(0)$, the density of states, and the Fermi-surface maps
+of Sec.~\ref{sec:fermi}. The band-structure/fatband runs of Sec.~\ref{sec:electronic} follow a
+60-point $\Gamma$--M--K--$\Gamma$ path with {\sc projwfc.x} projections onto all Na $s/p$ and Co
+$d$ orbitals.
+
+\emph{Fitting and quantization.} $E(\delta)$ is fit to the even Landau polynomial
+$E_0+\alpha\delta^2+\beta\delta^4$ (Eq.~\eqref{eq:landau}); where the quartic fit is not bracketed
+by the sampled $\delta$ range (the $c\geq8.4$~\AA{} series, Sec.~\ref{sec:wells}), it is replaced
+by a constrained sextic, $E_0+\alpha\delta^2+\beta\delta^4+\gamma_6\delta^6$ with $\gamma_6>0$
+enforced and a hard-core cap $\delta_{\min}\leq c/2-2.0$~\AA{} (an ansatz for the alkali--oxygen
+contact distance; varying it 1.8--2.5~\AA{} changes only the frozen-regime depths, no
+conclusion). The quantized levels of Sec.~\ref{sec:softening} come from an exact one-dimensional
+Schr\"odinger solve of the fitted well on a parity-resolved, staggered half-line finite-difference
+grid ($N=2400$ points, box size following the well), which separates the even and odd sectors
+exactly and resolves the near-degenerate tunnelling doublet without the numerical noise a
+naive shooting method would add. The effective zero-point frequency is always reported as
+$\hbar\omega_{\rm eff}=\hbar^2/2M\langle\delta^2\rangle_0$, never as $E_1-E_0$: in the deep
+double-well regime $E_1-E_0$ is an exponentially small tunnelling splitting ($<10^{-12}$~meV for
+Na at $c\geq6.9$~\AA), a real feature of the isolated double well but not the scale that couples to
+electrons, whereas $E_2-E_0$, the even overtone quantified by $\langle\delta^2\rangle_0$, both sets
+$\hbar\omega_{\rm eff}$ and is the boson of Eq.~\eqref{eq:lambda}.
+
+\emph{Charge and coupling.} Bader charges are computed from the converged charge density (valence
+counts $Z_{\rm val}=9$ for Na, 3 for Li, reflecting the semicore PAW pseudopotentials used). The
+Allen--Dynes evaluation of Sec.~\ref{sec:model} uses $\mu^\ast=0.10$, is gated on $N(0)\geq0.1$
+states~eV$^{-1}$cell$^{-1}$spin$^{-1}$ (results are insensitive to this threshold between 0.04 and
+0.9), and is cut where $\lambda$ exceeds the polaron criterion $\lambda_{\rm loc}=2$ (surveyed range
+1--2 in the literature), beyond which Allen--Dynes theory is not describing a well-defined
+quasiparticle and raw numbers are not reported.
+
+\emph{Water and its relaxation (sets G, J, L).} The rigid-cage scans (set~G) hold all twelve water
+atoms fixed while the sodium scans $\delta$ (construction in Sec.~\ref{sec:water}). The adiabatic
+scans (set~J) relax the same twelve water atoms by BFGS at each pinned sodium position, with
+if\_pos freezing every Co, framework-oxygen, and sodium coordinate and leaving all water
+coordinates free, force convergence threshold forc\_conv\_thr~$=10^{-3}$~Ry/Bohr and a cap of 100
+ionic steps; the sixty-step-capped comparison run in Sec.~\ref{sec:water} uses the identical
+settings, stopped early on purpose. The dispersion-corrected repeat (Sec.~\ref{sec:water}) adds
+Grimme D3 (vdw\_corr~$=$~\texttt{'grimme-d3'}, supported natively in QE~7.3.1) on top of the set-J
+settings. The Born--Oppenheimer molecular-dynamics stage (set~L) is generated with only the twelve
+water atoms mobile (Verlet dynamics, stochastic-velocity-rescaling thermostat, $T=290$~K, time step
+$\approx0.48$~fs, 4000 steps $\approx1.9$~ps); it is the open calculation referenced throughout this
+work and has not yet been analyzed (Table~\ref{tab:inventory}, last row).
+
+\emph{The frozen-oxygen systematic.} The largest systematic in the whole calculation is holding the
+CoO$_2$ oxygen planes fixed at $z_O=0.96$~\AA. A direct check, moving the oxygen plane by
+$\pm0.06$~\AA{} (to $z_O=0.90$ and $1.02$~\AA{} at $c=6.9$~\AA, $\delta=0.5$~\AA), shifts the
+single-point energy by $+117$ and $-21$~meV respectively, comparable to the well depth itself; every
+well depth quoted in this work therefore carries a systematic uncertainty of roughly $\pm50\%$. This
+does not touch the sign of $\alpha$: the 5.5~\AA{} single well and the 6.9~\AA{} double well survive
+the full range, and in the frozen polaronic regime the coupling is an order of magnitude past the
+limit where a factor of two would matter. Two further checks bound the rest of the uncertainty
+budget. A $12\times12\times4$ vs.\ $8\times8\times3$ $k$-mesh check at $c=6.9$~\AA, $\delta=0.5$~\AA{}
+shifts the total energy by $-1.6$~meV, negligible on the $\sim100$~meV wells. An nspin~$=1$ vs.\
+nspin~$=2$ check at the same geometry reproduces the well drop to within $0.2\%$ ($-89.1$ vs.\
+$-88.9$~meV); at $c=9.9$~\AA, $\delta=0.75$~\AA{} the two spin treatments agree to $6.3\%$
+($-121.5$ vs.\ $-113.8$~meV), so magnetism does not affect the well physics at a level that matters
+for any conclusion in this work. Higher-cutoff (80~Ry) and lower-smearing (0.01~Ry) single points
+exist at the reference geometry and are consistent with the production settings; the corresponding
+relative (well-drop) checks are still running and are marked \% TODO verify where the manuscript
+would otherwise imply they are complete. Composition dependence is checked directly rather than
+assumed: interpolating $\alpha(c)$ for the physical $\sqrt3\times\sqrt3$ cell gives
+$c^\ast\approx6.57$~\AA{} against $6.40$~\AA{} for the full-coverage $1\times1$ cell, a shift of
+about $0.2$~\AA, so the transition is not an artifact of full coverage.
+
+% ---- TABLE S1: calculation inventory ----
+\begin{table*}[p]
+  \caption{Calculation inventory. Every displacement scan, relaxation, and dense-mesh run behind
+  the Letter and this Supplement, in the order it is used. ``Open'' marks the one calculation
+  generated but not yet analyzed.}
+  \label{tab:inventory}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.35}%
+  \begin{tabular}{@{}p{3.4cm}p{2.0cm}p{4.2cm}p{1.9cm}p{4.4cm}@{}}
+    \toprule
+    \textbf{Set / computes} & \textbf{Cell} & \textbf{Spacings / points} &
+    \textbf{$k$-mesh} & \textbf{Feeds}\\
+    \midrule
+    A: anhydrous $E(\delta)$, Na/Li & $1\times1$ & $c=5.5,6.9,8.4,9.9$\,\AA;
+      $\delta=0$--1.00\,\AA{} (6 pts) & $8\times8\times3$ &
+      Fig.~S1, Fig.~2(a), Table~I rows 1,2,4\\
+    B: anhydrous $E(\delta)$, Na & $\sqrt3\times\sqrt3$ & $c=5.5,6.9,8.4,9.9$\,\AA;
+      $\delta=0$--0.75\,\AA{} (4 pts) & $6\times6\times3$ &
+      Fig.~S1, the $\sqrt3$ check (Sec.~S1)\\
+    C: dense NSCF + dos.x, $N(0)$ & both cells & same $c$ grid as A/B &
+      $24\times24\times8$ & Fig.~2(b), Fig.~S3\\
+    D: bands + {\sc projwfc} & $1\times1$, $\sqrt3\times\sqrt3$ &
+      $c=5.5,6.9,9.9$\,\AA; $\Gamma$--M--K--$\Gamma$, 60 pts & --- &
+      Fig.~3 (Letter), Fig.~S4\\
+    E: K$_x$CoO$_2$ $E(\delta)$ & $1\times1$ & same $c$ grid as A &
+      $8\times8\times3$ & Fig.~S9, $c^\ast_{\rm K}$\\
+    F: gated LiCoO$_2$ (jellium) & $1\times1$ & $c=5.5$\,\AA; charge $0.1$--$0.3\,e$/f.u. &
+      $8\times8\times3$ & gating prediction, Sec.~S12\\
+    G: rigid-cage hydrate + vacuum ref. & $\sqrt3\times\sqrt3$ &
+      $c=9.9$\,\AA; $\delta=0$--0.75\,\AA{} (4 pts) & $6\times6\times2$ &
+      Fig.~4(a) (Letter)\\
+    K: oxygen-height ($z_O$) scan & $\sqrt3\times\sqrt3$, vac. &
+      $c=9.9$\,\AA; $z_O=0.90,1.02$\,\AA & $6\times6\times2$ &
+      Fig.~S10, $\Delta v$ slope\\
+    H: Na$_2$CoSe$_2$O check & primitive & SCF + dense NSCF &
+      $24\times24\times8$ & negative control, Sec.~S12\\
+    I2/J: adiabatic BFGS relax. & $\sqrt3\times\sqrt3$ &
+      $c=9.9$\,\AA; $\delta=0$--1.00\,\AA{} (6 pts), 100 steps & $6\times6\times2$ &
+      Fig.~4(a) (Letter)\\
+    I3: DFT-D3 spot-check & $\sqrt3\times\sqrt3$ &
+      $c=9.9$\,\AA; $\delta=0.00,0.15$ converged of 0.00--0.50 & $6\times6\times2$ &
+      Sec.~S7 D3 check\\
+    L/M: BOMD of set-G cell + snapshot rescans & $\sqrt3\times\sqrt3$ &
+      $c=9.9$\,\AA; $\delta=0$, $T=290$\,K, $\sim$1.9\,ps & $6\times6\times2$ &
+      \emph{open}: the decisive dynamical test\\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\FloatBarrier
+\section{The well transition, in full}
+\label{sec:wells}
+
+This is the raw data behind the single number, $c^\ast_{\rm Na}\approx6.40$~\AA, that the Letter
+builds on: the well shapes themselves, at every spacing and both cell sizes, and the check that the
+transition is not an artifact of full sodium coverage.
+
+For each spacing $c$ the sodium is displaced off centre by $\delta$ along $c$ and the total energy
+$E(\delta)$ recorded; near the bottom the curve is even in $\delta$ and is fit by
+\begin{equation}
+  E(\delta) = E_0 + \alpha\,\delta^{2} + \beta\,\delta^{4},
+  \label{eq:landau}
+\end{equation}
+continued to sixth order where the quartic term alone does not track the data. The sign of $\alpha$
+is the whole story: while $\alpha>0$ the centre is a stable minimum and the sodium has one well;
+once $\alpha<0$ the centre is a local maximum and the well has split in two. Figure~\ref{fig:wells}
+shows the full set of curves for both cell sizes. At $c=5.5$~\AA{} (the dry spacing) $\alpha=+2.5$
+eV/\AA$^2$ and the well is single and stiff; by $c=6.9$~\AA{} (the monolayer-hydrate spacing)
+$\alpha=-0.5$~eV/\AA$^2$ and the ion sits in a pair of minima about 0.7~\AA{} off centre. The sign
+flips between two spacings actually computed, so the crossing is bracketed,
+$5.5~\text{\AA}<c^\ast_{\rm Na}<6.9$~\AA, and interpolating the four points places it at
+$c^\ast_{\rm Na}\approx6.40$~\AA. Repeating the full scan at the physical composition $x=1/3$ in the
+$\sqrt3\times\sqrt3$ cell moves the crossing by only about 0.2~\AA, so the transition is not an
+artifact of the full-coverage cell.
+
+Two of the curves in Fig.~\ref{fig:wells} (open symbols, $c\geq8.4$~\AA) are still falling at the
+largest displacement sampled, meaning the sodium is sliding toward adsorption onto one CoO$_2$
+sheet rather than settling into a genuine double well; the depths quoted for those spacings are
+lower bounds, flagged as such in the figure, and this is exactly the pathology that the water cage
+of Sec.~\ref{sec:water} is built to cure at $c=9.9$~\AA.
+
+% ---- FIG S1: wells ----
+\begin{figure}[t]
+  \centering
+  \figorbox{fig1_wells}{fig1}{0.62\columnwidth}
+  \caption{The single-to-double-well transition, in full. Energy $E(\delta)$ of the off-centre
+  sodium displacement, computed for Na $1\times1$ (top, $x=1$) and Na $\sqrt3\times\sqrt3$
+  (bottom, $x=1/3$) at the four gallery spacings; points are total energies, curves the fits of
+  Eq.~\eqref{eq:landau} continued to sixth order where needed. At 5.5~\AA{} the well is single and
+  stiff ($\alpha>0$); by 6.9~\AA{} it has split into a double well ($\alpha<0$) with minima marked.
+  Open symbols with arrows ($c\geq8.4$~\AA) flag scans still falling at the largest sampled
+  displacement, where the sodium is adsorbing onto one layer and the quoted depth is a lower bound
+  only.}
+  \label{fig:wells}
+\end{figure}
+
+\FloatBarrier
+\section{The two-band model and the coupling}
+\label{sec:model}
+
+The Letter states the pairing formula and defers the derivation here: why the linear coupling
+vanishes, what the quadratic vertex is, and how $\lambda(c)$ and $\hbar\Omega(c)$ turn into the
+dome of Fig.~2(c).
+
+\emph{The bands.} The two states that share the gallery electron are borrowed, not fit here: an
+SSH-type four-band tight-binding model developed for the surfaces of the layered
+cobaltates~\cite{RadhaLambrecht2021}, restricted to the pair of bands relevant in the gallery, one
+of alkali $sp_z$ character and one of CoO$_2$ character. Their band centres split according to how
+the electron is shared between them, and that split is fixed by the Bader charge computed directly
+in Sec.~\ref{sec:wells}, so the gallery band fills exactly as the two-dimensional gas turns on in
+Fig.~2(b) of the Letter, with no free parameter left in the electronic part of the model. What is
+added here is the sodium's own motion, and how the two bands respond to it. Figure~\ref{fig:model}
+sketches all three pieces of the construction: the charge-sharing bands (panel a), the parity
+argument (panel b), and the quantized double well with its overtone boson (panel c).
+
+\emph{The parity argument.} The sodium displacement $\delta$ is odd under reflection through the
+gallery midplane. A linear electron--phonon coupling would shift a band energy in proportion to
+$\delta$, and such a term must vanish identically at the symmetric point by that reflection alone;
+we checked this explicitly in the model at several $k_z$ and it holds everywhere in the gallery
+band. The leading coupling is therefore quadratic, and the band energy responds as
+$\tfrac12\chi\delta^2$, with
+\begin{equation}
+  \chi = 2\sum_m \frac{\lvert\langle {\rm alk}\lvert\,\partial H/\partial\delta\,\rvert m\rangle\rvert^2}
+                       {E_{\rm alk}-E_m},
+  \label{eq:chi}
+\end{equation}
+the ordinary second-order perturbation sum over the other bands $m$ of the model. Near the
+transition this comes out to $\chi\approx-6$~eV/\AA$^2$, and it grows in magnitude as the band
+splitting collapses further out in $c$.
+
+\emph{The overtone boson.} Because the coupling is quadratic, an electron does not scatter off one
+quantum of the rattling mode; it scatters off two. The matrix element that enters is
+$\langle0\lvert\delta^2\rvert2\rangle$ between the ground state and the second excited state of the
+quantized well (the first excited state is forbidden by the same parity that killed the linear
+term), and the effective boson is the even overtone $\hbar\Omega=E_2-E_0$. The dimensionless
+coupling is
+\begin{equation}
+  \lambda = \frac{2\,N(0)\,g^2}{\hbar\Omega}, \qquad
+  g = \tfrac12\lvert\chi\rvert\,\langle0\lvert\delta^2\rvert2\rangle,
+  \label{eq:lambda}
+\end{equation}
+with $N(0)$ taken directly from the density-functional calculation of Sec.~\ref{sec:wells}, not
+adjusted to fit anything.
+
+\emph{The dome and its two walls.} Feeding $\lambda(c)$, $\hbar\Omega(c)$, and $N(0)(c)$ into the
+Allen--Dynes formula, with $\mu^\ast=0.10$ and gated on $N(0)\geq0.1$ states eV$^{-1}$cell$^{-1}$
+spin$^{-1}$, gives the dome shown in Fig.~2(c) of the Letter: a narrow peak between $c\approx6.35$
+and 6.45~\AA, height $T_c\approx14$~K at $\lambda\approx1.3$ and $\hbar\Omega\approx11$~meV. The two
+walls are the two limits where the approximation itself tells us to stop trusting it. Below
+$c^\ast$, $N(0)\to0$ and $\lambda\to0$ with it: there are no carriers to pair. Above the window, or
+once the sodium is frozen into one well, $\hbar\Omega$ stays near 20~meV while $\lambda$ climbs past
+2, which is no longer weak-to-intermediate coupling but a self-trapped polaron; Allen--Dynes theory
+does not describe that regime, and a real bipolaron treatment past that cut has not been attempted
+here. The ansatz range quoted for the peak, 11--23~K, comes from varying the electron--phonon range
+parameter over its plausible values; the dome height depends on that parameter to the fourth power,
+which is why the Letter states $T_c\approx14$~K as an order of magnitude and not a precision number.
+
+% ---- FIG S2: the two-band coupling model ----
+\begin{figure}[t]
+  \centering
+  \figorbox{fig3_model}{fig3_model}{\columnwidth}
+  \caption{The two-band model and its coupling. (a) The gallery electron is shared between an
+  alkali $sp_z$ band and a CoO$_2$ band, borrowed from the SSH-type surface
+  model~\cite{RadhaLambrecht2021} and split by the Bader charge computed directly. (b) The gallery
+  midplane mirror forbids a linear electron--phonon vertex at $\delta=0$; the leading coupling is
+  quadratic. (c) The quantized double well, with the near-degenerate tunnelling doublet $E_0,E_1$
+  and the even overtone $E_2$ that carries the quadratic coupling; the pairing boson is
+  $\hbar\Omega=E_2-E_0$.}
+  \label{fig:model}
+\end{figure}
+
+\FloatBarrier
+\section{The Fermi surface and the ARPES comparison}
+\label{sec:fermi}
+
+The band structure of Sec.~\ref{sec:electronic} shows the gallery band crossing $E_F$; this section
+checks what it leaves behind against the one photoemission measurement available for comparison.
+
+Figure~\ref{fig:fermi} is the Fermi surface at $c=9.9$~\AA: the spectral function
+$A(\mathbf{k},E_F)$ in the $k_z=0$ plane of the Na $1\times1$ hexagonal Brillouin zone, from the
+dense $24\times24\times8$ non-self-consistent eigenvalues, symmetry-completed with the $C_{6v}$
+point group and Lorentzian-broadened at $E_F$ (50~meV, both spins summed). The calculation gives a
+single electron barrel around $\Gamma$, the sodium two-dimensional gas, and no $e_g'$ pockets at K.
+Angle-resolved photoemission on the anhydrous parent Na$_{0.73}$CoO$_2$~\cite{Geck2007} sees the
+same topology: a single $a_{1g}$ barrel around $\Gamma$ with measured $k_F\approx0.65$--0.70
+\AA$^{-1}$, and no $e_g'$ pockets, the $e_g'$ band sitting $\approx85$~meV below $E_F$. Our barrel is
+sodium- rather than cobalt-derived and the composition differs, so we compare topology and size, not
+band identity; the two barrels are of comparable radius. The measured $a_{1g}$ velocities,
+$v_F\approx0.3$ and 0.6~eV\,\AA{} along $\Gamma$--K and $\Gamma$--M respectively, run roughly a
+factor of two below the band-theory value, a renormalization our self-energy-free Kohn--Sham map
+does not carry (see also Sec.~\ref{sec:correlations}).
+
+% ---- FIG S3: Fermi surface + ARPES comparison ----
+\begin{figure}[t]
+  \centering
+  \figorbox{fig8}{fig8}{\columnwidth}
+  \caption{Fermi surface at $c=9.9$~\AA{} and the ARPES comparison. $A(\mathbf{k},E_F)$ in the
+  $k_z=0$ plane of the Na $1\times1$ hexagonal Brillouin zone, symmetry-completed and
+  Lorentzian-broadened (50~meV, both spins summed): a single electron barrel around $\Gamma$ and no
+  $e_g'$ pockets at K. Dashed: the ARPES barrel on anhydrous Na$_{0.73}$CoO$_2$~\cite{Geck2007}
+  ($k_F\approx0.65$--0.70~\AA$^{-1}$), of comparable radius; the measured $a_{1g}$ velocities are
+  $\sim2\times$ below the unrenormalized band value shown here.}
+  \label{fig:fermi}
+\end{figure}
+
+\FloatBarrier
+\section{The gallery band, and the electronic evidence for it}
+\label{sec:electronic}
+
+\subsection{At full sodium coverage}
+
+Figure~\ref{fig:gallery} (reproduced from the Letter's Fig.~3, with the full caption repeated here
+for completeness) is the band structure the Letter's headline number, 91\% sodium weight at $E_F$
+by $c=9.9$~\AA, comes from. It is bare Kohn--Sham spectral weight, both spins summed and each band
+Lorentzian-broadened by $\Gamma=40$~meV, with no self-energy applied. The cell is weakly
+spin-polarized above the transition ($0.8\,\mu_B$ at $9.9$~\AA), so the gallery band is genuinely
+spin-split; summing both spins is what a photoemission measurement would also collect.
+
+\subsection{At the physical composition, $x=1/3$}
+\label{sec:galleryfold}
+
+The full-coverage result is checked at the real sodium content in the $\sqrt3\times\sqrt3$ cell.
+Figure~\ref{fig:s3fold} mirrors the $x=1$ case exactly: no sodium weight at $E_F$ at 5.5~\AA, a
+strong sodium band through $E_F$ at 9.9~\AA. These are supercell bands, and every one is a fold of
+the primitive zone; lacking the plane-wave coefficients a weight-resolved unfolding would need, we
+mark the folding relations rather than draw a misleading unfolded dispersion. The $1\times1$ K point
+folds onto the supercell $\Gamma$, and the $1\times1$ M point folds onto the supercell M. Every band
+in Fig.~\ref{fig:s3fold} should be read as folded.
+
+% ---- FIG S4: sqrt3 folded bands ----
+\begin{figure}[t]
+  \centering
+  \figorbox{fig9}{fig9}{\columnwidth}
+  \caption{The gallery band at the physical composition, $x=1/3$. Kohn--Sham spectral weight of the
+  Na $\sqrt3\times\sqrt3$ cell at (a) 5.5 and (b) 9.9~\AA, built exactly as in Fig.~\ref{fig:gallery}
+  (grayscale total weight, blue sodium fatband, both spins summed, 40~meV broadening). No sodium
+  weight sits at $E_F$ at 5.5~\AA; a strong sodium band crosses $E_F$ at 9.9~\AA, mirroring the
+  $x=1$ result. The $1\times1$ K point folds onto the supercell $\Gamma$ and the $1\times1$ M point
+  onto the supercell M; every band shown here is folded.}
+  \label{fig:s3fold}
+\end{figure}
+
+\begin{figure*}[t]
+  \centering
+  \figorbox{fig7}{fig7}{0.98\textwidth}
+  \caption{(Reproduced from the Letter.) The gallery band appears. Kohn--Sham spectral weight of Na
+  $1\times1$ along $\Gamma$--M--K--$\Gamma$ at (a) 5.5, (b) 6.9, and (c) 9.9~\AA, referenced to
+  $E_F$ (dashed). Grayscale is the total DFT spectral weight (all bands, both spins summed, each
+  Lorentzian-broadened by $\Gamma=40$~meV); the blue fatband is the sodium-orbital projected weight
+  from {\sc projwfc}, its width proportional to sodium character (key in panel c). At 5.5~\AA{} the
+  $x=1$ cell is a band insulator and the sodium band lies $\approx2$~eV above $E_F$; by 9.9~\AA{} a
+  band of $\sim$91\% sodium character has descended through $E_F$, the interlayer electron gas made
+  visible as a single band. No self-energy is applied: this is bare Kohn--Sham weight, not a
+  renormalized quasiparticle spectrum.}
+  \label{fig:gallery}
+\end{figure*}
+
+\FloatBarrier
+\section{Mode softening and the quantized wells}
+\label{sec:softening}
+
+The pairing model of Sec.~\ref{sec:model} needs a soft anharmonic mode, not just a sign change in
+$\alpha$; this section shows how soft it actually gets.
+
+Figure~\ref{fig:soft} is the effective zero-point frequency $\hbar\omega_{\rm eff}=\hbar^2/2M
+\langle\delta^2\rangle_0$ of the quantized alkali mode, obtained from an exact one-dimensional
+solution of the fitted wells of Sec.~\ref{sec:wells} at the physical sodium mass. It collapses by
+three orders of magnitude across the transition, from a stiff $\sim30$~meV single-well mode to a
+sub-meV soft mode as the gallery opens, entering a quantum-paraelectric regime in which the ion is
+smeared across the barrier rather than localized in either minimum. The inset shows the lowest
+levels of the 6.9~\AA{} sodium double well directly: the near-degenerate tunnelling doublet
+$E_0,E_1$ that the parity argument of Sec.~\ref{sec:model} forbids from coupling linearly, and the
+even overtone $E_2$ that carries the quadratic vertex and sets $\hbar\Omega$.
+
+% ---- FIG S5: softening ----
+\begin{figure}[t]
+  \centering
+  \figorbox{fig5_softening}{fig5}{\columnwidth}
+  \caption{The sodium mode softening. Effective zero-point frequency
+  $\hbar\omega_{\rm eff}=\hbar^2/2M\langle\delta^2\rangle_0$ of the quantized alkali mode, from an
+  exact one-dimensional solution of the fitted wells at the physical mass. It collapses by three
+  orders of magnitude across the transition, from a stiff $\sim30$~meV single-well mode to a
+  sub-meV soft mode, entering a quantum-paraelectric window. Inset: the lowest levels of the
+  6.9~\AA{} double well, the tunnelling doublet $E_0,E_1$ and the overtone $E_2$ that carries the
+  quadratic coupling.}
+  \label{fig:soft}
+\end{figure}
+
+\FloatBarrier
+\section{The water cage}
+\label{sec:water}
+
+The Letter's Fig.~4 rests entirely on the construction described here. We give it in full because
+the result turns on the construction, and because the three-way comparison (vacuum, rigid cage,
+adiabatic cage) is what turns a plausible story into a checkable calculation.
+
+\subsection{Construction}
+
+The host is the $\sqrt3\times\sqrt3$ ($x=1/3$) Na$_x$CoO$_2$ cell at the bilayer spacing
+$c=9.9$~\AA{} ($a=5.00$~\AA), the same cell and the same spin-polarized PBE+PAW settings of
+Sec.~\ref{sec:methods} used for the anhydrous scans. The CoO$_2$ sheets and oxygen heights are
+frozen at the values used throughout, so the water is the only thing added. Each water is a rigid
+gas-phase molecule, O--H bond 0.9572~\AA{} and H--O--H angle $104.52^\circ$. Four are placed per
+cell, in the arrangement neutron diffraction finds for the bilayer
+hydrate~\cite{Jorgensen2003,Lynn2003}: the sodium sits on the Co-top $(0,0)$ site on its plane at
+$z=c/2+\delta$, and the four water oxygens lie in two layers 1.2~\AA{} below and above that plane,
+on in-plane sites the sodium does not occupy, two O-top images in the lower layer and two Co-top
+images in the upper layer. Over the whole displacement scan the sodium--water oxygen distances run
+2.05--2.57~\AA{} (lower layer) and 2.92--3.13~\AA{} (upper), an octahedral-like first coordination
+shell. The hydrogens point away from the sodium, toward the nearest CoO$_2$ sheet and radially
+outward, the molecular bisector tilted $50^\circ$ off the $c$ axis, chosen to maximize the smallest
+intermolecular contact: every water--water, water--framework, and water--sodium distance stays
+$\geq2.05$~\AA{} across the whole $\delta$ grid. The two down-pointing and two up-pointing molecules
+cancel the layer's $z$-dipole exactly, so the cage adds no net dipole field.
+
+\subsection{The rigid cage (set G)}
+
+The waters are held fixed while the sodium scans $\delta$, so $E_{\rm hyd}(\delta)-E_{\rm
+vac}(\delta)$, the hydrate curve minus the identical cell with the twelve water atoms deleted, is
+the clean effect of the solvation cage on the sodium potential, with no relaxation confounds. This
+probes the static cage only: it answers whether an expanded gallery leaves the sodium chemisorbed
+(it does, in vacuum, an unstable mode with $\lvert\hbar\omega\rvert\approx11i$~meV) or bound in a
+confined well (it does, with the cage, $\hbar\omega_{\rm eff}\approx23$~meV), and fixes that well's
+frequency. It cannot represent the water's own motion.
+
+\subsection{Adiabatic relaxation (set J) and its surprise}
+
+The obvious next move is to let the cage relax. We repeated the scan with the four waters no longer
+frozen but allowed to find their own minimum-energy configuration at each pinned sodium position, a
+full BFGS relaxation of the twelve water atoms, one hundred ionic steps, converged at every
+$\delta$. A relaxing shell, if water were a lubricant in the naive sense, would slide out of the
+sodium's way and flatten the well; instead it follows the sodium off-centre and deepens the bound
+well, from 199~meV (frozen) to 380~meV at the same $\delta\approx0.30$~\AA{} minimum, and quantized
+about that minimum the adiabatic mode is stiffer, not softer, near 37~meV. Classical adiabatic water
+does not soften the sodium; taken at face value, the naive lubricant picture is wrong. A
+dispersion-corrected (DFT-D3) repeat tracks this deepening at the two points where the D3
+trajectory has converged, $-210$~meV against $-222$~meV (PBE) at $\delta=0.15$~\AA; the remaining D3
+points are still relaxing but are consistent with the same trend, so the deepening is not a
+van-der-Waals artifact of the bare PBE cage.
+
+\subsection{The 0.4 eV spread, and the sixty-step artifact}
+
+The single relaxed configuration is only the deepest point of a landscape the four-water
+hydrogen-bond network does not sit still in. A relaxation of the same $\delta=0.30$~\AA{} cell,
+stopped at sixty ionic steps rather than carried to full convergence, comes to rest 394~meV above
+the fully converged minimum, a different, shallower local minimum of the cage at the identical
+sodium position (the open star in the Letter's Fig.~4(a)). The hydrogen-bond network therefore
+presents the sodium not with one potential but with a family of them, spanning at least 0.4~eV
+between local minima at fixed $\delta$; the sodium potential is set by the instantaneous cage
+configuration, of which the deep adiabatic surface is only the lower envelope. (This is also, for
+the record, why an earlier reading of the sixty-step run as a near-flat 5~meV well was an artifact
+of incomplete relaxation, not a physical softening; the corrected, fully converged comparison is the
+one reported throughout.)
+
+\subsection{The timescale argument}
+
+The two motions live on different clocks, and that is what closes the argument. The bound sodium
+mode has $\hbar\omega\approx23$~meV, a period near 200~fs; the hydrogen-bond network of gallery
+water reorganizes on the picosecond scale that quasielastic neutron scattering measures
+directly~\cite{Jalarvo2008}. The sodium is fast against the cage. It does not ride the deep
+adiabatic surface, which the slow network can only present once fully relaxed; it rattles on a
+rigid-cage-like surface drawn, at each instant, from the thermal and quantum ensemble of cage
+configurations, an ensemble that, as the 0.4~eV spread shows, includes surfaces far shallower than
+the adiabatic minimum. The softening this mechanism needs is therefore statistical-dynamical, not
+adiabatic: the fast sodium samples the soft members of the cage ensemble, it does not wait for the
+slow cage to relax to its own stiff, deep minimum. The frozen-cage well is one member of that
+ensemble and the adiabatic well its extreme deep member; the physical mode lives between them, and
+the one calculation that can show this directly, a finite-temperature Born--Oppenheimer or
+path-integral molecular-dynamics sampling of the coupled sodium--water system, remains open.
+
+\subsection{The isotope-null consistency check}
+
+This picture makes the deuteration and $^{18}$O experiments consistency checks rather than
+predictions, because both have already been run. Replacing H$_2$O by D$_2$O shifts $T_c$ by less
+than 0.2~K~\cite{Jin2003}; replacing $^{16}$O by $^{18}$O is also null~\cite{Yokoi2008}, with the
+authors of that study noting explicitly that a null shift does not by itself exclude a phonon
+mechanism once strong correlations are present. Neither result is evidence against the picture
+argued here, because neither isotope substitution touches the boson: the pairing mode is the sodium
+rattling along $c$, gated by the statistical ensemble of cage configurations, and the water's own
+mass enters only through how stiff the hydrogen-bond network is, a second-order effect on the
+ensemble the sodium samples rather than a first-order mass term in the boson frequency itself. A
+mechanism that paired electrons directly off a water vibration, by contrast, predicts a
+first-order isotope shift and does not survive this result. Sodium itself offers no equivalent test:
+$^{23}$Na is its only stable isotope, so the direct mass test on the boson is unavailable, which is
+why Sec.~\ref{sec:predictions} emphasizes the spectroscopic search for the mode itself over any
+further isotope substitution.
+
+\FloatBarrier
+\section{Spin phase diagram and spin-orbit coupling}
+\label{sec:spin}
+
+The gas that condenses in the gallery is not always paramagnetic, and where it orders matters for
+two old puzzles in this compound: why a magnetic phase sits next to the dome, and why the
+Knight-shift literature reports both a singlet and a triplet. This section builds the phase diagram
+that answers both.
+
+\subsection{The Stoner strip}
+
+Right where the gas first condenses, the gallery band is narrow and its density of states high, and
+a narrow, high-density-of-states band is a Stoner magnet. The Radha--Lambrecht surface calculation
+already finds this polarized gallery gas~\cite{RadhaLambrecht2021}, with the gallery moment
+antiparallel to the cobalt. Carrying the same SSH-type surface-charge model into the gallery and
+applying a Stoner criterion to the gallery band gives, in the plane of sodium content $x$ and
+CoO$_2$ spacing $c$, a polarized strip that hugs the carrier turn-on line, boosted to a
+paramagnon-rich metal just outside it and settling into a plain paramagnet beyond
+(Fig.~\ref{fig:spinpd}(a)); the spacing dependence of the enhancement is the cut in
+Fig.~\ref{fig:spinpd}(b). The diagram is anchored to our own numbers: the density-functional moment
+switches on exactly at the well transition (Fig.~\ref{fig:spinpd}(c)), which is where the model
+places the carrier turn-on at full coverage. The one number we do not trust is the moment of the
+$\sqrt3\times\sqrt3$ cell, over-polarized in the local-spin-density approximation and excluded from
+the diagram; the well energies on which the mechanism rests shift by less than 6\% under the spin
+treatment (Sec.~\ref{sec:correlations}), so the exclusion leaves the structural story intact.
+
+In this picture the magnetism is a thin strip hugging the carrier turn-on, strongest just past it
+and dying as the band widens, so superconductivity lives one step beyond the magnetism and the
+magnetism lives one step beyond the turn-on. This is the ordering Sakurai, Ihara, and Takada report
+for the magnetic phase bordering the dome against cobalt valence~\cite{Sakurai2015}. Figure
+\ref{fig:dome} puts real data on that claim: the experimental $T_c$ against cobalt valence, with the
+superconducting dome and the adjacent magnetic-phase region shown as pastel fills, is the anchor
+for ``magnetism borders the dome'' rather than a schematic restatement of it. Proximity to the
+Stoner boundary also dissolves an old contradiction. Early powder NMR suggested a triplet, later
+single-crystal work a singlet; in this picture that is not a contradiction but a statement of where
+each sample sits, because the Stoner enhancement varies steeply across the strip and hydration
+drifts from sample to sample, and right at the boundary an equal-spin channel of $f$ symmetry lies
+close in energy to the singlet, the link to the two surviving $f$-wave states of
+Sec.~\ref{sec:gauntlet} that Mazin and Johannes could not eliminate~\cite{MazinJohannes2005}. The
+prediction is sharp: the NMR Knight-shift suppression below $T_c$ should anticorrelate, across
+samples, with the normal-state Stoner enhancement. Both symmetry-allowed states of Mazin and
+Johannes are consistent with the muon null~\cite{Higemoto2004}, and we do not need the chiral
+$d+id$ scenario~\cite{Kiesel2013} to fit the record, though our data do not exclude it.
+
+% ---- FIG S6: gallery spin phase diagram (three panels) ----
+\begin{figure*}[t]
+  \centering
+  \figorbox{fig10}{fig10}{0.92\textwidth}
+  \caption{The gallery-2DEG spin phase diagram. (a) Stoner phase diagram of the interlayer gas,
+  built by carrying the SSH-type surface-charge model of Ref.~\cite{RadhaLambrecht2021} into the
+  gallery: in the plane of sodium content $x$ and CoO$_2$ spacing $c$, the gallery band is empty
+  below the carrier turn-on line, narrow and Stoner-polarized (red) just above it, then a
+  paramagnon-boosted (amber) and plain paramagnetic (blue) metal further out. Markers: the
+  monolayer (6.9~\AA, $\times$) and bilayer (9.9~\AA, $\circ$) hydrates at the physical $x=0.35$.
+  (b) Cuts at $x=0.35$: the carrier fraction $q$ per Na and the Stoner enhancement $S$ against $c$.
+  (c) The DFT cell-integrated moment $\langle\lvert m\rvert\rangle$ for Na and Li $1\times1$,
+  switching on at the same spacing the well transition does; the $\sqrt3\times\sqrt3$ cell is
+  over-polarized in LSDA and shown only as an excluded caveat band. The model is an ansatz
+  calibrated to the one on/off hydrate anchor pair; every parameter is source-tagged in the
+  generating script.}
+  \label{fig:spinpd}
+\end{figure*}
+
+% ---- FIG S7: Tc vs Co valence with SC dome + magnetic region ----
+\begin{figure}[t]
+  \centering
+  \figorbox{figS_dome}{figS_dome}{\columnwidth}
+  \caption{Magnetism borders the dome, against real data. Experimental $T_c$ against the
+  redox-\emph{titrated} cobalt valence, the eight batches of Milne \textit{et al.}~\cite{Milne2004},
+  with the superconducting dome and the adjacent magnetic-phase region drawn as pastel fills; the
+  nominal-composition ($4-x$) points of Ref.~\cite{Schaak2003} use a different, offset ($\approx
+  0.2$--$0.3$) valence axis and are deliberately omitted rather than mixed with the titrated set.
+  The magnetic-phase boundary ($v\approx3.36$) is anchored to the collapse threshold Milne \textit{et
+  al.} report, combined with the phase adjacency Sakurai \textit{et al.} give~\cite{Sakurai2015}, and
+  is approximate. The titrated batches cover the optimal plateau and the overdoped collapse, not the
+  underdoped rising edge, so this is a partial map of the dome, not a claim of its full shape; what it
+  shows is real: the magnetic region sits immediately outside the superconducting one, the adjacency
+  the Stoner strip of Fig.~\ref{fig:spinpd}(a) predicts from the calculation alone.}
+  \label{fig:dome}
+\end{figure}
+
+\subsection{Spin-orbit coupling}
+
+Spin-orbit coupling does not select or mix the pairing at any level that matters here. The gallery
+state is sodium-derived, with only a few percent cobalt weight, so its effective on-band spin-orbit
+scale is a couple of meV; the Rashba splitting from the off-centre sodium, estimated from the
+displaced charge, is about 0.8~meV, of order the gap but far below the Fermi energy, and the
+parity-mixed component of the gap it induces is at the sub-percent level. On the average
+centrosymmetric structure the up and down sectors carry opposite Rashba fields and largely cancel.
+Spin-orbit coupling is a small correction to the spin response, not a term in the pairing.
+
+\FloatBarrier
+\section{The pairing gauntlet}
+\label{sec:gauntlet}
+
+Twenty years of proposals for Na$_x$CoO$_2\cdot y$H$_2$O have been thinned by four measurements;
+Table~\ref{tab:gauntlet} sets the surviving field, including the state of this work, against them,
+in a form where no verdict runs past two printed lines.
+
+The natural ground state of a phonon-mediated instability on the gallery gas is a spin singlet,
+anisotropic and $s_\pm$-like across the two bands, the gallery two-dimensional gas and the $a_{1g}$
+pocket, and it breaks no time-reversal symmetry. That single fact clears the two constraints that do
+the most damage in Table~\ref{tab:gauntlet}: the singlet passes the single-crystal Knight shift that
+kills the triplet proposals, and the preserved time-reversal symmetry passes the $\mu$SR
+null~\cite{Higemoto2004} that kills the chiral $d+id$ states~\cite{Kiesel2013}.
+
+The other two constraints our picture turns to account rather than merely surviving. There is no
+Hebel--Slichter peak because the pairing boson is a soft, strongly anharmonic mode, and the
+anharmonic broadening that softens it also smears the coherence peak; we state this as expected of a
+soft-mode coupling, not as a fitted success. The specific-heat nodes are the more telling case. The
+gap on the gallery band is small, set by the dilute gallery density of states, and a small gap on a
+two-dimensional gas is fragile against precisely the gallery disorder that dehydration introduces. A
+fragile second gap driven below the measurement threshold looks like line nodes, which explains both
+the node claims and their notorious dependence on sample age~\cite{Sakurai2015}: the gap is not
+nodal, it carries a soft second component the aging of the water network quietly removes. The state
+is falsifiable in two clean ways: any breaking of time-reversal symmetry, a $\mu$SR relaxation onset
+at $T_c$ or a polar Kerr rotation, excludes the singlet channel, and so does a Knight shift that
+stays flat below $T_c$ in a fresh single crystal, because a singlet must show the shift drop. Either
+observation would end the picture.
+
+% ---- TABLE S1: pairing gauntlet ----
+\begin{table*}[t]
+  \caption{The pairing gauntlet. Verdicts are single words read against each state's own symmetry:
+  pass, fail, or tension (a constraint met only with an added assumption, flagged
+  $^{\rm a\text{--}f}$, notes below). The Sakurai entry is a mechanism, not a fixed symmetry, so the
+  symmetry columns do not constrain it. The last row is the state argued in the Letter
+  (Sec.~\ref{sec:gauntlet}).}
+  \label{tab:gauntlet}
+  \renewcommand{\arraystretch}{1.3}%
+  \begin{tabular}{@{}p{4.4cm}p{2.0cm}p{2.0cm}p{2.0cm}p{2.0cm}@{}}
+    \toprule
+    \textbf{Proposed state} & \textbf{Knight shift} & \textbf{Hebel--Slichter} &
+    \textbf{Heat nodes} & \textbf{$\mu$SR TRS}\\
+    \midrule
+    RVB singlet $d+id$~\cite{Baskaran2003,KumarShastry2003,WangLeeLee2004}
+      & pass & pass & tension$^{\rm a}$ & fail\\
+    Spin-triplet $p$/$f$~\cite{TanakaHu2003,KurokiTanakaArita2004}
+      & fail & pass & pass & pass$^{\rm b}$\\
+    Chiral $d+id$, fRG~\cite{Kiesel2013}
+      & pass & tension$^{\rm a}$ & tension$^{\rm a}$ & fail\\
+    Two surviving $f$-wave~\cite{MazinJohannes2005}
+      & tension$^{\rm c}$ & pass & pass & pass\\
+    $s$-wave, anharmonic H/O phonons~\cite{Lynn2003}
+      & pass & fail$^{\rm d}$ & fail$^{\rm e}$ & pass\\
+    Magnetic-fluctuation~\cite{Sakurai2015} & --- & --- & --- & ---\\
+    \midrule
+    \textbf{This work}: singlet $s_\pm$, TRS-preserving, two-gap
+      & pass & pass$^{\rm f}$ & pass$^{\rm g}$ & pass\\
+    \bottomrule
+  \end{tabular}\\[4pt]
+  \parbox{0.98\textwidth}{\footnotesize
+  $^{\rm a}$~Fully gapped states must invoke disorder or a second gap to explain the observed
+  $T^2$ term.
+  $^{\rm b}$~Requires $e_g'$ pockets that ARPES does not see~\cite{Geck2007}.
+  $^{\rm c}$~Passes only after an added reconciliation of the singlet-favoring Knight shift with a
+  triplet order parameter.
+  $^{\rm d}$~Predicts a Hebel--Slichter peak the data do not show.
+  $^{\rm e}$~Fully gapped; does not reproduce the observed low-$T$ nodal-like term.
+  $^{\rm f}$~Anharmonic broadening of the soft-mode boson smears the coherence peak.
+  $^{\rm g}$~Small gallery gap is disorder-fragile; explains both the node claims and their
+  sample-age dependence.}
+\end{table*}
+
+\FloatBarrier
+\section{Correlations we have not treated}
+\label{sec:correlations}
+
+Every estimate above is built on Kohn--Sham bands, and the cobaltates are correlated; this section
+states which way that correlation pushes the numbers, rather than leaving the reader to guess.
+
+Angle-resolved photoemission on the anhydrous parent finds dispersions roughly twice flatter than
+LDA, with $a_{1g}$ velocities $v_F\approx0.3$--0.6~eV\,\AA{} against a band value about twice
+larger~\cite{Geck2007}. A mass renormalization $m^\ast/m\approx2$ raises the density of states
+$N(0)$ and lowers $v_F$ in the same proportion, and $N(0)$ enters the coupling in the direction that
+increases it: since $\lambda=2N(0)g^2/\hbar\Omega$ was built on the unrenormalized
+density-functional $N(0)$, the $\lambda$ and $T_c$ estimates of Sec.~\ref{sec:model} are, if
+anything, conservative. The same flattening deepens the narrow-band limit the gallery gas already
+sits in, and a flatter band at fixed filling carries a higher $N(0)$, which only sharpens the
+Stoner-strip argument of Sec.~\ref{sec:spin}, correlations widen the polarized region of
+Fig.~\ref{fig:spinpd} rather than narrow it. The natural next step is a DFT+DMFT calculation on the
+gallery band, which we have not attempted. One caution runs the other way: correlations do not only
+renormalize the band, they can also broaden and damp the sodium mode that carries the pairing, and a
+strongly overdamped mode would couple less efficiently than the sharp Einstein boson assumed here.
+
+The rest of the list is shorter. The transition spacing is computed at full sodium coverage, $x=1$,
+and checked at the physical $x=1/3$ in a single cell, where it moves by about 0.2~\AA. The
+local-spin-density treatment over-polarizes the $\sqrt3$ cell, giving an unphysically large and flat
+moment there; we rest the magnetic story on the $1\times1$ series and exclude the $\sqrt3$ moments,
+and the well energies themselves are insensitive to the spin treatment at the few-percent level, so
+the over-polarization does not touch the wells. The explicit water (Sec.~\ref{sec:water}) is treated
+statically, a rigid cage frozen while the sodium scans and an adiabatically relaxed cage at each
+sodium position; together they settle the static question and show that adiabatic relaxation
+deepens rather than softens that well, but neither can represent the statistical-dynamical softening
+the moving network supplies, the one calculation left open. The pairing is treated as a single
+Einstein boson in the Allen--Dynes approximation, with an explicit cut where the coupling leaves the
+regime that approximation can describe; a real bipolaron treatment past that cut is not attempted.
+
+\FloatBarrier
+\section{The design rule, prior art, and the LiZrNCl null hypothesis}
+\label{sec:designrule}
+
+If the picture holds, it is not just an account of one compound, it is a design rule; this section
+states the rule, credits the ingredients that are not new, and then tests it against the one
+layered intercalate that seems, at first look, to break it.
+
+Every ingredient of the rule is old. Pairing tuned to a soft polar mode at a quantum-critical point
+is the SrTiO$_3$ story~\cite{Edge2015,Muller1979QuantumParaelectric,vanderMarel2019SrTiO3,
+Yu2022QuantumParaelectric}; an occupied interlayer state as the switch for superconductivity in an
+intercalate, set by the layer separation, is the graphite-intercalation
+story~\cite{Csanyi2005,OhtomoHwang2004}; enhancement of $T_c$ as an intercalant mode softens, then
+collapse when the ion orders, is seen in CaC$_6$ under pressure~\cite{Gauzzi2007}; a rattling alkali
+ion in an oversized cage driving strong-coupling pairing is the $\beta$-pyrochlore
+story~\cite{Yonezawa2004KOs2O6,Hiroi2012RattlingReview}; and carriers in one layer paired by a
+quantum-paraelectric layer next door is an old model of Shenoy, Subrahmanyam, and
+Bishop~\cite{Shenoy1997}. What is new here is the joinery: the donor ion is itself the
+quantum-paraelectric unit, not a caged spectator or a host-lattice mode, and one structural knob,
+the gallery spacing, turns on the carriers and tunes the ion through its bistability at once, so the
+window closes on both sides rather than one. Stated as a rule: open a layered gallery past the
+spacing where the donor ion turns bistable, and the same motion that spills the ion's electrons
+into an interlayer gas softens the ion into the pairing boson.
+
+A rule stated that broadly invites a counterexample, and the most-studied layered donor intercalate
+is one. In Li$_x$ZrNCl and its hafnium analogue~\cite{Yamanaka1998}, opening the gallery from 9 to
+more than 22~\AA{} never kills the superconductivity: $T_c$ rises modestly and then saturates
+(Fig.~\ref{fig:zrncl}(a)), and it survives with no intercalant ion at all, whether the chlorine is
+de-intercalated or the carriers are supplied by a gate~\cite{Nakagawa2021}. This looks like a
+refutation until the premise is checked, and the premise fails: here the donor's electron does not
+return to the gallery. It fills an in-plane Zr/Hf $d$--N $p$ host band, the ion is chemically locked
+and spectroscopically silent, and the pairing belongs to the host, not to any gallery gas or soft
+ion. The nitride is therefore orthogonal to our rule, it tests a different pairing channel, and its
+use to us is disciplinary. It forbids the universal statement: the rule holds only where the
+interlayer state lies at the Fermi level, the precondition made computable by Cs\'anyi and
+co-workers~\cite{Csanyi2005}, and fails where the host band lies below it. And it fixes the null
+hypothesis. A gallery opened without a soft donor ion gives a monotonic, saturating $T_c(c)$; the
+nonmonotonic dome computed for the hydrate (Fig.~\ref{fig:zrncl}(b)) is, against that background,
+the anomaly that demands the extra ingredient, the soft sodium, that the nitride does not have.
+
+% ---- FIG S8: ZrNCl comparison ----
+\begin{figure}[t]
+  \centering
+  \figorbox{figS_zrncl}{figS_zrncl}{\columnwidth}
+  \caption{The null hypothesis, tested. (a) Literature $T_c$ against gallery spacing for
+  Li$_x$ZrNCl and its hafnium analogue~\cite{Yamanaka1998,Nakagawa2021} (17 points spanning both
+  chemical and gate-induced intercalation): opening the gallery from 9~\AA{} to beyond 22~\AA{}
+  gives a monotonic, saturating $T_c(c)$, because the donor electron never returns to the gallery.
+  (b) Our computed Allen--Dynes dome for the hydrate, with the 4.5~K bilayer-hydrate anchor (star),
+  rises and falls instead: a nonmonotonic window that appears only when the gallery hosts a soft
+  donor ion. The comparison in (a) and (b) is the null hypothesis this work must beat.}
+  \label{fig:zrncl}
+\end{figure}
+
+\FloatBarrier
+\section{Predictions beyond the compound}
+\label{sec:predictions}
+
+If the rule of Sec.~\ref{sec:designrule} is right, it should say something about the neighboring
+compounds and about probes that have not yet been tried on this one; this section collects those
+predictions and, where we could, puts a number on them.
+
+\subsection{Lithium, sodium, and potassium}
+
+Lithium cobaltate is the same structure with a smaller ion, and it has never been made to
+superconduct; the picture requires that. Its well crosses into the double-well regime only at the
+smallest spacing in the dataset, so there is only an upper bound $c^\ast_{\rm Li}\leq5.5$~\AA, and
+at that spacing the well is a mere 4~meV deep while the lithium zero-point energy is 8.8~meV,
+larger than the well itself. The light ion does not sit in either minimum; it is smeared across
+both, a quantum paraelectric, dynamically centred despite the negative $\alpha$, and a centred ion
+is a stiff ion with no soft anharmonic mode to offer. Lithium fails on the glue, for the plain
+reason that it is light. A heavier gallery ion should push the threshold the other way: for
+potassium the Landau coefficient crosses zero at $c^\ast_{\rm K}\approx6.75$~\AA, against 6.40~\AA{}
+for sodium and $\leq5.5$~\AA{} for lithium, ordering Li~$<$~Na~$<$~K with ionic size
+(Fig.~\ref{fig:thresholds}); hydrated to that spacing, potassium cobaltate should superconduct by
+the same route with a heavier, softer mode, a clean prediction for hydrated K$_x$CoO$_2$.
+
+% ---- FIG S9: Li/Na/K thresholds ----
+\begin{figure}[t]
+  \centering
+  \figorbox{figS_thresholds}{figS_thresholds}{\columnwidth}
+  \caption{The threshold ordering, in one plot. $\alpha(c)$ for Li, Na, and K $1\times1$, with the
+  three thresholds marked: $c^\ast_{\rm Li}\leq5.5$~\AA{} (an upper bound only, $\alpha$ is already
+  negative at the smallest spacing sampled, not a bracketed crossing), $c^\ast_{\rm
+  Na}\approx6.40$~\AA, and $c^\ast_{\rm K}\approx6.75$~\AA{} (both bracketed crossings). The
+  threshold rises with ionic size, the prediction behind the hydrated-K$_x$CoO$_2$ test proposed in
+  the Letter.}
+  \label{fig:thresholds}
+\end{figure}
+
+\subsection{The valence fingerprint}
+
+The gallery gas leaves a fingerprint on the sodium valence that two kinds of probe should read
+differently. If the sodium keeps a fraction $q$ of its electron in the gallery rather than giving it
+to the cobalt, a site-specific valence probe, the cobalt $L$-edge or NQR, and a charge-counting
+probe, redox titration of the whole crystal, should disagree, and only once the gallery is open. We
+can put a number on it: the Bader charge on the sodium in the $x=1/3$ cell rises from the
+empty-gallery monolayer spacing to the superconducting bilayer by $\Delta q\approx0.18\,e$, so the
+gallery-specific valence split is $\Delta v=x\,\Delta q\approx0.06$ per cobalt, switching on with
+the water and vanishing in the monolayer hydrate where the gallery band is empty. This small split
+is not the large valence offset seen in these materials~\cite{Milne2004}, which needs an extra
+electron reservoir such as oxonium and is several times larger; ours is the small, gallery-specific
+piece alone. Figure~\ref{fig:zscan} gives the microscopic slope behind the number: the Landau
+coefficient $\alpha$ against the frozen oxygen height $z_O$ at $c=9.9$~\AA{} (vacuum cell, three
+collinear points: the production $z_O=0.96$~\AA{} and two dedicated checks at $z_O=0.90$ and
+$1.02$~\AA) has slope $d\alpha/dz_O\approx-0.52$~eV/\AA$^2$ per \AA, the same charge-transfer
+channel that sets $\Delta v$, made explicit as a single derivative rather than left implicit in the
+total-energy scan. Only the slope is defensible here (three points define a line, not an absolute
+stiffness); it is offered as the microscopic rate behind $\Delta v$, not as a fourth independent
+calibration of it.
+
+% ---- FIG S10: alpha vs oxygen height ----
+\begin{figure}[t]
+  \centering
+  \figorbox{figS_zscan}{figS_zscan}{\columnwidth}
+  \caption{The microscopic basis of the valence prediction, all vacuum (water-free) potentials at
+  $c=9.9$~\AA. (a) The raw $E(\delta)$ curves at the three sampled oxygen heights $z_O=0.90$, 0.96
+  (production), and $1.02$~\AA, shown for transparency. (b) The extracted Landau coefficient
+  $\alpha(z_O)$: three collinear points give slope $d\alpha/dz_O\approx-0.52$~eV/\AA$^2$ per \AA. The
+  defensible quantity is this slope, not an absolute well stiffness; it is the same
+  oxygen-to-gallery charge-transfer channel that sets the valence split $\Delta v\approx0.06$ per
+  cobalt quoted in the text.}
+  \label{fig:zscan}
+\end{figure}
+
+\subsection{Gating and a negative control}
+
+A LiCoO$_2$ thin film in which the carrier density is set electrostatically rather than chemically
+should show the gallery turn-on without the disadvantage of the light frozen ion. Adding carriers to
+the anhydrous (5.5~\AA) lithium cell by a compensating background, 0.1--0.3~$e$ per formula unit,
+fills the gallery: the Fermi level and the areal density rise monotonically, to
+$n_{\rm 2D}\approx4\times10^{14}$~cm$^{-2}$ at $0.3\,e$, and the lithium well softens as it fills
+while remaining under a millielectronvolt deep, far below the lithium zero-point energy of
+$\sim9$~meV, so the ion stays dynamically centred. Gating thus tunes the gas without freezing the
+ion, exactly the place to test the gas and the magnetism apart from the glue, an ionic-liquid-gating
+prediction for a thin-film collaboration.
+
+Na$_2$CoSe$_2$O~\cite{Cheng2024}, a mixed-anion cobaltate ($T_c=6.3$~K) that carries the same
+two-dimensional cobalt network with a different gallery chemistry, asks whether its gallery ion
+hosts an interlayer band. It does not: the states at the Fermi level are the Co\,$3d$--Se\,$4p$
+network, and the ionic sodium of its Na$_2$O gallery sits well above the Fermi level, with no
+sodium-derived band there. Na$_2$CoSe$_2$O superconducts through its cobalt network, not the
+gallery, and is a clean negative control: same CoO$_2$-like sheet, no gallery gas, superconductivity
+by another route.
+
+\bibliographystyle{apsrev4-2}
+\bibliography{refs}
+
+\end{document}

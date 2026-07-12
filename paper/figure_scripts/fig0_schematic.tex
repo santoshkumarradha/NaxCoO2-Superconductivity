@@ -1,154 +1,145 @@
-% Figure 0 - Mechanism schematic (paper visual anchor).
-% Na_xCoO2.yH2O: how CoO2-CoO2 spacing (hydration) drives the alkali gallery
-% mode from a stiff single well (no 2DEG) through a soft double well (2DEG on,
-% SC window) to a deep polaronic double well at the bilayer spacing.
-% Build:  pdflatex fig0_schematic.tex
-\documentclass[border=4pt]{standalone}
+% Figure 1 - Mechanism schematic (paper visual anchor), single-column (86 mm).
+% Na_xCoO2.yH2O: how the CoO2-CoO2 spacing (hydration) drives the alkali
+% gallery mode from a stiff single well (no 2DEG) through a soft double well
+% (2DEG on, SC window) to a deep polaronic double well at the bilayer spacing
+% where water re-softens the well back into the pairing window.
+%
+% Design note: this figure is placed at \columnwidth (86 mm). It is therefore
+% drawn at a small natural width (~9 cm) with LARGE fonts (>= \footnotesize)
+% and minimal text, so every label is legible at print size.  Build:
+%   pdflatex fig0_schematic.tex
+\documentclass[10pt,border=2pt]{standalone}
 \usepackage{tikz}
 \usepackage{amsmath}
+\usepackage{mathptmx}          % Times-like serif to match the APS body text
 \usetikzlibrary{arrows.meta,positioning,decorations.pathreplacing,
-                decorations.pathmorphing,patterns,backgrounds,fit,calc}
+                decorations.pathmorphing,backgrounds,fit,calc}
 
-% ---- palette (didactic; distinct from the data-plot series colours) ----
-\definecolor{slab}{HTML}{3C6E82}   % CoO2 slab
-\definecolor{slablt}{HTML}{CFE3EA}
-\definecolor{na}{HTML}{EDA100}     % Na ion
-\definecolor{egas}{HTML}{2A78D6}   % 2DEG / electrons
-\definecolor{water}{HTML}{5598E7}  % water O
+% ---- palette (schematic; physics-encoding only) -----------------------------
+\definecolor{slab}{HTML}{4A5A63}     % CoO2 slab (neutral structural slate)
+\definecolor{slabtxt}{HTML}{FFFFFF}
+\definecolor{na}{HTML}{E58A00}       % Na ion (mobile alkali)
+\definecolor{nadk}{HTML}{9A5B00}
+\definecolor{egas}{HTML}{2A78D6}     % 2DEG carriers (blue)
 \definecolor{ink}{HTML}{0B0B0B}
 \definecolor{sec}{HTML}{52514E}
-\definecolor{good}{HTML}{0CA30C}
-\definecolor{crit}{HTML}{D03B3B}
-\definecolor{amber}{HTML}{EDA100}
+\definecolor{good}{HTML}{0C8A2E}
+\definecolor{crit}{HTML}{C23A38}
+\definecolor{amber}{HTML}{B07600}
+\definecolor{winfill}{HTML}{F8E2B4}  % SC-window tint (FILL_AMBER)
+\definecolor{gasfill}{HTML}{DCEBFC}  % gas-on tint (light FILL_BLUE)
 
 \begin{document}
-\begin{tikzpicture}[
-    font=\sffamily,
-    slabstyle/.style={draw=slab,line width=0.6pt,top color=slab,
-        bottom color=slablt,rounded corners=1pt},
-    naion/.style={circle,draw=na!70!black,line width=0.5pt,
-        top color=na!55,bottom color=na!95!black,minimum size=8.5pt,
-        inner sep=0pt},
-    elec/.style={circle,fill=egas,inner sep=0pt,minimum size=2.6pt},
+\begin{tikzpicture}[x=1cm,y=1cm,line join=round,
+    slabstyle/.style={draw=slab!80!black,line width=0.5pt,fill=slab},
+    naion/.style={circle,draw=nadk,line width=0.4pt,fill=na,
+        minimum size=4.6pt,inner sep=0pt},
+    elec/.style={circle,fill=egas,inner sep=0pt,minimum size=1.5pt},
   ]
 
-  \def\W{2.0}          % half slab width
-  \def\hs{0.62}        % slab thickness
-  \def\dx{6.6}         % stage pitch
+  % ---- geometry -------------------------------------------------------------
+  \def\P{3.05}         % column pitch
+  \def\W{1.24}         % slab half-width
+  \def\hs{0.34}        % slab thickness
+  \def\ww{1.05}        % well half-width
+  \def\wh{1.05}        % well height
+  \pgfmathsetmacro\Xmax{2*\P}
 
-  % ============================================================= STAGES
-  % Crystals are centred on the gallery mid-plane (y=0) so all three stay
-  % symmetric as the spacing grows -- titles above / wells below never collide.
-  % #1 gap  #2 Na-displacement  #3 n_elec(2DEG)  #4 water?  #5 x-origin
-  \foreach \g/\disp/\ne/\wat/\ox/\stg in {
-      1.00/0/0/0/0/A, 1.60/0.55/5/0/\dx/B, 2.50/0.80/8/1/{2*\dx}/C}{
-    \begin{scope}[shift={(\ox,0)}]
-      \pgfmathsetmacro\hg{\g/2}            % half-gap; gallery mid at y=0
+  % crystal vertical anchors
+  \def\ycen{0}         % gallery mid-plane
+  \def\ywell{-2.35}    % well baseline
+  \def\yhead{1.62}     % header baseline
+  \def\yarrow{2.55}    % top arrow
 
-      % --- CoO2 slabs (bottom below, top above the gallery) ---
+  % =============================================================== CRYSTALS
+  % #1 x-origin  #2 half-gap  #3 Na-disp  #4 n_elec  #5 gasfill?
+  \foreach \ox/\hg/\disp/\ne/\gas in {0/0.40/0/0/0, \P/0.62/0.34/5/1, {2*\P}/0.86/0.54/6/1}{
+    \begin{scope}[shift={(\ox,\ycen)}]
+      % gallery tint where the 2DEG lives
+      \ifnum\gas>0
+        \fill[gasfill] (-\W,-\hg) rectangle (\W,\hg);
+      \fi
+      % CoO2 slabs
       \fill[slabstyle] (-\W,-\hg-\hs) rectangle (\W,-\hg);
       \fill[slabstyle] (-\W,\hg) rectangle (\W,\hg+\hs);
-      \node[slab,font=\scriptsize\bfseries] at (0,-\hg-\hs/2) {CoO$_2$};
-      \node[slab,font=\scriptsize\bfseries] at (0,\hg+\hs/2) {CoO$_2$};
-
-      % --- 2DEG: electron sheet on the gallery-facing surfaces ---
+      \node[slabtxt,font=\footnotesize] at (0,-\hg-\hs/2) {CoO$_2$};
+      \node[slabtxt,font=\footnotesize] at (0,\hg+\hs/2) {CoO$_2$};
+      % 2DEG electron sheets on gallery-facing surfaces
       \ifnum\ne>0
         \foreach \k in {1,...,\ne}{
-          \pgfmathsetmacro\ex{-\W+0.28+ (\k-1)*(2*\W-0.56)/(\ne-1)}
-          \node[elec] at (\ex,-\hg-0.11){};
-          \node[elec] at (\ex,\hg+0.11){};
+          \pgfmathsetmacro\ex{-\W+0.22+(\k-1)*(2*\W-0.44)/(\ne-1)}
+          \node[elec] at (\ex,-\hg+0.09){};
+          \node[elec] at (\ex,\hg-0.09){};
         }
-        \node[egas,font=\tiny,anchor=east] at (\W-0.04,-\hg+0.24)
-          {2DEG $e^-$};
       \fi
-
-      % --- Na ion (+ bistable ghost + arrow for the double well) ---
+      % Na ion (+ bistable ghost + double-well hop arrow)
       \ifdim\disp pt>0pt
-        \node[naion,opacity=0.32] at (-\disp,0){};
-        \draw[<->,sec,line width=0.5pt] (-\disp+0.16,0) -- (\disp-0.16,0);
+        \node[naion,fill=na!35,draw=na!45!white] at (-\disp,0){};
+        \draw[<->,sec,line width=0.35pt] (-\disp+0.14,0) -- (\disp-0.14,0);
       \fi
-      \node[naion] (na\stg) at (\disp,0){};
-      \node[na!60!black,font=\tiny,anchor=south] at (\disp,0.17){Na};
-
-      % --- water molecules for the bilayer hydrate ---
-      \ifnum\wat>0
-        \foreach \wx/\wy in {-1.25/-0.55, 1.15/0.62, -0.30/1.00}{
-          \node[circle,fill=water,inner sep=0pt,minimum size=4pt]
-            at (\wx,\wy){};
-          \fill[white] (\wx-0.11,\wy+0.06) circle (0.9pt);
-          \fill[white] (\wx+0.11,\wy+0.06) circle (0.9pt);
-        }
-        \node[water,font=\tiny,anchor=west] at (-\W+0.08,\hg-0.32){H$_2$O};
-      \fi
-
-      % --- spacing brace on the right ---
-      \draw[decorate,decoration={brace,amplitude=3pt},sec,line width=0.5pt]
-        (\W+0.14,\hg) -- (\W+0.14,-\hg)
-        node[midway,anchor=west,font=\tiny,sec,xshift=2pt]{$c$};
+      \node[naion] at (\disp,0){};
+      \node[nadk,font=\footnotesize,anchor=south,inner sep=1pt] at (\disp,0.12){Na$^+$};
     \end{scope}
   }
+  % single 2DEG label (columns 2-3 share the carrier physics)
+  \node[egas,font=\footnotesize] at (1.5*\P,-1.52) {2DEG $e^-$ (carriers)};
 
-  % ============================================================= WELLS
-  % mini potential V(delta) under each stage: single / soft-double / deep-double
-  \def\wy{-3.05}       % well-plot baseline (top of frame)
-  \def\ww{1.55}        % well half-width
-  \def\wh{1.65}        % well height
-  \foreach \ox/\type/\lvl in {0/single/1, \dx/soft/2, {2*\dx}/deep/3}{
-    \begin{scope}[shift={(\ox,\wy)}]
-      % frame axes
-      \draw[sec,line width=0.5pt,-{Latex[length=3pt]}]
-        (-\ww-0.15,-\wh) -- (\ww+0.15,-\wh);      % delta axis
-      \draw[sec,line width=0.5pt,-{Latex[length=3pt]}]
-        (0,-\wh) -- (0,0.28);                     % V axis
-      \node[sec,font=\tiny,anchor=north east] at (\ww+0.15,-\wh){$\delta$};
-      \node[sec,font=\tiny,anchor=south east] at (-0.06,0.28){$V$};
+  % =============================================================== WELLS
+  % V(delta): single / shallow-double / deep-double, with quantized levels
+  \foreach \ox/\type in {0/single, \P/soft, {2*\P}/deep}{
+    \begin{scope}[shift={(\ox,\ywell)}]
+      \draw[sec,line width=0.4pt,-{Latex[length=2.6pt]}]
+        (-\ww-0.12,-\wh) -- (\ww+0.16,-\wh);
+      \draw[sec,line width=0.4pt,-{Latex[length=2.6pt]}]
+        (0,-\wh) -- (0,0.18);
+      \node[sec,font=\footnotesize,anchor=north] at (\ww+0.14,-\wh+0.02){$\delta$};
+      \node[sec,font=\footnotesize,anchor=east] at (-0.05,0.16){$V$};
 
-      \ifnum\lvl=1  % ---- stiff single well ----
-        \draw[ink,line width=1.1pt,smooth,domain=-1.15:1.15,samples=60]
-          plot (\x,{-\wh + 1.05*\x*\x});
-        \pgfmathsetmacro\ea{-\wh+0.30}
-        \draw[egas,line width=1.0pt] (-0.53,\ea)--(0.53,\ea);
-        \node[egas,font=\tiny,anchor=south] at (0,\ea+0.01){$E_0$};
+      \ifnum\pdfstrcmp{\type}{single}=0
+        \draw[ink,line width=0.9pt,smooth,domain=-0.92:0.92,samples=50]
+          plot (\x,{-\wh+1.15*\x*\x});
+        \pgfmathsetmacro\ea{-\wh+0.26}
+        \draw[egas,line width=0.9pt] (-0.38,\ea)--(0.38,\ea);
+        \node[egas,font=\footnotesize,anchor=south,inner sep=0.6pt] at (0,\ea){$E_0$};
       \fi
-      \ifnum\lvl=2  % ---- soft double well ----
-        \draw[ink,line width=1.1pt,smooth,domain=-1.28:1.28,samples=80]
-          plot (\x,{-\wh + 0.75 + (-1.20*\x*\x + 0.85*\x*\x*\x*\x)});
-        \pgfmathsetmacro\eb{-\wh+0.44}
-        \draw[egas,line width=1.0pt] (-0.92,\eb)--(0.92,\eb);
-        \node[egas,font=\tiny,anchor=south] at (0,\eb+0.01){$E_0,E_1$};
+      \ifnum\pdfstrcmp{\type}{soft}=0
+        \draw[ink,line width=0.9pt,smooth,domain=-1.02:1.02,samples=80]
+          plot (\x,{-\wh+0.60+(-1.60*\x*\x+1.10*\x*\x*\x*\x)});
+        \pgfmathsetmacro\eb{-\wh+0.16}
+        \draw[egas,line width=0.9pt] (-0.80,\eb)--(0.80,\eb);
+        \node[egas,font=\footnotesize,anchor=south,inner sep=0.6pt] at (0,\eb){$E_0{,}E_1$};
       \fi
-      \ifnum\lvl=3  % ---- deep double well ----
-        \draw[ink,line width=1.1pt,smooth,domain=-1.30:1.30,samples=90]
-          plot (\x,{-\wh + 1.00 + (-2.60*\x*\x + 1.70*\x*\x*\x*\x)});
-        \pgfmathsetmacro\ec{-\wh+0.30}
-        \draw[egas,line width=1.0pt] (-0.98,\ec)--(0.98,\ec);
-        \node[egas,font=\tiny,anchor=south] at (0,\ec+0.01){$E_0,E_1$};
+      \ifnum\pdfstrcmp{\type}{deep}=0
+        \draw[ink,line width=0.9pt,smooth,domain=-1.02:1.02,samples=80]
+          plot (\x,{-\wh+0.85+(-2.7*\x*\x+1.85*\x*\x*\x*\x)});
+        \pgfmathsetmacro\ec{-\wh+0.22}
+        \draw[egas,line width=0.9pt] (-0.78,\ec)--(0.78,\ec);
+        \node[egas,font=\footnotesize,anchor=south,inner sep=0.6pt] at (0,\ec){$E_0{,}E_1$};
       \fi
     \end{scope}
   }
 
-  % ============================================================= LABELS
-  \def\ty{2.9}         % stage-title baseline
-  \foreach \ox/\ttl/\sub/\vd/\vc in {
-      0/{$c=5.5$ \AA\ \textbf{anhydrous}}/{single stiff well $\cdot$ no 2DEG}/{not SC}/crit,
-      \dx/{$c\approx6.4$ \AA\ \textbf{SC window}}/{soft double well $\cdot$ 2DEG on}/{SC}/good,
-      {2*\dx}/{$c=9.9$ \AA\ \textbf{bilayer hydrate}}/{deep double well $\cdot$ polaronic}/{expt.\ SC 4.5 K}/amber}{
-    \node[ink,font=\small,anchor=south] at (\ox,\ty){\ttl};
-    \node[sec,font=\scriptsize,anchor=south] at (\ox,\ty-0.42){\sub};
-    \node[\vc,font=\scriptsize\bfseries,anchor=north,
-          draw=\vc,rounded corners=2pt,inner sep=2pt,line width=0.6pt]
-      at (\ox,\wy-\wh-0.15){\vd};
+  % =============================================================== HEADERS
+  % #1 x  #2 spacing(bold)  #3 descriptor  #4 verdict  #5 verdict-colour
+  \foreach \ox/\sp/\desc/\vd/\vc in {
+      0/{$c=5.5$\,\AA}/{anhydrous}/{not SC}/crit,
+      \P/{$c\approx6.4$\,\AA}/{SC window}/{SC window}/good,
+      {2*\P}/{$c=9.9$\,\AA}/{bilayer hydrate}/{SC 4.5\,K}/amber}{
+    \node[ink,font=\footnotesize\bfseries,anchor=south] at (\ox,\yhead){\sp};
+    \node[sec,font=\footnotesize,anchor=south] at (\ox,\yhead-0.34){\desc};
+    \node[\vc,font=\footnotesize\bfseries,anchor=north,draw=\vc,
+          rounded corners=1.5pt,inner sep=2.2pt,line width=0.5pt]
+      at (\ox,\ywell-\wh-0.18){\vd};
   }
+  % water re-softening note under the bilayer column
+  \node[sec,font=\footnotesize,anchor=north,text width=2.9cm,align=center]
+    at (2*\P,\ywell-\wh-0.68){water re-softens\\the well};
 
-  % ============================================================= BIG ARROW
-  \draw[-{Latex[length=6pt,width=6pt]},slab,line width=1.6pt]
-    (-\W-0.35,\ty+0.95) -- ({2*\dx+\W+0.35},\ty+0.95);
-  \node[slab,font=\small\bfseries,anchor=south] at (\dx,\ty+1.02)
-    {increasing CoO$_2$--CoO$_2$ spacing \ $c$ \ (hydration)};
-
-  % soft-mode / SC-window callout under the middle stage arrow
-  \node[good,font=\tiny,anchor=north] at (\dx,\wy-\wh-0.92)
-    {$\alpha<0$, $\hbar\omega_{\mathrm{eff}}\!\to\!0$ : quantum-paraelectric pairing glue};
+  % =============================================================== TOP ARROW
+  \draw[-{Latex[length=5pt,width=5pt]},slab,line width=1.3pt]
+    (-\W-0.25,\yarrow) -- (\Xmax+\W+0.25,\yarrow);
+  \node[ink,font=\footnotesize\bfseries,anchor=south] at (\P,\yarrow+0.06)
+    {increasing CoO$_2$--CoO$_2$ spacing $c$ \ (hydration)};
 
 \end{tikzpicture}
 \end{document}

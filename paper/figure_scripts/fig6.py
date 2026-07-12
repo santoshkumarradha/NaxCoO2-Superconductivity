@@ -22,7 +22,9 @@ from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyArrowPatch
+import matplotlib.colors as mcolors
+from matplotlib.patches import Circle
+from matplotlib.lines import Line2D
 
 import _style as S
 
@@ -110,19 +112,30 @@ def parse_pwin(job):
 
 atoms, aL, cL = parse_pwin("Na_s3hyd_c9.9_d0.30")
 
-# species -> (facecolor, edgecolor, radius pt, label). Muted CPK; atoms=data.
+# Species -> flat CPK-ish fill + ionic/covalent-proportioned radius (A) + key
+# marker size.  Na large, O medium, Co small, H smallest (per house palette).
 SPEC = {
-    "Co": ("#3b4a6b", "#243049", 10.5, "Co"),
-    "O":  ("#d98a7a", "#9c5344", 7.0, "O"),
-    "Na": ("#c9a63a", "#8f7212", 11.5, "Na"),
-    "H":  ("#d9d7cf", "#8a8880", 4.2, "H"),
+    "Na": dict(color="#d9b23a", r=0.62, ms=9.0, label="Na"),
+    "O":  dict(color="#d76b5a", r=0.44, ms=7.5, label="O"),
+    "Co": dict(color="#3b5b8c", r=0.38, ms=7.0, label="Co"),
+    "H":  dict(color="#d8d6cc", r=0.24, ms=5.5, label="H"),
 }
+PAPER = "#fcfcfb"
+
+
+def _blend(color, other, t):
+    """Flat de-saturation toward the paper colour (no gradient): mix a fraction
+    t of `other` into `color`.  Used to push far-depth atoms slightly back."""
+    c = np.array(mcolors.to_rgb(color))
+    o = np.array(mcolors.to_rgb(other))
+    return tuple((1 - t) * c + t * o)
+
 
 # ======================================================================
 fig, (axA, axB) = plt.subplots(
-    1, 2, figsize=(7.0, 3.3), gridspec_kw={"width_ratios": [1.28, 1.0]})
+    1, 2, figsize=(7.0, 2.95), gridspec_kw={"width_ratios": [1.95, 1.0]})
 
-# ---------------------------------------------------------------- (a)
+# ================================================================= (a)
 dsym = np.concatenate([-dd[:0:-1], dd])       # drop the duplicated 0
 Ehs = np.concatenate([Eh[:0:-1], Eh])
 Evs = np.concatenate([Ev[:0:-1], Ev])
@@ -131,111 +144,148 @@ Ems = np.concatenate([Em[:0:-1], Em])
 
 from scipy.interpolate import PchipInterpolator
 xf = np.linspace(-0.75, 0.75, 400)
+xf2 = np.linspace(-1.0, 1.0, 500)
 rig_i = PchipInterpolator(dsym, Ehs)(xf)
 adi_i = PchipInterpolator(dmsym, Ems)(xf)
+adi_full = PchipInterpolator(dmsym, Ems)(xf2)
+vac_i = PchipInterpolator(dsym, Evs)(xf)
 
-# configurational-range band: between the frozen-cage well (upper) and the deep
-# adiabatic well (lower) -- the range of E(delta) surfaces the moving cage can
-# present to Na.  Pastel amber = the softening/prediction domain (house style).
+# amber configurational-range band = spread of E(delta) surfaces the moving cage
+# can present between the frozen-cage well (upper) and the deep adiabatic well.
 axA.fill_between(xf, rig_i, adi_i, color=S.FILL_AMBER, lw=0, zorder=1)
-axA.text(-0.52, -250, "cage\nconfigurational\nrange $\\gtrsim 0.4$ eV",
-         ha="center", va="center", fontsize=6.6, color=S.INK_AMBER, zorder=2)
+axA.text(-0.46, -235, "cage range", ha="center", va="center", fontsize=7.4,
+         color=S.INK_AMBER, zorder=2)
 axA.axhline(0, color=S.C_MUT, lw=0.6, zorder=1)
 
 # smooth guides (monotone PCHIP through the mirror-symmetric points)
-xf2 = np.linspace(-1.0, 1.0, 500)
-axA.plot(xf2, PchipInterpolator(dmsym, Ems)(xf2), "-", color=S.C_RED, lw=1.5,
-         zorder=3)
-axA.plot(xf, rig_i, "-", color=S.C_BLUE, lw=1.4, zorder=3)
-axA.plot(xf, PchipInterpolator(dsym, Evs)(xf), color=S.C_SEC, lw=1.1,
-         ls=(0, (4, 2)), zorder=3)
+axA.plot(xf2, adi_full, "-", color=S.C_RED, lw=1.6, zorder=3)
+axA.plot(xf, rig_i, "-", color=S.C_BLUE, lw=1.5, zorder=3)
+axA.plot(xf, vac_i, ls=(0, (4, 2)), color=S.C_SEC, lw=1.1, zorder=3)
 
-axA.plot(dmsym, Ems, "D", ms=4.3, color=S.C_RED, mec="white", mew=0.5,
-         zorder=5, label="adiabatic (mobile 4-H$_2$O, 100 steps)")
-axA.plot(dsym, Ehs, "o", ms=4.8, color=S.C_BLUE, mec="white", mew=0.5,
-         zorder=5, label="rigid cage (frozen 4-H$_2$O)")
-axA.plot(dsym, Evs, "s", ms=4.2, mfc="white", mec=S.C_SEC, mew=1.0,
-         zorder=5, label="vacuum (water deleted)")
+# data markers (legend labels short; caption carries the reading)
+axA.plot(dsym, Evs, "s", ms=4.0, mfc="white", mec=S.C_SEC, mew=1.0,
+         zorder=5, label="vacuum")
+axA.plot(dsym, Ehs, "o", ms=4.6, color=S.C_BLUE, mec="white", mew=0.6,
+         zorder=5, label="rigid cage")
+axA.plot(dmsym, Ems, "D", ms=4.2, color=S.C_RED, mec="white", mew=0.6,
+         zorder=5, label="adiabatic water")
 
-# 60-step outlier: an explicit multi-minimum sample, and the vertical spread it
-# opens above the adiabatic minimum (evidence for the >=0.4 eV cage landscape)
-axA.annotate("", xy=(0.30, Em[2] + 6), xytext=(0.30, E60_30 - 6),
-             arrowprops=dict(arrowstyle="<->", color=S.C_INK, lw=0.8),
-             zorder=4)
-axA.text(0.35, 0.5 * (Em[2] + E60_30), "$394$ meV", rotation=90, va="center",
-         ha="left", fontsize=6.4, color=S.C_INK, zorder=6)
-axA.plot([0.30, -0.30], [E60_30, E60_30], "*", ms=9.0, mfc="white",
-         mec=S.C_INK, mew=0.9, zorder=6)
-axA.annotate("step-capped\nlocal minimum", (0.30, E60_30), xytext=(0.66, -55),
-             ha="center", fontsize=6.4, color=S.C_INK,
-             arrowprops=dict(arrowstyle="-", color=S.C_MUT, lw=0.6), zorder=6)
-axA.annotate("runs away", (0.72, Ev[-1] + 4), xytext=(0.55, -250),
-             ha="center", fontsize=6.6, color=S.C_SEC,
-             arrowprops=dict(arrowstyle="->", color=S.C_MUT, lw=0.6))
+# the 60-step-capped local minimum: an explicit high-lying multi-minimum sample
+# (its meaning is spelled out in the caption -- no in-plot annotation here)
+axA.plot([0.30, -0.30], [E60_30, E60_30], "*", ms=8.5, mfc="white",
+         mec=S.C_INK, mew=0.8, zorder=6)
 
 axA.set_xlabel(r"Na off-centre displacement  $\delta$  (Å)")
 axA.set_ylabel(r"$E(\delta)-E(0)$  (meV)")
 axA.set_xlim(-1.05, 1.05)
-axA.set_ylim(-410, 60)
-axA.legend(loc="lower center", fontsize=6.6, handletextpad=0.4,
-           borderaxespad=0.4, labelspacing=0.3)
+axA.set_ylim(-405, 80)
+axA.legend(loc="upper center", ncol=3, fontsize=7.3, columnspacing=1.4,
+           handletextpad=0.4, borderaxespad=0.35)
 S.thin_spines(axA)
-S.panel_label(axA, "a", x=-0.16)
+S.panel_label(axA, "a", x=-0.13)
 
-# ---------------------------------------------------------------- (b)
-# side view: horizontal = x (A), vertical = z (A, the c-axis stacking).
-# draw two in-plane periodic images (shift by +a1) so the layers read as sheets
-a1 = np.array([aL, 0, 0])
-def scat(P, sp):
-    fc, ec, r, _ = SPEC[sp]
-    for shift in (0.0, 1.0):
-        Q = P + shift * a1
-        axB.scatter(Q[:, 0], Q[:, 2], s=r**2, facecolor=fc, edgecolor=ec,
-                    linewidth=0.5, zorder={"H": 2, "O": 3, "Co": 4,
-                                           "Na": 5}[sp])
+# ================================================================= (b)
+# Flat vector crystal drawing (side view, projection along the in-plane y):
+# horizontal = x, vertical = z (the c-axis stack).  The full periodic crystal
+# is generated from the pw.in basis with hexagonal lattice translations
+# n1*a1 + n2*a2 + n3*a3, then clipped to a window ~2.5 cells wide and one
+# in-plane depth period deep, so the CoO2 sheets appear as complete O-Co-O
+# sandwiches (both apical O rows), the gallery as the Na + 4-H2O layer, and
+# every drawn bond is a real 3D near-neighbour distance.  Frame OFF; the
+# projected unit cell is a thin dashed rectangle; single c-arrow scale cue.
+a1 = np.array([aL, 0.0, 0.0])
+a2 = np.array([-aL / 2, aL * np.sqrt(3) / 2, 0.0])
+a3 = np.array([0.0, 0.0, cL])
 
-# water O-H bonds (within the primary + shifted image)
-Ow = atoms["O"][atoms["O"][:, 2] > 0.20 * cL]   # water O (above the lower slab)
-Hs = atoms.get("H", np.empty((0, 3)))
-for shift in (0.0, 1.0):
-    for o in Ow:
-        for h in Hs:
-            for hs in (0.0, 1.0):
-                oo, hh = o + shift * a1, h + hs * a1
-                if np.linalg.norm(oo - hh) < 1.1:
-                    axB.plot([oo[0], hh[0]], [oo[2], hh[2]], "-",
-                             color="#b9b7ae", lw=0.8, zorder=1)
-for sp in ("Co", "O", "H", "Na"):
-    if sp in atoms:
-        scat(atoms[sp], sp)
+XW = (-1.3, 11.3)                # drawing window in x (about 2.5 cells)
+ZW = (-1.35, cL + 1.35)          # z window: sheets complete with both O rows
+YW = (-0.10, aL * np.sqrt(3) / 2 - 0.10)   # one depth period (no duplicates)
 
-# CoO2-sheet guide lines (z of the two Co planes = 0 and c) and the mid-plane
-for zc, lab in ((0.0, None), (cL, None)):
-    axB.axhline(zc, color=S.C_GRID, lw=0.7, zorder=0)
-axB.axhline(cL / 2, color=S.C_MUT, lw=0.6, ls=(0, (4, 3)), zorder=0)
-axB.text(axB_x := (-0.5 * aL), cL / 2, " Na plane\n ($c/2$)", fontsize=6.3,
-         color=S.C_SEC, va="center", ha="left")
-axB.text(-0.5 * aL, 0.02 * cL, r" CoO$_2$", fontsize=6.3, color=S.C_SEC,
-         va="bottom")
+kept = []                        # (pos3, species)
+for sp in ("Co", "O", "Na", "H"):
+    for P in atoms.get(sp, []):
+        for n1 in range(-2, 4):
+            for n2 in range(-2, 3):
+                for n3 in (-1, 0, 1):
+                    q = P + n1 * a1 + n2 * a2 + n3 * a3
+                    if (XW[0] <= q[0] <= XW[1] and ZW[0] <= q[2] <= ZW[1]
+                            and YW[0] <= q[1] < YW[1]):
+                        kept.append((q, sp))
+pos = np.array([q for q, _ in kept])
+spc = [sp for _, sp in kept]
+ymin, ymax = pos[:, 1].min(), pos[:, 1].max()
 
-# tidy legend of species (small dots), neutral text
-handles = [plt.Line2D([], [], marker="o", ls="", mfc=SPEC[s][0],
-                      mec=SPEC[s][1], mew=0.5,
-                      ms=np.sqrt(SPEC[s][2] ** 2) / 2.6, label=SPEC[s][3])
-           for s in ("Co", "O", "Na", "H")]
-axB.legend(handles=handles, loc="upper right", fontsize=6.6, ncol=4,
-           handletextpad=0.15, columnspacing=0.7, borderaxespad=0.2,
-           bbox_to_anchor=(1.02, 1.06))
+is_water_O = np.array([sp == "O" and 0.2 * cL < p[2] < 0.8 * cL
+                       for p, sp in kept])
 
-axB.set_xlabel(r"$x$ (Å)")
-axB.set_ylabel(r"$z$ along $c$ (Å)")
-axB.set_xlim(-0.7 * aL, 1.7 * aL)
-axB.set_ylim(-0.9, cL + 0.9)
+# --- bonds (real 3D distances), drawn under the atoms -------------------
+BOND_INK = "#8f8d84"
+n = len(kept)
+for i in range(n):
+    for j in range(i + 1, n):
+        pi, pj = pos[i], pos[j]
+        d3 = np.linalg.norm(pi - pj)
+        pair = {spc[i], spc[j]}
+        dmean = 0.5 * (pi[1] + pj[1] - 2 * ymin) / (ymax - ymin + 1e-9)
+        if pair == {"Co", "O"} and d3 < 2.15:            # CoO6 sheet bond
+            col = _blend(BOND_INK, PAPER, 0.45 * dmean)
+            axB.plot([pi[0], pj[0]], [pi[2], pj[2]], "-", color=col,
+                     lw=1.5, solid_capstyle="round", zorder=2)
+        elif pair == {"O", "H"} and d3 < 1.15:           # water O-H capsule
+            col = _blend(BOND_INK, PAPER, 0.45 * dmean)
+            axB.plot([pi[0], pj[0]], [pi[2], pj[2]], "-", color=col,
+                     lw=2.4, solid_capstyle="round", zorder=2.2)
+        elif pair == {"Na", "O"} and d3 < 3.15 and \
+                (is_water_O[i] or is_water_O[j]):        # Na...O contact
+            axB.plot([pi[0], pj[0]], [pi[2], pj[2]], ls=(0, (2, 2)),
+                     color=S.C_MUT, lw=0.8, zorder=1.6)
+
+# --- atoms, back (far y) -> front (near), flat de-saturation for depth ---
+order = sorted(range(n), key=lambda i: -pos[i][1])
+for k, i in enumerate(order):
+    x, y, z = pos[i]
+    d = (y - ymin) / (ymax - ymin + 1e-9)       # 0 near, 1 far
+    fc = _blend(SPEC[spc[i]]["color"], PAPER, 0.20 * d)
+    axB.add_patch(Circle((x, z), SPEC[spc[i]]["r"], facecolor=fc,
+                         edgecolor="white", linewidth=0.9, zorder=5 + 0.01 * k))
+
+# --- projected unit cell (a1 x a3 face at y=0), thin dashed ink ----------
+axB.plot([0, aL, aL, 0, 0], [0, 0, cL, cL, 0], ls=(0, (4, 2.5)),
+         color=S.C_INK, lw=0.9, zorder=9)
+# label sits in the empty band between the sheet apical O and the water H
+axB.text(0.5 * aL, 1.98, "unit cell", ha="center", va="center", fontsize=7.0,
+         color=S.C_INK, zorder=9)
+
+# --- layer labels (right edge, muted ink) --------------------------------
+axB.text(XW[1] + 0.25, 0.0, r"CoO$_2$", fontsize=7.2, color=S.C_SEC,
+         va="center", ha="left")
+axB.text(XW[1] + 0.25, cL, r"CoO$_2$", fontsize=7.2, color=S.C_SEC,
+         va="center", ha="left")
+axB.text(XW[1] + 0.25, cL / 2, "Na +\n4 H$_2$O", fontsize=7.2, color=S.C_SEC,
+         va="center", ha="left", linespacing=1.2)
+
+# --- single scale cue: c-spacing double arrow at the left ----------------
+xarr = -2.35
+axB.annotate("", xy=(xarr, cL), xytext=(xarr, 0.0),
+             arrowprops=dict(arrowstyle="<->", color=S.C_SEC, lw=0.9,
+                             shrinkA=0, shrinkB=0))
+axB.text(xarr - 0.30, cL / 2, r"$c\simeq 9.9$ Å", rotation=90, va="center",
+         ha="right", fontsize=7.2, color=S.C_SEC)
+
+axB.set_xlim(-3.6, XW[1] + 2.6)
+axB.set_ylim(ZW[0] - 0.15, ZW[1] + 0.15)
 axB.set_aspect("equal", adjustable="box")
-S.thin_spines(axB)
-S.panel_label(axB, "b", x=-0.12)
+axB.axis("off")
 
-fig.subplots_adjust(left=0.085, right=0.985, top=0.95, bottom=0.145,
-                    wspace=0.32)
+# species key: labelled circles in one tidy row below the panel
+handles = [Line2D([], [], marker="o", ls="", mfc=SPEC[s]["color"],
+                  mec="white", mew=0.8, ms=SPEC[s]["ms"], label=SPEC[s]["label"])
+           for s in ("Na", "O", "Co", "H")]
+axB.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 0.015),
+           ncol=4, frameon=False, handletextpad=0.25, columnspacing=1.3,
+           fontsize=8, borderaxespad=0.0)
+S.panel_label(axB, "b", x=0.02, y=0.98)
+
+fig.subplots_adjust(left=0.088, right=0.99, top=0.94, bottom=0.155, wspace=0.04)
 S.save(fig, "fig6")
 print("fig6 written")

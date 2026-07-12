@@ -64,11 +64,13 @@ c_zero = float(na.index[np.where(na.values < 0.02)[0].max()])   # 5.5
 c_on_dft = float(na.index[np.where(na.values > 0.05)[0].min()])  # 6.9
 
 # ---------------------------------------------------------------- figure
-fig = plt.figure(figsize=(7.1, 3.5))
-gs = fig.add_gridspec(2, 2, width_ratios=[1.62, 1.0], hspace=0.14, wspace=0.42)
-ax = fig.add_subplot(gs[:, 0])
-axq = fig.add_subplot(gs[0, 1])
-axs = fig.add_subplot(gs[1, 1], sharex=axq)
+fig = plt.figure(figsize=(7.5, 3.4))
+gs = fig.add_gridspec(2, 3, width_ratios=[1.68, 1.0, 1.05],
+                      hspace=0.15, wspace=0.50)
+ax = fig.add_subplot(gs[:, 0])          # (a) phase diagram
+axq = fig.add_subplot(gs[0, 1])         # (b) q(c) cut
+axs = fig.add_subplot(gs[1, 1], sharex=axq)   # (b) S(c) cut
+axm = fig.add_subplot(gs[:, 2])         # (c) DFT moment turn-on
 
 # --- (a) phase diagram --------------------------------------------------
 cmap = ListedColormap(FILLS)
@@ -83,7 +85,7 @@ for lv, col, ls in ((lv_on, S.EDGE_TURNON, "-"), (lv_st, S.EDGE_STONER, "-"),
 # Stoner-enhancement contours inside the plain-PM (blue) region
 S_plot = np.where(region == 3, Sf, np.nan)
 cs = ax.contour(X, C, S_plot, levels=[2.0], colors=["#5598e7"], linewidths=0.8)
-ax.clabel(cs, fmt=lambda v: f"S={v:g}", fontsize=6.2, colors=S.C_SEC)
+ax.clabel(cs, fmt=lambda v: f"S={v:g}", fontsize=7.0, colors=S.C_SEC)
 
 # minimal region tags (phase name only; full reading is in the caption)
 ax.text(0.235, 6.5, "no 2DEG", color=S.INK_NONE, ha="center", fontsize=8)
@@ -110,14 +112,14 @@ ax.plot([xd], [c_zero + 0.18], marker="o", ms=4.2, mfc="white", mec=S.INK_RED,
         mew=1.2, zorder=6)
 ax.plot([xd], [c_on_dft], marker="o", ms=4.8, color=S.INK_RED, mec="white",
         mew=0.6, zorder=6)
-ax.text(0.90, 7.25, "DFT $|m|$\nonset", fontsize=6.6, color=S.INK_RED,
+ax.text(0.90, 7.25, "DFT $|m|$\nonset", fontsize=7.0, color=S.INK_RED,
         ha="center", va="bottom", linespacing=1.15)
 
 ax.set_xlabel("Na content $x$")
 ax.set_ylabel(r"CoO$_2$ plane spacing $c$ (Å)  [gallery opening]")
 ax.set_xlim(x[0], x[-1])
 ax.set_ylim(c[0], c[-1])
-S.panel_title(ax, "(a) Gallery-2DEG spin phase diagram (model, ansatz-labelled)")
+S.panel_title(ax, "(a) Gallery-2DEG spin phase diagram")
 
 ax2 = ax.twinx()                     # same c, mapped to the model half-width
 ax2.set_ylim(ax.get_ylim())
@@ -135,7 +137,7 @@ handles = [Line2D([], [], color=S.EDGE_TURNON, lw=1.2,
                   label=r"Stoner  $I_s N(0)=1$"),
            Line2D([], [], color=S.EDGE_SSTAR, lw=1.2, ls="--",
                   label=f"$S=S^\\ast={P['S_star']:g}$")]
-ax.legend(handles=handles, loc="upper right", fontsize=6.4, frameon=True,
+ax.legend(handles=handles, loc="upper right", fontsize=7.0, frameon=True,
           facecolor="white", edgecolor=S.C_GRID, framealpha=0.9,
           handlelength=1.4, borderpad=0.4).get_frame().set_linewidth(0.6)
 
@@ -174,6 +176,51 @@ axs.set_ylim(0, 8)
 axs.set_ylabel("Stoner $S$", fontsize=8)
 axs.set_xlabel("c (Å)", fontsize=8)
 
-fig.subplots_adjust(left=0.075, right=0.90, top=0.92, bottom=0.12)
+# --- (c) DFT cell-moment turn-on (folded in from the standalone fig4) -----
+# Cell-integrated |m|(c) for Na and Li 1x1 (LSDA spin scans): the local moment
+# switches on exactly at the alpha<0 well transition -- the DFT counterpart of
+# (a)'s red polarized strip.  Same region-fill vocabulary; c-axis matched to (b).
+C_TR = 6.40                              # well transition / moment turn-on
+S.vspan_region(axm, 5.5, C_TR, S.FILL_NONE)
+S.vspan_region(axm, C_TR, 10.6, S.FILL_RED, "magnetic", ytext=0.62,
+               ha="center", fontsize=8.0)
+axm.axvline(C_TR, color=S.EDGE_STONER, lw=1.0, zorder=1)
+axm.text(5.98, 1.35, "no moment", ha="center", va="center", rotation=90,
+         fontsize=7.6, color=S.INK_NONE)
+axm.text(C_TR - 0.07, 0.12, "well transition", ha="right", va="bottom",
+         rotation=90, fontsize=7.0, color=S.INK_RED)
+
+# sqrt3 LSDA over-polarisation caveat band (kept neutral; excluded)
+s3 = mag[(mag.alkali == "Na") & (mag.cell == "s3")]["abs_mag_muB"]
+axm.axhspan(s3.min(), s3.max(), color=S.FILL_NONE, lw=0, zorder=0.5)
+axm.text(10.45, s3.max() - 0.05, r"$\sqrt{3}$ (excluded)", ha="right", va="top",
+         fontsize=7.2, color=S.C_SEC)
+
+for el in ("Na", "Li"):
+    st = S.SERIES[(el, "1x1")]
+    d = mag[(mag.alkali == el) & (mag.cell == "1x1")]
+    cs_, mean_, lo_, hi_ = [], [], [], []
+    for cv, g in d.groupby("c_A"):
+        v = g["abs_mag_muB"].values
+        cs_.append(cv); mean_.append(v.mean()); lo_.append(v.min()); hi_.append(v.max())
+    o = np.argsort(cs_)
+    cs_ = np.array(cs_)[o]; mean_ = np.array(mean_)[o]
+    lo_ = np.array(lo_)[o]; hi_ = np.array(hi_)[o]
+    axm.fill_between(cs_, lo_, hi_, color=st["color"], alpha=0.16, lw=0, zorder=2)
+    axm.plot(cs_, mean_, st["marker"] + "-", ms=5.0, lw=1.4, color=st["color"],
+             mfc=st["color"], mew=0, zorder=4, label=st["label"])
+
+axm.set_xlim(5.5, 10.6)                  # c-axis matched to (b)
+axm.set_ylim(-0.05, 2.82)
+axm.set_xlabel("c (Å)", fontsize=8)
+axm.set_ylabel(r"cell moment  $\langle|m|\rangle$  ($\mu_B$)", fontsize=8)
+leg = axm.legend(loc="upper left", bbox_to_anchor=(0.03, 0.78),
+                 handletextpad=0.4, fontsize=7.2, frameon=True,
+                 facecolor="white", edgecolor=S.C_GRID, framealpha=0.92)
+leg.get_frame().set_linewidth(0.6)
+S.thin_spines(axm)
+S.panel_title(axm, "(c) DFT $|m|$ turn-on", fontsize=8.5, pad=3)
+
+fig.subplots_adjust(left=0.068, right=0.965, top=0.90, bottom=0.13)
 S.save(fig, "fig10")
 print("fig10 written; DFT Na1x1 onset bracket c =", c_zero, "->", c_on_dft)
