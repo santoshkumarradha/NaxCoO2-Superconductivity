@@ -33,6 +33,10 @@ E(delta).  All jobs are hydrate BFGS relaxations (c = 9.9, set-G ansatz):
   J3: joint-minimum search at delta = 0.30: waters free AND Na z
       free (x,y pinned) -- is the joint minimum off-center?      1 relax
 
+`--stage zscan` writes set K into jobs_zscan/ and manifest_zscan.json (run
+with run_zscan.sh): vacuum sqrt3 x sqrt3 Na_1/3CoO2 E(delta) scans at fixed
+c = 9.9 A and z_O = 0.90/1.02 A                              10 SCF
+
 stdlib + numpy only.
 """
 import argparse
@@ -99,13 +103,13 @@ def atoms_1x1(element, c, delta):
             (element, 0.0, 0.0, za)]  # Co-top site (lowest-energy, SciPost Fig.5 pos.1)
 
 
-def atoms_s3(element, c, delta):
+def atoms_s3(element, c, delta, zo=Z_O):
     """sqrt3 x sqrt3 R30 supercell, 1 alkali per 3 Co (x = 1/3), 10 atoms.
 
     Primitive fractional (u,v) maps to supercell fractional
     ((u+v)/3, (2v-u)/3); Co sublattice images are (0,0), (1/3,2/3), (2/3,1/3).
     """
-    zo = Z_O / c
+    zo = zo / c
     za = (c / 2.0 + delta) / c
     offs = [(0.0, 0.0), (1 / 3, 2 / 3), (2 / 3, 1 / 3)]
     atoms = []
@@ -873,10 +877,58 @@ def generate_mobile(root):
           f"+ manifest_mobile.json")
 
 
+# ------------------------------------------------------------ zscan stage ---
+# Set K, written to jobs_zscan/ + manifest_zscan.json, run via run_zscan.sh.
+# At fixed c, vary the CoO2 layer thickness via z_O and fit the Na E(delta)
+# well shape.  The z_O = 0.96 A baseline is the existing set-G vacuum scan.
+ZSCAN_DIR = "jobs_zscan"
+ZOS_K = [0.90, 1.02]
+DELTAS_K = [0.0, 0.15, 0.30, 0.50, 0.75]
+
+K_NOTES = [
+    "! Set K: vacuum sqrt3 x sqrt3 Na_1/3CoO2 z_O sensitivity scan.",
+    "! At fixed c = 9.9 A, vary the CoO2 layer thickness (O height z_O)",
+    "! and scan Na displacement delta to extract the well-shape parameter",
+    "! alpha(z_O).  The z_O = 0.96 A baseline is the existing set-G vacuum",
+    "! scan in results_extra (Na_s3vac_c9.9_d*); it is not regenerated.",
+]
+
+
+def generate_zscan(root):
+    jobs = []
+    el, c = "Na", 9.9
+    a = A_LAT[el] * np.sqrt(3.0)
+
+    for zo in ZOS_K:
+        for d in DELTAS_K:
+            atoms = atoms_s3(el, c, d, zo=zo)
+            name = f"zscan_{el}_s3_c{c:.1f}_zO{zo:.2f}_d{d:.2f}"
+            text = pw_input("scf", el, a, c, atoms, KPTS_G, notes=K_NOTES)
+            write_job(root, name, text, jobs_dir=ZSCAN_DIR)
+            jobs.append(dict(name=name, set="K", element=el, cell="s3", c=c,
+                             z_O=zo, delta=d, type="scf",
+                             kpts=list(KPTS_G), nat=len(atoms)))
+
+    manifest = dict(
+        pseudos=PSEUDOS, zval=ZVAL, a_lat=A_LAT, z_O=Z_O,
+        analyze=("Fit alpha(z_O), the well-shape/curvature parameter, at fixed "
+                 "c = 9.9 A across the delta scan for each z_O, including the "
+                 "existing z_O = 0.96 A baseline curve from set G in "
+                 "results_extra (Na_s3vac_c9.9_d*), which is not regenerated. "
+                 "Then compare the resulting slope d(alpha)/d(z_O) against "
+                 "the existing set D single-point sensitivity result of "
+                 "roughly +/-100 meV per -/+0.06 A in z_O."),
+        jobs=jobs)
+    with open(os.path.join(root, "manifest_zscan.json"), "w") as f:
+        json.dump(manifest, f, indent=2)
+    print(f"wrote {len(jobs)} zscan-set jobs (K: {len(jobs)}) "
+          f"+ manifest_zscan.json")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--stage", choices=["scf", "nscf", "extra", "bands",
-                                       "mobile"],
+                                       "mobile", "zscan"],
                    default="scf")
     p.add_argument("--root", default=os.path.dirname(os.path.abspath(__file__)))
     args = p.parse_args()
@@ -888,6 +940,8 @@ def main():
         generate_bands(args.root)
     elif args.stage == "mobile":
         generate_mobile(args.root)
+    elif args.stage == "zscan":
+        generate_zscan(args.root)
     else:
         generate_nscf(args.root)
 
