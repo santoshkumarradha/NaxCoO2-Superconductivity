@@ -83,7 +83,7 @@ for d in jobs_ensemble/md_w*/; do
   fi
   echo "  $name: start on gpu$gpu $(date +%H:%M:%S)"
   ( cd "$d" && CUDA_VISIBLE_DEVICES="$gpu" \
-      mpirun -np 1 "$PW_BIN" -nk 1 -input pw.in > pw.out 2>&1 ) &
+      "$PW_BIN" -nk 1 -input pw.in > pw.out 2>&1 ) &
 done
 wait
 
