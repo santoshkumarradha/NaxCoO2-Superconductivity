@@ -1,0 +1,52 @@
+&CONTROL
+  calculation = 'nscf'
+  prefix = 'pw'
+  outdir = '../Na2CoSe2O_scf/out'
+  pseudo_dir = '../../pseudo'
+  verbosity = 'high'
+  tprnfor = .true.
+/
+&SYSTEM
+  ibrav = 5
+  celldm(1) = 18.50864202
+  celldm(4) = 0.93556215
+  nat = 6
+  ntyp = 4
+  nbnd = 48
+  ecutwfc = 60.0
+  ecutrho = 480.0
+  occupations = 'smearing'
+  smearing = 'mv'
+  degauss = 0.02
+  nspin = 2
+  starting_magnetization(2) = 0.3
+/
+&ELECTRONS
+  conv_thr = 1.0d-7
+  mixing_beta = 0.3
+  mixing_mode = 'local-TF'
+  electron_maxstep = 300
+/
+ATOMIC_SPECIES
+  Na  22.98977  Na.pbe-spn-kjpaw_psl.1.0.0.UPF
+  Co  58.93300  Co.pbe-spn-kjpaw_psl.0.3.1.UPF
+  Se  78.97100  Se.pbe-dn-kjpaw_psl.1.0.0.UPF
+  O  15.99900  O.pbe-n-kjpaw_psl.1.0.0.UPF
+! Set H: Na2CoSe2O primitive rhombohedral cell (1 f.u., 6 atoms).
+! Structure VERIFIED from JACS 146, 5908 (2024) SI Tables S1-S2
+! (arXiv:2310.17464): R-3m (166), a_hex = 3.5161 A, c_hex = 28.745 A;
+! Co 3a (0,0,0), O 3b (0,0,1/2), Se 6c z = 0.28884, Na 6c z = 0.1251
+! (standard-origin hexagonal setting; on the 3-fold axis the
+! rhombohedral crystal coordinates are exactly (z,z,z)).
+! Purpose: does a Na-derived [Na2O]-gallery band sit near E_F?
+! Inspect the printed eigenvalues/occupations (verbosity high) and the
+! dos.x output of the dense-k NSCF twin.
+ATOMIC_POSITIONS crystal
+  Co  0.0000000000  0.0000000000  0.0000000000
+  O  0.5000000000  0.5000000000  0.5000000000
+  Se  0.2888400000  0.2888400000  0.2888400000
+  Se  0.7111600000  0.7111600000  0.7111600000
+  Na  0.1251000000  0.1251000000  0.1251000000
+  Na  0.8749000000  0.8749000000  0.8749000000
+K_POINTS automatic
+  16 16 16 0 0 0

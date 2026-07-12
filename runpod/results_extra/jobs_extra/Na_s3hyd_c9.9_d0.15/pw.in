@@ -1,0 +1,79 @@
+&CONTROL
+  calculation = 'scf'
+  prefix = 'pw'
+  outdir = './out'
+  pseudo_dir = '../../pseudo'
+  verbosity = 'high'
+  tprnfor = .true.
+/
+&SYSTEM
+  ibrav = 4
+  celldm(1) = 9.45271759
+  celldm(3) = 1.97914393
+  nat = 22
+  ntyp = 4
+  nbnd = 85
+  ecutwfc = 60.0
+  ecutrho = 480.0
+  occupations = 'smearing'
+  smearing = 'mv'
+  degauss = 0.02
+  nspin = 2
+  starting_magnetization(1) = 0.3
+/
+&ELECTRONS
+  conv_thr = 1.0d-7
+  mixing_beta = 0.3
+  mixing_mode = 'local-TF'
+  electron_maxstep = 300
+/
+ATOMIC_SPECIES
+  Co  58.93300  Co.pbe-spn-kjpaw_psl.0.3.1.UPF
+  O  15.99900  O.pbe-n-kjpaw_psl.1.0.0.UPF
+  Na  22.98977  Na.pbe-spn-kjpaw_psl.1.0.0.UPF
+  H  1.00800  H.pbe-kjpaw_psl.1.0.0.UPF
+! Set G water-placement ANSATZ (crystallographically-informed guess
+! after Jorgensen et al., PRB 68, 214517 (2003): in Na_x CoO2 . 1.3 H2O
+! the Na plane at z = c/2 is sandwiched by two water layers ~1.2 A
+! below/above it, with Na octahedrally coordinated by water O):
+!   - Na on the (0,0) Co-top site at z = c/2 + delta;
+!   - 4 rigid gas-phase H2O (O-H 0.9572 A, H-O-H 104.52 deg), water O at
+!     z = c/2 -/+ 1.2 A, on in-plane sites NOT occupied by Na: the two
+!     O-top images (1/3,0), (0,1/3) in the LOWER layer (Na moves away
+!     from them, Na-Ow 2.05-2.57 A over the delta grid) and the two
+!     other Co-top images (1/3,2/3), (2/3,1/3) in the UPPER layer (Na
+!     moves toward them, Na-Ow 2.92-3.13 A);
+!   - H point away from Na, toward the nearest CoO2 plane and radially
+!     outward (bisector tilted 50 deg off +-z); the layer z-dipoles
+!     cancel exactly (2 down, 2 up).  Orientation angles maximize the
+!     minimum intermolecular contact: ALL water-water, water-framework
+!     and water-Na contacts stay >= 2.05 A over the whole delta grid;
+!   - waters stay FIXED while Na scans delta, so E(delta) probes the
+!     double well inside a static solvation cage. The twin *_vac job
+!     differs ONLY by deleting the 12 H2O atoms -> water effect on
+!     E(delta) is the clean difference of the two scans.
+ATOMIC_POSITIONS crystal
+  Co  0.0000000000  0.0000000000  0.0000000000
+  Co  0.3333333333  0.6666666667  0.0000000000
+  Co  0.6666666667  0.3333333333  0.0000000000
+  O  0.3333333333  0.3333333333  0.0969696970
+  O  0.6666666667  0.0000000000  0.0969696970
+  O  0.0000000000  0.6666666667  0.0969696970
+  O  0.3333333333  0.0000000000  0.9030303030
+  O  0.6666666667  0.6666666667  0.9030303030
+  O  0.0000000000  0.3333333333  0.9030303030
+  Na  0.0000000000  0.0000000000  0.5151515152
+  O  0.3333333333  0.0000000000  0.3787878788
+  H  0.5340199106  0.0303423465  0.3984293317
+  H  0.3120938818  0.9696576535  0.2830660485
+  O  0.0000000000  0.3333333333  0.3787878788
+  H  0.9696576535  0.5036775641  0.3984293317
+  H  0.0303423465  0.3424362283  0.2830660485
+  O  0.3333333333  0.6666666667  0.6212121212
+  H  0.3581077436  0.8675400977  0.6085279256
+  H  0.4121627694  0.6730009283  0.7099766943
+  O  0.6666666667  0.3333333333  0.6212121212
+  H  0.8675400977  0.5094323541  0.6085279256
+  H  0.6730009283  0.2608381589  0.7099766943
+K_POINTS automatic
+  6 6 2 0 0 0
