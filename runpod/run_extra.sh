@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+# GPU-parallel launcher for the EXTRA pw.x job sets (E-H) in jobs_extra/.
+#   Set E: K_xCoO2 1x1 E(delta) scans                (24 SCF)
+#   Set F: gated LiCoO2, tot_charge jellium proxy    (12 SCF)
+#   Set G: Na_1/3CoO2 hydrate bilayer + vacuum twin  (10 SCF)
+#   Set H: Na2CoSe2O gallery check                   (1 SCF + 1 dense-k NSCF)
+# Phase 1: all SCF jobs, one pw.x per GPU concurrently.
+# Phase 2: NSCF jobs (+ dos.x where a dos.in is present).
+# Idempotent: any job whose pw.out already ends in "JOB DONE" is skipped, so
+# re-running this script resumes where it left off.  Kill switch: create a
+# file named STOP in this directory; workers exit after their current job.
+set -uo pipefail
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$ROOT"
+
+export PATH=/usr/local/qe/bin:/usr/local/openmpi/bin:/usr/local/ucx/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda/lib:/usr/local/cuda/lib64:/usr/local/fftw/lib:/opt/nvidia/hpc_sdk/Linux_x86_64/24.7/compilers/lib:$LD_LIBRARY_PATH
+export PMIX_MCA_gds=hash
+export OMP_NUM_THREADS="${OMP_NUM_THREADS:-14}"
+PW_BIN="${PW_BIN:-pw.x}"
+DOS_BIN="${DOS_BIN:-dos.x}"
+
+command -v "$PW_BIN" >/dev/null || { echo "ERROR: $PW_BIN not in PATH"; exit 1; }
+
+NGPU=$(nvidia-smi -L 2>/dev/null | wc -l)
+[ "$NGPU" -ge 1 ] || { echo "WARNING: no GPU detected, using 1 serial slot"; NGPU=1; }
+echo "== $NGPU GPU(s) detected =="
+
+[ -d pseudo ] && ls pseudo/*.UPF >/dev/null 2>&1 || bash get_pseudos.sh
+# make sure the extra-stage pseudos (K, Se, H) are present even if pseudo/
+# was populated by an older get_pseudos.sh
+for f in K.pbe-spn-kjpaw_psl.1.0.0.UPF Se.pbe-dn-kjpaw_psl.1.0.0.UPF H.pbe-kjpaw_psl.1.0.0.UPF; do
+  [ -s "pseudo/$f" ] || { bash get_pseudos.sh; break; }
+done
+[ -f manifest_extra.json ] || python3 generate_inputs.py --stage extra
+
+job_done() {  # $1 = job dir
+  [ -f "$1/pw.out" ] && tail -n 20 "$1/pw.out" | grep -q "JOB DONE"
+}
+
+run_job() {  # $1 = gpu id, $2 = job name
+  local gpu="$1" name="$2" dir="jobs_extra/$2"
+  if job_done "$dir"; then echo "[gpu$gpu] $name: already done, skip"; return 0; fi
+  echo "[gpu$gpu] $name: start $(date +%H:%M:%S)"
+  ( cd "$dir" && CUDA_VISIBLE_DEVICES="$gpu" "$PW_BIN" -nk 1 -input pw.in > pw.out 2>&1 )
+  if job_done "$dir"; then
+    echo "[gpu$gpu] $name: JOB DONE $(date +%H:%M:%S)"
+    if [ -f "$dir/dos.in" ]; then
+      ( cd "$dir" && "$DOS_BIN" < dos.in > dos.out 2>&1 ) \
+        && echo "[gpu$gpu] $name: dos.x done" \
+        || echo "[gpu$gpu] $name: dos.x FAILED"
+    fi
+  else
+    echo "[gpu$gpu] $name: FAILED (see $dir/pw.out)"
+  fi
+}
+
+run_pool() {  # $1 = file with one job name per line
+  local queue="$1"
+  [ -s "$queue" ] || { echo "  (queue empty)"; return 0; }
+  local lock="$queue.lock"; : > "$lock"
+  worker() {
+    local gpu="$1" name
+    while :; do
+      [ -f STOP ] && { echo "[gpu$gpu] STOP file found, worker exiting"; break; }
+      name=$( { flock 9; head -n 1 "$queue"; sed -i '1d' "$queue"; } 9>>"$lock" )
+      [ -n "$name" ] || break
+      run_job "$gpu" "$name"
+    done
+  }
+  local g
+  for g in $(seq 0 $((NGPU - 1))); do worker "$g" & done
+  wait
+  rm -f "$lock"
+}
+
+list_jobs() {  # $1 = type (scf|nscf) -> job names from manifest_extra.json
+  python3 - "$1" <<'EOF'
+import json, sys
+jobs = json.load(open("manifest_extra.json"))["jobs"]
+for j in jobs:
+    if j["type"] == sys.argv[1]:
+        print(j["name"])
+EOF
+}
+
+echo "== Phase 1: extra SCF jobs (sets E, F, G + H parent) =="
+list_jobs scf > .queue_extra_scf
+run_pool .queue_extra_scf
+[ -f STOP ] && { echo "stopped by STOP file"; exit 1; }
+
+echo "== Phase 2: extra NSCF + DOS jobs (set H) =="
+ensure_pp_tools() {
+  command -v dos.x >/dev/null 2>&1 && command -v pp.x >/dev/null 2>&1 && return 0
+  echo "== compiling QE 7.3.1 PP tools (CPU) =="
+  apt-get install -y -qq gfortran gcc make libfftw3-dev >/dev/null 2>&1
+  ( cd /opt \
+    && curl -fsSL -o qe.tar.gz https://gitlab.com/QEF/q-e/-/archive/qe-7.3.1/q-e-qe-7.3.1.tar.gz \
+    && tar xzf qe.tar.gz && cd q-e-qe-7.3.1 \
+    && FC=gfortran F90=gfortran CC=gcc ./configure --disable-parallel > configure.log 2>&1 \
+    && make -j"$(nproc)" pp > make_pp.log 2>&1 \
+    && cp bin/dos.x bin/pp.x /usr/local/bin/ ) || echo "PP TOOLS BUILD FAILED"
+}
+ensure_pp_tools
+list_jobs nscf > .queue_extra_nscf
+run_pool .queue_extra_nscf
+[ -f STOP ] && { echo "stopped by STOP file"; exit 1; }
+
+echo "== all extra phases finished =="
+echo "Summary:"
+n_ok=0; n_bad=0
+for d in jobs_extra/*/; do
+  if job_done "$d"; then n_ok=$((n_ok+1)); else n_bad=$((n_bad+1)); echo "  incomplete: $d"; fi
+done
+echo "  $n_ok done, $n_bad incomplete"
+echo "EXTRA COMPLETE"
