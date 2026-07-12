@@ -66,7 +66,7 @@ for ax, (el, cell, ramp, ylim, letter) in zip(axes, PANELS):
     S.panel_label(ax, letter)
     lab = S.SERIES[(el, cell)]["label"]
     ax.text(0.5, 0.94, lab, transform=ax.transAxes, ha="center", va="top",
-            fontsize=8, color=S.SERIES[(el, cell)]["color"], fontweight="bold")
+            fontsize=8, color=S.C_INK)
     leg = ax.legend(title=r"$c$ (Å)", loc="lower center", ncol=4,
                     handletextpad=0.3, columnspacing=0.9, borderpad=0.3,
                     handlelength=0.9)

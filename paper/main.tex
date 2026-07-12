@@ -14,14 +14,11 @@
 % ("Extra \or" in the column preamble), so the scoreboard is a plain booktabs
 % tabular with fixed p{} column widths.
 \usepackage{booktabs}
-\usepackage{pifont}
-\definecolor{good}{HTML}{0A8A0A}
-\definecolor{amber}{HTML}{C98500}
-\definecolor{sec}{HTML}{52514E}
-% verdict glyph macros (colour + word; never colour alone)
-\newcommand{\vok}{{\color{good}\ding{51}}\ \textbf{\color{good}explained}}
-\newcommand{\vpred}{{\color{amber}$\blacktriangle$}\ \textbf{\color{amber}prediction}}
-\newcommand{\srcref}[1]{\,{\footnotesize\itshape\color{sec}(#1)}}
+% Table I verdict/source styling: plain roman, no colour, no glyphs
+% (aesthetic-sobriety pass -- reads like a printed PRL table).
+\newcommand{\vok}{explained}
+\newcommand{\vpred}{prediction}
+\newcommand{\srcref}[1]{\,{\footnotesize\itshape(#1)}}
 
 \graphicspath{{figures/}}
 
@@ -204,10 +201,12 @@ does not; the single-to-double-well flip survives every check we ran.
   one state per {eV} at the same spacing---the interlayer electron gas switching on.
   (c)~The Allen--Dynes superconducting temperature: a narrow dome pinned just above
   $c^{\ast}$, with the shaded band spanning the electron--phonon coupling ansatz ($11$--$23$~K)
-  and the hatched region where the coupling exceeds the polaron limit and superconductivity is
-  killed. The experimental anchors are marked: the dry parent and monolayer hydrate (not
-  superconducting) fall on the walls, and the bilayer hydrate (star, $T_c=4.5$~K) does not sit
-  in the static window---the difficulty of Sec.~\ref{sec:difficulty}.}
+  and the grey region (right of the dome) where the coupling exceeds the polaron limit and
+  superconductivity is killed. The experimental anchors are the thin dashed verticals at
+  $5.5$, $6.9$ and $9.9$~\AA: the dry parent and monolayer hydrate (not superconducting) fall on
+  the walls, and the bilayer hydrate (star, $T_c=4.5$~K) does not sit in the static
+  window---the difficulty of Sec.~\ref{sec:difficulty}, resolved there by water re-binding the
+  sodium.}
   \label{fig:money}
 \end{figure*}
 
@@ -297,37 +296,80 @@ those is a problem, and we turn to it now.
 The bilayer hydrate is the compound that actually superconducts, and it holds its {CoO$_2$}
 layers $9.9$~\AA{} apart~\cite{Jorgensen2003}. That is far outside the dome we calculated. Worse,
 when we compute the sodium well at $9.9$~\AA{} without water, we do not find a soft symmetric
-rattler at all: the energy falls all the way to the largest displacement we sampled, meaning
-the sodium is not centred but bound hard against one {CoO$_2$} sheet. The static picture puts
-the one superconducting compound in the dead polaronic regime. It would be convenient to
-relegate this to a supplement; it is instead the most important number in the paper, and it
-has, we believe, a single cause: the calculation holds the water still, and the water does not
-hold still.
+rattler at all: the energy falls monotonically all the way to the largest displacement we
+sampled ($-206$~meV at $\delta=0.75$~\AA, still falling), meaning the sodium is not centred but
+sliding toward a bound site against one {CoO$_2$} sheet. The curvature at the midplane is
+negative, $V''(0)<0$: the centred ion is not the bottom of a soft well but the top of an
+instability, an imaginary-frequency mode ($\lvert\hbar\omega\rvert\approx11i$~meV) that runs
+downhill into chemisorption. The static picture puts the one superconducting compound in the
+dead polaronic regime. This is not our artifact; it is the mechanical form of the long-standing
+result that hydration does nothing to the electronic structure beyond
+expansion~\cite{JohannesSingh2004,MarianettiKotliarCeder2004,Arita2005}. A bare expanded
+gallery is a disaster for the sodium. The cause, we will show, is that the calculation holds
+the water still, and the water does not hold still~\cite{Jalarvo2008,Lynn2003}.
 
-Consider what is actually in that gallery. At $9.9$~\AA{} the water bilayer fills nearly
-four-fifths of the space between the sheets, and it is a hydrogen-bonded network, not a rigid
-spacer. A frozen calculation sees only the average positions and reports a deep asymmetric
-well. But a mobile, polarizable water network screens the attraction that would otherwise
-bind the sodium to one layer, and its fluctuating hydrogen bonds shake the ion back and forth
-across the midplane. The effect on the sodium potential is to shallow it and re-symmetrize
-it---to push the well back toward the soft, near-critical shape that lives in the dome. The
-water is not what sets the layers $9.9$~\AA{} apart and then stands aside. The water is what
-keeps the sodium soft at a spacing where, left to a static lattice, it would freeze. It is a
-lubricant, not a spacer.
+So we put the water in. We built the bilayer solvation cage that neutron
+diffraction~\cite{Jorgensen2003,Lynn2003} places around the sodium---four rigid gas-phase
+{H$_2$O} molecules, two in the layer below the sodium plane and two above, octahedrally
+disposed about the ion (Fig.~\ref{fig:water}(b); the placement and its validation are in
+Appendix~\ref{app:water})---and recomputed $E(\delta)$ in that cage, against the identical cell
+with the twelve water atoms deleted. The waters are frozen while the sodium scans, so the
+hydrate-minus-vacuum difference is clean. The result is Fig.~\ref{fig:water}(a), and it is the
+demonstration this paper turns on. The vacuum curve runs away as before. The hydrate curve does
+not: the solvation cage converts the runaway into a \emph{bound} double well, with minima near
+$\pm0.30$~\AA, a central barrier of about $0.20$~eV, and a real, confined $c$-axis sodium mode.
+Quantized about its true minimum with the sodium mass, that mode has
+$\hbar\omega_{\mathrm{eff}}\approx23$~meV: finite, positive, bound---where the vacuum mode was
+imaginary. Water re-binds the sodium the static lattice was throwing away.
 
-This converts the mismatch into the sharpest prediction in the paper, and it is a prediction
-about dynamics, so the tests are about dynamics. First, deuteration: replacing {H$_2$O} by
-{D$_2$O} stiffens the water network's librations by roughly $\sqrt2$ and tightens its hydrogen
-bonds, which should shift the sodium well and therefore $T_c$---a small, possibly inverse,
-isotope effect on $T_c$ with the exponent well below the {BCS} value of one half, because the
-boson is the sodium and not the water. Second, spectroscopy: there must be a soft, strongly
-anharmonic sodium $c$-axis mode at the {meV} scale in the superconducting hydrate, visible to
-inelastic neutron scattering or low-frequency Raman, and it must be dynamical---sodium seen
-statically split, sitting off-centre without rattling, would kill the mechanism. Third, and
-decisive, the calculation we have not done: $E(\delta)$ for the sodium between explicit water
-layers. If that calculation still shows the sodium bound hard to one {CoO$_2$} sheet, the water
-does not do what we say and the picture is wrong. This is the next calculation for this
-problem, and we say plainly that the mechanism stands or falls on it.
+We are careful about what this does and does not settle. It settles the qualitative claim---the
+water is not a spacer, it is what keeps the sodium from chemisorbing, and it does so
+mechanically, not electronically. It does not, by itself, land the sodium in the dome. The cage
+here is frozen, and a frozen cage re-binds the ion into a still-deep well; feeding that well
+through the coupling machinery of Sec.~\ref{sec:model} gives a large $\lambda$ (above the
+polaron limit across the whole ansatz range), because the barrier is $0.20$~eV and the ion is
+localized, not yet rattling. The static half of the water's job---stop the chemisorption,
+re-symmetrize the potential---is now demonstrated. The remaining half---soften the well the
+rest of the way into the pairing window---is what the water's \emph{motion} does, and a rigid
+cage cannot show it. This sharpens the claim rather than weakening it: it localizes the missing
+physics precisely, in the librations and hydrogen-bond fluctuations of the gallery
+water~\cite{Jalarvo2008}, and nowhere else.
+
+The tests are therefore about dynamics. First, deuteration: replacing {H$_2$O} by {D$_2$O}
+stiffens the water librations by roughly $\sqrt2$ and tightens the hydrogen bonds, which should
+shift the sodium well and therefore $T_c$---a small, possibly inverse, isotope effect with an
+exponent well below the {BCS} one-half, because the boson is the sodium and not the water. We
+say plainly what our rigid-cage calculation can and cannot predict here: with the waters frozen,
+no atom that moves is deuterated, so the direct libration channel is absent by construction; a
+rigid run can bound only the sodium-mode mass dependence ($\hbar\omega\propto M^{-1/2}$) and the
+cage-stiffness mixing, and a genuine {D$_2$O} number requires mobile water. Second,
+spectroscopy: there must be a soft, strongly anharmonic sodium $c$-axis mode at the scale we now
+quote, $\hbar\omega\sim20$~meV, in the superconducting hydrate, visible to inelastic neutron
+scattering or low-frequency Raman, and it must be dynamical---sodium seen statically split,
+sitting off-centre without rattling, would kill the mechanism. Third, and decisive, the one
+calculation still open: $E(\delta)$ with the water allowed to move, by molecular dynamics or a
+relaxed-water potential of mean force. If mobile water does not soften the bound well of
+Fig.~\ref{fig:water}(a) toward the pairing window, the picture is wrong. The static calculation
+has answered the objection it was built to answer; the mechanism now stands or falls on the
+dynamical one.
+
+% ---- FIG 6: the rigid-cage water demonstration ----
+\begin{figure}[t]
+  \centering
+  \figorbox{fig6}{fig6}{\columnwidth}
+  \caption{The rigid-cage water demonstration. (a)~Total energy $E(\delta)$ of the off-centre
+  sodium at $c=9.9$~\AA{} in the $\sqrt{3}\times\sqrt{3}$ ($x=1/3$) cell, with a rigid
+  four-{H$_2$O} solvation cage (hydrate) and with the water deleted (vacuum); points are {QE}
+  total energies, curves guide the eye. Without water the curve runs away monotonically---the
+  sodium chemisorbs onto a {CoO$_2$} sheet, an unstable ($V''(0)<0$) mode with no bound state.
+  With the rigid cage it becomes a bound double well (minima $\approx\pm0.30$~\AA, central
+  barrier $\approx0.20$~eV), a real confined mode of $\hbar\omega_{\mathrm{eff}}\approx23$~meV.
+  The frozen cage re-binds the sodium but leaves the well deep; softening it into the pairing
+  window is the work of the water's motion (text). (b)~The hydrate cell, drawn from the actual
+  input coordinates (Appendix~\ref{app:water}), viewed along $c$: {CoO$_2$} sheets at top and
+  bottom, the sodium on its plane at $c/2$, and the two-layer water cage between.}
+  \label{fig:water}
+\end{figure}
 
 % ===========================================================================
 \section{Consequences}
@@ -381,27 +423,46 @@ is a small correction to the spin response, not a term in the pairing.
 \paragraph{A probe-dependent valence.}
 If the sodium keeps a fraction $q$ of its electron in the gallery rather than giving it to
 the cobalt, then a site-specific valence probe---the cobalt {$L$}-edge or {NQR}---and a
-charge-counting probe---redox titration of the whole crystal---should disagree, by
-$\Delta v = x\,q\approx0.04$ per cobalt, and only when the gallery is open. We are careful
-here: this small split is not the large valence offset seen in these
-materials~\cite{Milne2004}, which needs an extra electron reservoir such as oxonium and is
-about six times larger; our prediction is the small, gallery-specific piece that switches on
-with the water and vanishes in the monolayer hydrate where the gallery band is empty.
+charge-counting probe---redox titration of the whole crystal---should disagree, and only when
+the gallery is open. We can now put a number on it. The {Bader} charge on the sodium in the
+$x=1/3$ cell rises from the empty-gallery monolayer spacing to the superconducting bilayer by
+$\Delta q\approx0.18\,e$, so the gallery-specific valence split is
+$\Delta v = x\,\Delta q\approx0.06$ per cobalt, switching on with the water and vanishing in the
+monolayer hydrate where the gallery band is empty. We are careful here: this small split is not
+the large valence offset seen in these materials~\cite{Milne2004}, which needs an extra electron
+reservoir such as oxonium and is several times larger; ours is the small, gallery-specific piece
+alone.
 
-\paragraph{Predictions for related systems.}
-The picture points beyond this one compound, and we label each as a prediction.
-A gated {LiCoO$_2$} thin film, in which the carrier density is set electrostatically rather
-than chemically, should show the interlayer gas turn-on without the disadvantage of the light
-frozen ion---a place to test the gas and the magnetism apart from the glue.
-Potassium cobaltate {K$_x$CoO$_2$}, with a still larger and heavier gallery ion, should reach
-the soft-mode window at a wider spacing and, if it can be hydrated to open the gallery, should
-superconduct by the same route with a heavier, softer mode.
-The mixed-anion cobaltate {Na$_2$CoSe$_2$O}~\cite{Cheng2024} carries the same two-dimensional
-cobalt network with a different gallery chemistry, and our picture asks a definite question of
-it: does its gallery ion sit in a soft anharmonic well, and does a gas condense there?
-Finally the layered nitride superconductor {Li$_x$ZrNCl} deserves re-analysis in the same
-language, as a gallery whose carrier density and interlayer mode may be doing together what
-they do here. Each is one experiment, and each is stated so it can fail.
+\paragraph{Related systems: three tests we have run, one we have not.}
+The picture points beyond this one compound, and three of its predictions we have now put to
+the calculation.
+\emph{Gating.} A {LiCoO$_2$} thin film in which the carrier density is set electrostatically
+rather than chemically should show the gallery turn-on without the disadvantage of the light
+frozen ion. We added carriers to the anhydrous ($5.5$~\AA) lithium cell by a compensating
+background, $0.1$--$0.3\,e$ per formula unit. The added charge fills the gallery: the Fermi
+level and the areal density rise monotonically (to $n_{\mathrm{2D}}\approx4\times10^{14}$
+cm$^{-2}$ at $0.3\,e$), and the lithium well softens as it fills---while remaining under a
+millielectronvolt deep, far below the lithium zero-point energy of $\sim9$~meV, so the ion
+stays dynamically centred. Gating thus tunes the gas without freezing the ion, exactly the
+place to test the gas and the magnetism apart from the glue; it is the ionic-liquid-gating
+prediction for the thin-film collaboration.
+\emph{Potassium.} A larger, heavier gallery ion should reach the soft-mode window at a wider
+spacing. It does: for {K$\,1\times1$} the {Landau} coefficient crosses zero at
+$c^{\ast}_{\mathrm{K}}\approx6.75$~\AA, against $6.40$~\AA{} for sodium and $\leq5.5$~\AA{} for
+lithium, so the threshold orders {Li}$<${Na}$<${K} with ionic size, and the window opens
+farther out for potassium---which, hydrated to that spacing, should superconduct by the same
+route with a heavier, softer mode.
+\emph{{Na$_2$CoSe$_2$O}.} The mixed-anion cobaltate~\cite{Cheng2024} ($T_c=6.3$~K) carries the
+same two-dimensional cobalt network with a different gallery chemistry, and our picture asks
+whether its gallery ion hosts an interlayer band. It does not: the states at the Fermi level
+are the {Co}\,$3d$--{Se}\,$4p$ network, and the ionic sodium of its {Na$_2$O} gallery sits well
+above the Fermi level, with no sodium-derived band there. {Na$_2$CoSe$_2$O} superconducts
+through its cobalt network, not the gallery, and is a clean negative control: same {CoO$_2$}-like
+sheet, no gallery gas, superconductivity by another route.
+Finally, the layered nitride superconductor {Li$_x$ZrNCl} deserves re-analysis in the same
+language, as a gallery whose carrier density and interlayer mode may be doing together what they
+do here; that one we label a prediction, not yet computed. Each is one experiment, and each is
+stated so it can fail.
 
 % ---- FIG 4: spin ----
 \begin{figure}[t]
@@ -437,8 +498,9 @@ they do here. Each is one experiment, and each is stated so it can fail.
       into a polaron and pairing is killed.\\
     Bilayer hydrate ($9.9$\,\AA) is SC, $T_c\!=\!4.5$\,K\srcref{Takada 2003}
       & \vpred &
-      The bare geometry is polaronic here; superconductivity needs water to
-      soften the sodium well back into the window---untested.\\
+      Bare geometry is polaronic; a rigid water cage re-binds Na into a
+      confined $23$\,meV well (Fig.~\ref{fig:water}), but full softening into
+      the window needs mobile water---the one open calculation.\\
     No superconducting Li analogue & \vok &
       $c^{\ast}_{\mathrm{Li}}\!\le\!5.5$\,\AA\ and the lighter mass make a
       stiffer mode; Li never enters the soft-mode window.\\
@@ -475,9 +537,12 @@ $0.2$~\AA. The local-spin-density treatment over-polarizes the $\sqrt{3}$ cell, 
 unphysically large and flat moment there; we therefore rest the magnetic story on the
 $1\times1$ series and exclude the $\sqrt{3}$ moments, and we have checked that the well
 energies themselves are insensitive to the spin treatment at the few-percent level, so the
-over-polarization does not touch the wells. There is no explicit water anywhere in these
-calculations, which is exactly the gap that Sec.~\ref{sec:difficulty} says must be filled
-next. And the pairing is treated as a single Einstein boson in the Allen--Dynes
+over-polarization does not touch the wells. The explicit water we do include
+(Sec.~\ref{sec:difficulty}, Appendix~\ref{app:water}) is a rigid solvation cage, frozen while the
+sodium scans; it settles the static question---the sodium binds into a confined well rather than
+chemisorbing---but by construction it cannot show the softening that the water's motion supplies,
+which is the one calculation Sec.~\ref{sec:difficulty} still leaves open. And the pairing is
+treated as a single Einstein boson in the Allen--Dynes
 approximation, with an explicit cut where the coupling leaves the regime that approximation
 can describe; a real bipolaron treatment past that cut is not attempted. The final test of any
 physical theory lies, of course, in experiment, and Sec.~\ref{sec:difficulty} and
@@ -486,16 +551,11 @@ search first.
 
 % ===========================================================================
 
-\section*{\textcolor{red}{TODO --- Pending calculations, to be integrated before submission}}
+\section*{\textcolor{red}{TODO --- Genuinely pending, to be integrated before submission}}
 
 \begin{itemize}
-\item \todosec{Explicit-water DFT (Sec.~IV)} --- $E(\delta)$ for Na in the bilayer-hydrate geometry with four solvating H$_2$O vs.\ the same cell with vacuum; the water-softening claim stands or falls here. Batch built (set G), awaiting the GPU run.
-\item \todosec{D$_2$O isotope shift (Sec.~IV)} --- from the water-softened well, re-quantize with D$_2$O masses; predicted $T_c$ shift against the existing deuteration experiments.
+\item \todosec{Mobile-water $E(\delta)$ (Sec.~IV)} --- the one open calculation: $E(\delta)$ with the gallery water allowed to move (AIMD or a relaxed potential of mean force), to show the softening of the rigid-cage bound well of Fig.~\ref{fig:water} the rest of the way into the pairing window. The rigid-cage static half is done (set G); this is the dynamical half.
 \item \todosec{Li$_x$ZrNCl/HfNCl reanalysis (Sec.~V)} --- published $T_c$ vs.\ basal-spacing data confronted with the gallery mechanism; support, refutation, or orthogonal. Literature extraction in progress.
-\item \todosec{K$_x$CoO$_2$ scans (Sec.~V)} --- set E; does the larger alkali widen the superconducting window?
-\item \todosec{Gated thin-film LiCoO$_2$ (Sec.~V)} --- set F, jellium-gated monolayer at 5.5~\AA; do added carriers occupy the gallery band while Li stays quantum-paraelectric? The ionic-liquid-gating prediction for the thin-film collaboration.
-\item \todosec{Na$_2$CoSe$_2$O gallery states (Sec.~V)} --- set H; does the stable Na$_2$O gallery of the 2024 $T_c=6.3$~K compound host the same interlayer band?
-\item \todosec{Site-specific XAS/NQR numbers (Sec.~V)} --- the probe-dependent Co-valence split $x\,q$ evaluated from the v4 Bader charges, with the measurable magnitude stated.
 \item \todosec{Design-rule novelty audit} --- prior-art verdict (SrTiO$_3$ quantum criticality, C$_6$Ca interlayer state, KOs$_2$O$_6$ rattling) and the one-sentence claim we can defend; in progress.
 \end{itemize}
 
@@ -514,6 +574,53 @@ water is not the spacer that holds the gallery open but the lubricant that keeps
 soft at a spacing where a rigid lattice would freeze it. The mechanism is testable, and the
 test that decides it is a calculation of the sodium well with the water put in and allowed to
 move.
+
+\appendix
+
+% ===========================================================================
+\section{The rigid water cage}
+\label{app:water}
+% ===========================================================================
+
+The water calculation of Sec.~\ref{sec:difficulty} (set~G) is built to isolate one thing: what
+a solvation cage does to the sodium potential, with everything else held fixed. We describe it
+in full because the result turns on the construction.
+
+\emph{Cell and electronic settings.} The host is the $\sqrt{3}\times\sqrt{3}$ ($x=1/3$)
+{Na$_x$CoO$_2$} cell at the bilayer spacing $c=9.9$~\AA{} ($a=5.00$~\AA), the same cell and the
+same spin-polarized {PBE}+{PAW} settings ($60/480$~Ry wavefunction/density cutoffs,
+Marzari--Vanderbilt smearing $0.02$~Ry, $6\times6\times2$ $\mathbf{k}$ mesh) used for the
+anhydrous scans of Sec.~\ref{sec:opening}. The {CoO$_2$} sheets and the oxygen heights are frozen
+at the values used throughout, so the water is the only thing added.
+
+\emph{Water geometry.} Each water is a rigid gas-phase molecule, {O--H} bond $0.9572$~\AA{} and
+{H--O--H} angle $104.52^\circ$. Four are placed per cell, in the arrangement neutron diffraction
+finds for the bilayer hydrate~\cite{Jorgensen2003,Lynn2003}: the sodium sits on the {Co}-top
+$(0,0)$ site on its plane at $z=c/2+\delta$, and the four water oxygens lie in two layers
+$1.2$~\AA{} below and above that plane, on in-plane sites not occupied by the sodium---the two
+{O}-top images in the lower layer, toward which the sodium moves away, and the two other
+{Co}-top images in the upper layer. Over the whole displacement scan the sodium--water oxygen
+distances run $2.05$--$2.57$~\AA{} (lower layer) and $2.92$--$3.13$~\AA{} (upper), an
+octahedral-like first coordination shell. The hydrogens point away from the sodium, toward the
+nearest {CoO$_2$} sheet and radially outward, with the molecular bisector tilted $50^\circ$ off
+the $c$ axis. The orientations are chosen to maximize the smallest intermolecular contact: every
+water--water, water--framework and water--sodium distance stays $\geq2.05$~\AA{} across the whole
+$\delta$ grid. The two down-pointing and two up-pointing molecules cancel the layer $z$-dipole
+exactly, so the cage adds no net dipole field.
+
+\emph{The scan.} The waters are held fixed while the sodium scans $\delta$, so
+$E_{\mathrm{hyd}}(\delta)-E_{\mathrm{vac}}(\delta)$---the hydrate curve minus the identical cell
+with the twelve water atoms deleted---is the clean effect of the solvation cage on the sodium
+potential, with no relaxation confounds.
+
+\emph{What a rigid cage can and cannot say.} By construction this probes the \emph{static}
+solvation cage only. It answers the objection it was built for---whether an expanded gallery
+leaves the sodium chemisorbed (it does, in vacuum) or bound in a confined well (it does, with
+the cage)---and it fixes the sodium-mode frequency of that well. It cannot represent the water's
+own motion: the librations and hydrogen-bond fluctuations that a mobile network
+supplies~\cite{Jalarvo2008}, and with them the direct deuteration channel and the further
+softening of the well, are absent here by design. That is the content of the one calculation we
+leave open.
 
 \begin{acknowledgments}
 % TODO: acknowledgments / funding.

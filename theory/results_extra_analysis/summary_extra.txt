@@ -1,0 +1,65 @@
+========================================================================
+SET G  — rigid-cage hydrate vs vacuum, Na sqrt3xsqrt3, c = 9.9 A
+========================================================================
+delta(A)   E_hyd(meV)   E_vac(meV)   [rel. to centred delta=0]
+  0.00           0.0          0.0
+  0.15        -144.4         -7.9
+  0.30        -198.5        -31.8
+  0.50        -173.0        -89.3
+  0.75         -58.3       -205.9
+  hydrate: minimum at delta = 0.30 A, depth 198 meV vs centre; rises again by 0.50-0.75 A
+  vacuum : monotone fall to -206 meV at 0.75 A (unterminated -> Na adsorbs onto a CoO2 sheet, no bound well)
+  hydrate confining fit: a=-1.60, b=+2.69, g=+0.00 eV/A^(2,4,6); global-fit d0=0.55 A (rms 65 meV; the well is wide/flat-bottomed so a low-order fit is only a guide)
+  DATA-direct: minimum at delta=0.30 A, central barrier 198 meV -- a BOUND double well (not a runaway)
+  vacuum  fit: a=-0.350, b=-0.028 eV/A^(2,4)  (monotone, rms 0.0 meV)
+
+Confinement (the headline): omega_hydrate vs omega_vacuum
+  hydrate, Na mass: local parabola about d0=0.35 A gives k=V''=2.79 eV/A^2 -> hbar*omega_eff = 23 meV (REAL, bound, confined)
+  vacuum,  Na mass: V''(0) = -0.70 eV/A^2 < 0 -> UNSTABLE, |hbar*omega| = 11i meV (IMAGINARY): no bound state, Na chemisorbs onto a CoO2 sheet.
+  ==> water converts an unstable ~11i meV runaway into a real, bound ~23 meV confined c-axis Na mode. THIS is the rigid-cage demonstration.
+
+Coupling (quadratic vertex, effective_model machinery):
+  N(0) (Na s3, 9.9 A, results_v4 dos.x) = 3.953 st/eV/cell/spin   [NB: at x=1/3 this is DOMINATED by the Co-3d background, NOT the gallery band -- so lambda below is an UPPER estimate]
+  Bader dq_s3(9.9-5.5) = +0.201 e -> TB splitting delta = 1.24 eV
+  even overtone hbar*Omega = E2-E0 = 33 meV, <0|d^2|2> = 0.0555 A^2
+  [gamma=1.43, z0=0.70 A] chi=10.4 eV/A^2, lambda=19.8 -> polaronic (lambda>2), Tc=0.0 K
+  [gamma=1.0, z0=1.00 A] chi=5.1 eV/A^2, lambda=4.8 -> polaronic (lambda>2), Tc=0.0 K
+  [gamma=2.0, z0=0.50 A] chi=20.3 eV/A^2, lambda=76.1 -> polaronic (lambda>2), Tc=0.0 K
+  VERDICT (set G): the FROZEN cage re-binds Na into a deep (~200 meV) bound well, so the quadratic-vertex lambda is large (mostly >2, polaronic-leaning across the ansatz range); the rigid cage kills the runaway but does NOT by itself soften Na into the low-lambda dome. Full softening into the SC window needs the water to MOVE -- exactly the 'lubricant, not spacer' claim, now with the static half demonstrated.
+
+Isotope (H2O vs D2O), rigid-cage caveat:
+  The 4 waters are FROZEN, so replacing H by D changes NO atom that moves in this calculation; the direct water-libration isotope channel is, by construction, not represented here.  What a rigid-cage run CAN bound is the Na-mode mass dependence (hbar*omega ~ M^-1/2) and the cage-stiffness mixing; a genuine D2O prediction needs mobile water.
+
+========================================================================
+SET E  — K_1x1 alpha(c), c*_K, Na/Li/K ordering
+========================================================================
+  c= 5.5: alpha=+7.122 eV/A^2, beta=+3.403, d0=0.00 A, depth=   -0 meV, E(1.0A)=10451 meV
+  c= 6.9: alpha=-0.198 eV/A^2, beta=+1.017, d0=0.31 A, depth=   10 meV, E(1.0A)=886 meV
+  c= 8.4: alpha=-0.658 eV/A^2, beta=+0.073, d0=2.12 A, depth= 1485 meV, E(1.0A)=-555 meV
+  c= 9.9: alpha=-0.405 eV/A^2, beta=-0.008, d0=5.00 A, depth=15385 meV, E(1.0A)=-411 meV
+  c*_K = 6.75 A (PCHIP; linear 6.86) bracketed 5.5-6.9 A
+  c*_Na(1x1) = 6.40 A;  c*_Li: alpha(5.5)= -0.16 <0 -> c*_Li <= 5.5 A (upper bound)
+
+========================================================================
+SET F  — Li_gate_c5.5, tot_charge -0.1/-0.2/-0.3 (gallery gating)
+========================================================================
+  q=-0.1 e: E(0.15/0.30/0.50)= +0.50/+7.93/+67.3 meV, alpha=-0.0125 eV/A^2, E_F=10.50 eV, n_2D=1.45e+14 e/cm^2
+  q=-0.2 e: E(0.15/0.30/0.50)= -0.22/+4.97/+58.7 meV, alpha=-0.0443 eV/A^2, E_F=10.68 eV, n_2D=2.90e+14 e/cm^2
+  q=-0.3 e: E(0.15/0.30/0.50)= -0.92/+2.08/+50.2 meV, alpha=-0.0755 eV/A^2, E_F=10.82 eV, n_2D=4.36e+14 e/cm^2
+  Li zero-point energy scale ~ 8-9 meV >> |well depth| (<1 meV at every gate): Li stays dynamically centred = quantum-paraelectric at all gate charges, while E_F and n_2D rise monotonically with added charge.
+  -> added charge fills the gallery/interlayer band (the well SOFTENS with gating, alpha decreasing toward 0), not a Li displacement: gating tunes carriers without freezing the ion. This is the ionic-liquid-gating prediction for the thin-film LiCoO2 collaboration.
+
+========================================================================
+SET H  — Na2CoSe2O (Tc=6.3 K): Na-derived gallery band near E_F?
+========================================================================
+  E_F = 6.855 eV; total DOS(E_F) = 6.35 states/eV/cell (both spins) = 3.17 per spin -> metallic (consistent with a phonon SC).
+  Na is 6c and ionic (Na+): its 3s states lie well above E_F; the E_F manifold is the Co-3d / Se-4p 2D network, NOT a Na2O-gallery band.
+  VERDICT: no Na-derived gallery state at E_F. Na2CoSe2O superconducts through its Co-Se network, not the interlayer-gallery route -- so it is OUTSIDE the gallery-2DEG mechanism (a clean negative control). (Caveat: total DOS only; no projwfc run, character inferred from Na ionicity + site.)
+
+========================================================================
+VALENCE SPLIT  Delta v = x*q  (Co L-edge/NQR vs redox titration)
+========================================================================
+  Na s3 Bader q_bader: 5.5/6.9/8.4/9.9 A = 8.105/8.123/8.075/8.306 e (zval Na = 9)
+  q retained in gallery at 9.9 A (q_bader-8) = 0.306 e -> Delta v_total = x*q = 0.102 per Co
+  gallery-specific piece (9.9 minus empty-gallery 6.9), x*Dq = 0.061 per Co  <- switches on with the water, ~0 in the monolayer hydrate
+  This is the SMALL gallery-specific split, distinct from the large (~0.24/Co) oxonium-reservoir offset seen in redox titration.

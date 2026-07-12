@@ -30,15 +30,17 @@ def series_stats(el, cell):
 
 fig, ax = plt.subplots(figsize=(3.4, 3.05))
 
+C_SHADE = "#e2e1db"     # neutral light-grey fill (sobriety: no decorative colour)
+
 # --- s3 LSDA over-polarisation caveat band (top) ---
 s3 = mag[(mag.alkali == "Na") & (mag.cell == "s3")]["abs_mag_muB"]
-ax.axhspan(s3.min(), s3.max(), color=S.C_YELL, alpha=0.16, lw=0, zorder=0)
+ax.axhspan(s3.min(), s3.max(), color=C_SHADE, alpha=0.9, lw=0, zorder=0)
 ax.text(9.85, s3.max(), r"Na $\sqrt{3}$: LSDA over-polarised," "\n"
         r"$|m|\!\approx\!$const (excluded)", ha="right", va="top",
-        fontsize=7.0, color="#9a7a00")
+        fontsize=7.0, color=S.C_SEC)
 
 # --- well-transition band (consistent with Fig. 2) ---
-ax.axvspan(6.35, 6.45, color=S.C_SEC, alpha=0.12, lw=0, zorder=0)
+ax.axvspan(6.35, 6.45, color=C_SHADE, alpha=0.9, lw=0, zorder=0)
 ax.text(6.31, 1.55, "well transition", ha="right", va="center", rotation=90,
         fontsize=7.2, color=S.C_SEC)
 

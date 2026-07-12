@@ -24,18 +24,24 @@ SC_LO, SC_HI = 6.35, 6.45        # SC window (task)
 LAM_C = 6.44                     # first c with lambda > 2 (polaronic)
 CG = np.linspace(5.5, 9.9, 400)
 
+# Aesthetic-sobriety palette: colour only on the data series (curves/markers);
+# every decorative element is neutral grey/black.
+C_SHADE = "#e2e1db"              # light-grey fill (SC window, polaronic zone)
+C_ANN = S.C_INK                  # annotation text: black
+C_ANN2 = S.C_SEC                 # secondary annotation text: ~40% grey
+
 fig, axes = plt.subplots(3, 1, figsize=(6.9, 7.4), sharex=True)
 axA, axB, axC = axes
 
 
 def shade_window(ax):
-    ax.axvspan(SC_LO, SC_HI, color=S.C_YELL, alpha=0.14, lw=0, zorder=0)
+    ax.axvspan(SC_LO, SC_HI, color=C_SHADE, alpha=0.9, lw=0, zorder=0)
 
 
 def anchors(ax, star=False):
     for c, _lab, col, is_sc in S.ANCHORS:
-        ax.axvline(c, color=col, ls=(0, (5, 3)), lw=1.0,
-                   alpha=0.85 if is_sc else 0.55, zorder=1)
+        ax.axvline(c, color=S.C_MUT, ls=(0, (5, 3)), lw=0.8,
+                   alpha=0.8, zorder=1)
 
 
 # ---------------------------------------------------------------- (a) alpha
@@ -49,8 +55,8 @@ axA.axhline(0, color=S.C_INK, lw=0.8, zorder=2)
 shade_window(axA)
 anchors(axA)
 axA.annotate(r"$c^\ast_{\mathrm{Na}}\!\approx\!6.40$ Å", xy=(6.40, 0),
-             xytext=(7.15, 1.35), fontsize=8, color=S.C_BLUE,
-             arrowprops=dict(arrowstyle="->", color=S.C_BLUE, lw=0.7))
+             xytext=(7.15, 1.35), fontsize=8, color=C_ANN,
+             arrowprops=dict(arrowstyle="->", color=C_ANN2, lw=0.7))
 axA.set_ylim(-1.2, 3.4)
 axA.set_ylabel(r"$\alpha$  (eV/Å$^2$)")
 axA.legend(loc="upper right", ncol=1, handletextpad=0.4, fontsize=8)
@@ -70,11 +76,11 @@ for (el, cell), st in S.SERIES.items():
     axB.plot(r["c"], r["N0"], st["marker"] + "-", ms=6, lw=1.6,
              color=st["color"], mfc=st["color"], mew=0, zorder=4)
     lx, ly, lha = lab[(el, cell)]
-    axB.text(lx, ly, st["label"], color=st["color"], fontsize=8,
-             ha=lha, va="center", fontweight="bold")
-axB.axhline(0.10, color=S.C_RED, ls=":", lw=1.0, zorder=2)
+    axB.text(lx, ly, st["label"], color=C_ANN, fontsize=8,
+             ha=lha, va="center")
+axB.axhline(0.10, color=S.C_MUT, ls=":", lw=1.0, zorder=2)
 axB.text(7.35, 0.30, "2DEG gate  " r"$N(0){=}0.1$", ha="left", va="bottom",
-         fontsize=7.6, color=S.C_RED)
+         fontsize=7.6, color=C_ANN2)
 shade_window(axB)
 anchors(axB)
 axB.set_ylim(-0.12, 4.3)
@@ -82,8 +88,8 @@ axB.set_ylabel(r"DFT $N(0)$" "\n" r"(states eV$^{-1}$ cell$^{-1}$ spin$^{-1}$)")
 S.thin_spines(axB)
 S.panel_label(axB, "b")
 axB.annotate("2DEG switches on", xy=(6.55, 0.9), xytext=(6.75, 2.3),
-             fontsize=8, color=S.C_INK, ha="left",
-             arrowprops=dict(arrowstyle="->", color=S.C_INK, lw=0.8))
+             fontsize=8, color=C_ANN, ha="left",
+             arrowprops=dict(arrowstyle="->", color=C_ANN2, lw=0.8))
 
 # ---------------------------------------------------------------- (c) Tc dome
 c = cp["c_A"].values
@@ -100,19 +106,19 @@ def draw_dome(ax, lw_line=1.8, band_lab=None, line_lab=None):
 
 draw_dome(axC, band_lab=r"$\gamma$ band (11$-$23 K)",
           line_lab=r"$T_c$ (Allen$-$Dynes)")
-# polaronic region: lambda > 2 -> SC killed
-axC.axvspan(LAM_C, 9.9, facecolor="none", edgecolor=S.C_CRIT, lw=0.0,
-            hatch="////", alpha=0.5, zorder=1)
-axC.text(9.6, 21.5, "polaronic self-trapping\n" r"($\lambda>2$) $-$ SC killed",
-         ha="right", va="center", fontsize=8, color=S.C_CRIT)
+# polaronic region: lambda > 2 -> SC killed  (neutral light-grey fill)
+axC.axvspan(LAM_C, 9.9, facecolor=C_SHADE, edgecolor="none", alpha=0.9,
+            zorder=1)
+axC.text(9.6, 21.5, r"polaronic ($\lambda>2$)",
+         ha="right", va="center", fontsize=8, color=C_ANN)
 shade_window(axC)
 anchors(axC, star=True)
-# experimental SC anchor: star at 9.9 A, Tc = 4.5 K
-axC.plot(9.9, 4.5, marker="*", ms=16, color=S.C_RED, mec="white", mew=0.6,
+# experimental SC anchor: distinct star marker at 9.9 A, Tc = 4.5 K (black)
+axC.plot(9.9, 4.5, marker="*", ms=16, color=C_ANN, mec="white", mew=0.6,
          zorder=6)
-axC.annotate("Takada 2003\n" r"expt. $T_c=4.5$ K", xy=(9.82, 4.7),
-             xytext=(9.15, 10.5), fontsize=8, color=S.C_RED, ha="center",
-             arrowprops=dict(arrowstyle="->", color=S.C_RED, lw=0.9))
+axC.annotate("expt. " r"$T_c=4.5$ K", xy=(9.82, 4.7),
+             xytext=(9.15, 10.5), fontsize=8, color=C_ANN, ha="center",
+             arrowprops=dict(arrowstyle="->", color=C_ANN2, lw=0.9))
 axC.set_ylim(0, 26)
 axC.set_ylabel(r"$T_c$  (K)")
 axC.set_xlabel(r"CoO$_2$$-$CoO$_2$ spacing  $c$  (Å)")
@@ -128,9 +134,8 @@ axz.set_facecolor("white")
 axz.set_zorder(5)
 axz.patch.set_alpha(1.0)
 draw_dome(axz, lw_line=1.6)
-axz.axvspan(LAM_C, 6.6, facecolor="none", edgecolor=S.C_CRIT, lw=0.0,
-            hatch="////", alpha=0.5)
-axz.axvspan(SC_LO, SC_HI, color=S.C_YELL, alpha=0.14, lw=0)
+axz.axvspan(LAM_C, 6.6, facecolor=C_SHADE, edgecolor="none", alpha=0.9)
+axz.axvspan(SC_LO, SC_HI, color=C_SHADE, alpha=0.9, lw=0)
 axz.set_xlim(6.28, 6.52)
 axz.set_ylim(0, 25)
 axz.set_title(r"dome (zoom), peak $T_c\!\approx\!14$ K", fontsize=7.5, pad=3)
@@ -140,12 +145,6 @@ axz.set_yticks([0, 10, 20])
 for s in ("top", "right"):
     axz.spines[s].set_visible(False)
 axC.indicate_inset_zoom(axz, edgecolor=S.C_MUT, lw=0.7, alpha=0.8)
-
-axC.text(0.5, -0.30,
-         r"$9.9$ Å reconciliation requires water softening of the Na well "
-         r"(prediction, untested)",
-         transform=axC.transAxes, ha="center", va="top", fontsize=8,
-         color=S.C_SEC, style="italic")
 
 for ax in axes:
     ax.set_xlim(5.4, 10.0)

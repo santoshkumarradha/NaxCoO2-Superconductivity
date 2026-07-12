@@ -20,11 +20,11 @@ fits = S.load_well_fits()
 
 fig, ax = plt.subplots(figsize=(3.4, 3.5))
 
-# quantum-paraelectric (soft-mode) window: omega < 1 meV
-ax.axhspan(1e-3, 1.0, color=S.C_BLUE, alpha=0.07, lw=0, zorder=0)
-ax.axhline(1.0, color=S.C_BLUE, lw=0.7, ls=(0, (4, 3)), alpha=0.6, zorder=1)
+# quantum-paraelectric (soft-mode) window: omega < 1 meV  (neutral shading)
+ax.axhspan(1e-3, 1.0, color="#e2e1db", alpha=0.9, lw=0, zorder=0)
+ax.axhline(1.0, color=S.C_MUT, lw=0.7, ls=(0, (4, 3)), alpha=0.8, zorder=1)
 ax.text(5.42, 0.0068, "quantum-paraelectric\n(soft-mode) window", ha="left",
-        va="bottom", fontsize=7.6, color=S.C_BLUE)
+        va="bottom", fontsize=7.6, color=S.C_SEC)
 
 for (el, cell), st in S.SERIES.items():
     q = qw[(qw.element == el) & (qw.cell == cell) & (qw.mass == el)]
@@ -66,7 +66,7 @@ def level(E, col, lab, lw=1.3):
         x0, x1 = -0.2, 0.2
     axi.plot([x0, x1], [E, E], color=col, lw=lw, zorder=4)
     axi.text(0.98, E, lab, transform=axi.get_yaxis_transform(), ha="right",
-             va="bottom", fontsize=7, color=col)
+             va="bottom", fontsize=7, color=S.C_INK)
 
 
 level(E2, S.C_YELL, r"$E_2$")
