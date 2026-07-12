@@ -14,6 +14,16 @@ and manifest_extra.json (run with run_extra.sh):
   G: Na_1/3CoO2.yH2O explicit-water bilayer + vacuum reference     10 SCF
   H: Na2CoSe2O gallery-band check (SCF + dense-k NSCF)              2 jobs
 
+`--stage bands` writes the referee-response job set I into jobs_bands/ and
+manifest_bands.json (run with run_bands.sh):
+  I1: Na fatband chains, 1x1 c = 5.5/6.9/9.9 + s3 c = 5.5/9.9 (delta = 0):
+      pw scf -> pw 'bands' (Gamma-M-K-Gamma, 60 pts) -> bands.x (up/dw)
+      -> projwfc.x (all-atom projections: Na s/p AND Co d)      5 chains
+  I2: hydrate relaxed-water check, c = 9.9, delta = 0.00/0.30:
+      BFGS relax, Na z + all H2O free, CoO2 frozen (if_pos)      2 relax
+  I3: hydrate vdW spot-check, c = 9.9, delta = 0.00/0.30/0.50:
+      SCF + vdw_corr = 'grimme-d3', compare E(delta) vs set G    3 SCF
+
 stdlib + numpy only.
 """
 import argparse
@@ -101,13 +111,20 @@ def atoms_s3(element, c, delta):
 
 # ------------------------------------------------------------ input files ---
 def pw_input(calc, element, a, c, atoms, kpts, prefix="pw", outdir="./out",
-             species=None, extra_system=None, notes=None):
+             species=None, extra_system=None, notes=None, extra_control=None,
+             ions=False, if_pos=None, kpath=None):
     """Hexagonal (ibrav=4) pw.x input.
 
     species      : explicit ATOMIC_SPECIES order (default Co, O, element)
     extra_system : extra lines appended inside &SYSTEM (e.g. tot_charge)
     notes        : '!'-comment lines placed before ATOMIC_POSITIONS
                    (pw.x card parser skips lines starting with '!'/'#')
+    extra_control: extra lines appended inside &CONTROL (e.g. nstep)
+    ions         : append an &IONS namelist (BFGS) for calc = 'relax'
+    if_pos       : per-atom (ix,iy,iz) 0/1 movability flags (relax only)
+    kpath        : list of (kx, ky, kz, npts) -> K_POINTS crystal_b card
+                   (band-structure path) instead of an automatic grid; the
+                   `kpts` argument is ignored (pass None)
     """
     if species is None:
         species = ["Co", "O", element]
@@ -121,6 +138,10 @@ def pw_input(calc, element, a, c, atoms, kpts, prefix="pw", outdir="./out",
         "  pseudo_dir = '../../pseudo'",
         "  verbosity = 'high'",
         "  tprnfor = .true.",
+    ]
+    if extra_control:
+        lines.extend(extra_control)
+    lines += [
         "/",
         "&SYSTEM",
         "  ibrav = 4",
@@ -147,17 +168,27 @@ def pw_input(calc, element, a, c, atoms, kpts, prefix="pw", outdir="./out",
         "  mixing_mode = 'local-TF'",
         "  electron_maxstep = 300",
         "/",
-        "ATOMIC_SPECIES",
     ]
+    if ions:
+        lines += ["&IONS", "  ion_dynamics = 'bfgs'", "/"]
+    lines.append("ATOMIC_SPECIES")
     for s in species:
         lines.append(f"  {s}  {MASS[s]:.5f}  {PSEUDOS[s]}")
     if notes:
         lines.extend(notes)
     lines.append("ATOMIC_POSITIONS crystal")
-    for s, x, y, z in atoms:
-        lines.append(f"  {s}  {x:.10f}  {y:.10f}  {z:.10f}")
-    lines.append("K_POINTS automatic")
-    lines.append(f"  {kpts[0]} {kpts[1]} {kpts[2]} 0 0 0")
+    for i, (s, x, y, z) in enumerate(atoms):
+        flags = f"  {if_pos[i][0]} {if_pos[i][1]} {if_pos[i][2]}" \
+            if if_pos else ""
+        lines.append(f"  {s}  {x:.10f}  {y:.10f}  {z:.10f}{flags}")
+    if kpath:
+        lines.append("K_POINTS crystal_b")
+        lines.append(f"  {len(kpath)}")
+        for kx, ky, kz, n in kpath:
+            lines.append(f"  {kx:.10f}  {ky:.10f}  {kz:.10f}  {n}")
+    else:
+        lines.append("K_POINTS automatic")
+        lines.append(f"  {kpts[0]} {kpts[1]} {kpts[2]} 0 0 0")
     lines.append("")
     return "\n".join(lines)
 
@@ -562,15 +593,176 @@ def generate_extra(root):
     print(f"wrote {len(jobs)} extra jobs ({per_set}) + manifest_extra.json")
 
 
+# ------------------------------------------------------------ bands stage ---
+# Set I (referee response), written to jobs_bands/ + manifest_bands.json,
+# run via run_bands.sh.
+BANDS_DIR = "jobs_bands"
+
+# Hexagonal-BZ band path Gamma-M-K-Gamma in crystal (reciprocal-lattice
+# fractional) coordinates: Gamma (0,0,0), M (1/2,0,0), K (1/3,1/3,0).
+# crystal_b semantics: the integer after each point is the number of k-points
+# from that point up to (excluding) the next one; pw.x appends the final
+# point, so totals are 22 + 12 + 25 + 1 = 60 k-points.  Segment counts are
+# proportional to segment lengths |GM| : |MK| : |KG| = 1 : 1/sqrt3 : 2/sqrt3.
+KPATH_HEX = [
+    (0.0, 0.0, 0.0, 22),        # Gamma
+    (0.5, 0.0, 0.0, 12),        # M
+    (1 / 3, 1 / 3, 0.0, 25),    # K
+    (0.0, 0.0, 0.0, 1),         # Gamma (final point, count ignored)
+]
+
+DELTAS_I2 = [0.0, 0.30]
+DELTAS_I3 = [0.0, 0.30, 0.50]
+
+I1_NOTES = [
+    "! Set I1 (referee response): band structure with fatband projections.",
+    "! Chain per geometry: pw scf -> pw 'bands' (Gamma-M-K-Gamma, 60 pts,",
+    "! K_POINTS crystal_b) -> bands.x (spin up/dw) -> projwfc.x.  projwfc",
+    "! projects onto ALL atoms, so one run yields both the Na s/p fatbands",
+    "! (interlayer-gallery weight, the reviewer figure) and the Co d",
+    "! fatbands (e_g' pocket check).",
+]
+I1_NOTES_S3 = I1_NOTES + [
+    "! sqrt3 x sqrt3 R30 cell: the path is Gamma-M-K-Gamma of the SUPERCELL",
+    "! BZ (rotated 30 deg, 1/3 the area of the 1x1 BZ).  Zone folding: the",
+    "! 1x1 K points fold onto the supercell Gamma and the 1x1 M points onto",
+    "! the supercell M, so the 1x1 K-point physics appears at Gamma here.",
+]
+I2_NOTES = [
+    "! Set I2 (referee response): relaxed-water check.  Same hydrate ansatz",
+    "! as set G (see G_NOTES in generate_inputs.py) but calculation='relax'",
+    "! (BFGS): Na z and ALL 12 H2O atoms are free; the CoO2 framework (3 Co",
+    "! + 6 lattice O) is frozen and Na is pinned to its Co-top column",
+    "! (x,y fixed) via the if_pos 0/1 triplets on each position line.",
+    "! Purpose: does the bounded off-center Na minimum survive when the",
+    "! water cage is allowed to respond?  Compare the final Na z for the",
+    "! delta = 0.00 vs 0.30 A starting points.",
+]
+I3_NOTES = [
+    "! Set I3 (referee response): vdW spot-check.  Geometry identical to the",
+    "! set G hydrate SCF at the same delta, plus vdw_corr = 'grimme-d3'",
+    "! (DFT-D3, supported by QE 7.3.1).  Compare E(delta) at 0.00/0.30/0.50",
+    "! against the non-vdW set G energies: does D3 change the well shape?",
+]
+
+
+def bands_x_input(spin, outdir="./out"):
+    """bands.x input; nspin=2 runs need one file per spin_component."""
+    tag = {1: "up", 2: "dw"}[spin]
+    return "\n".join([
+        "&BANDS",
+        "  prefix = 'pw'",
+        f"  outdir = '{outdir}'",
+        f"  spin_component = {spin}",
+        f"  filband = 'pw.bands.{tag}.dat'",
+        "  lsym = .true.",
+        "/",
+        "",
+    ])
+
+
+def projwfc_input(outdir="./out"):
+    return "\n".join([
+        "&PROJWFC",
+        "  prefix = 'pw'",
+        f"  outdir = '{outdir}'",
+        "  ngauss = 0",
+        "  degauss = 0.02",
+        "  DeltaE = 0.01",
+        "  filpdos = 'pw.pdos'",
+        "  filproj = 'pw.proj'",
+        "/",
+        "! projwfc.x projects onto ALL atomic wavefunctions by default (no",
+        "! atom selection): Na s/p for the gallery fatbands AND Co d for the",
+        "! e_g' pocket check come from the same filproj output.",
+        "",
+    ])
+
+
+def generate_bands(root):
+    jobs = []
+    counts = {}
+
+    def add(job):
+        jobs.append(job)
+        counts[job["set"]] = counts.get(job["set"], 0) + 1
+
+    el = "Na"
+
+    # --- I1: fatband chains (scf -> bands -> bands.x up/dw -> projwfc.x) ----
+    for cell, c in (("1x1", 5.5), ("1x1", 6.9), ("1x1", 9.9),
+                    ("s3", 5.5), ("s3", 9.9)):
+        s3 = cell == "s3"
+        a = A_LAT[el] * (np.sqrt(3.0) if s3 else 1.0)
+        atoms = (atoms_s3 if s3 else atoms_1x1)(el, c, 0.0)
+        kpts = KPTS_S3 if s3 else KPTS_1X1
+        notes = I1_NOTES_S3 if s3 else I1_NOTES
+        name = f"bands_{el}_{cell}_c{c:.1f}"
+        scf = pw_input("scf", el, a, c, atoms, kpts, notes=notes)
+        nscf = pw_input("bands", el, a, c, atoms, None, notes=notes,
+                        kpath=KPATH_HEX)
+        write_job(root, name, scf, jobs_dir=BANDS_DIR, extra={
+            "pw_bands.in": nscf,
+            "bands_up.in": bands_x_input(1),
+            "bands_dw.in": bands_x_input(2),
+            "projwfc.in": projwfc_input(),
+        })
+        add(dict(name=name, set="I1", element=el, cell=cell, c=c, delta=0.0,
+                 type="bands_chain", kpts=list(kpts),
+                 kpath="G-M-K-G_60pts", nat=len(atoms)))
+
+    # --- I2: hydrate relaxed-water check (BFGS, CoO2 frozen) -----------------
+    c = 9.9
+    a = A_LAT[el] * np.sqrt(3.0)
+    for d in DELTAS_I2:
+        atoms = atoms_s3_hydrate(c, d, with_water=True)   # 22 atoms
+        # atoms_s3 order: 3 Co (0-2), 6 lattice O (3-8), Na (9), then 4x
+        # (O,H,H) water (10-21).  Freeze CoO2, free Na z only, free water.
+        if_pos = ([(0, 0, 0)] * 9) + [(0, 0, 1)] + ([(1, 1, 1)] * 12)
+        name = f"relax_{el}_s3hyd_c{c:.1f}_d{d:.2f}"
+        text = pw_input("relax", el, a, c, atoms, KPTS_G,
+                        species=["Co", "O", "Na", "H"], ions=True,
+                        if_pos=if_pos, notes=I2_NOTES,
+                        extra_control=["  forc_conv_thr = 1.0d-3",
+                                       "  nstep = 60"])
+        write_job(root, name, text, jobs_dir=BANDS_DIR)
+        add(dict(name=name, set="I2", element=el, cell="s3", c=c, delta=d,
+                 water=True, type="relax", kpts=list(KPTS_G),
+                 nat=len(atoms)))
+
+    # --- I3: hydrate vdW (grimme-d3) spot-check ------------------------------
+    for d in DELTAS_I3:
+        atoms = atoms_s3_hydrate(c, d, with_water=True)
+        name = f"vdw_{el}_s3hyd_c{c:.1f}_d{d:.2f}"
+        text = pw_input("scf", el, a, c, atoms, KPTS_G,
+                        species=["Co", "O", "Na", "H"], notes=I3_NOTES,
+                        extra_system=["  vdw_corr = 'grimme-d3'"])
+        write_job(root, name, text, jobs_dir=BANDS_DIR)
+        add(dict(name=name, set="I3", element=el, cell="s3", c=c, delta=d,
+                 water=True, vdw="grimme-d3", type="scf", kpts=list(KPTS_G),
+                 nat=len(atoms)))
+
+    manifest = dict(pseudos=PSEUDOS, zval=ZVAL, a_lat=A_LAT, z_O=Z_O,
+                    kpath=[list(p) for p in KPATH_HEX], jobs=jobs)
+    with open(os.path.join(root, "manifest_bands.json"), "w") as f:
+        json.dump(manifest, f, indent=2)
+    per_set = ", ".join(f"{k}: {v}" for k, v in sorted(counts.items()))
+    print(f"wrote {len(jobs)} bands-set jobs ({per_set}) "
+          f"+ manifest_bands.json")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--stage", choices=["scf", "nscf", "extra"], default="scf")
+    p.add_argument("--stage", choices=["scf", "nscf", "extra", "bands"],
+                   default="scf")
     p.add_argument("--root", default=os.path.dirname(os.path.abspath(__file__)))
     args = p.parse_args()
     if args.stage == "scf":
         generate_scf(args.root)
     elif args.stage == "extra":
         generate_extra(args.root)
+    elif args.stage == "bands":
+        generate_bands(args.root)
     else:
         generate_nscf(args.root)
 
