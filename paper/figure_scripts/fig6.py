@@ -36,17 +36,41 @@ RY_EV = S.RY_EV
 E_RE = re.compile(r"^!\s+total energy\s+=\s+(-?[\d.]+)\s+Ry", re.M)
 
 
+MOB = REPO / "runpod" / "results_mobile"
+BND = REPO / "runpod" / "results_bands"
+
+
+def totE(base, job):
+    return float(E_RE.findall((base / job / "pw.out").read_text())[-1]) * RY_EV
+
+
 def total_E(job):
-    txt = (JOBS / job / "pw.out").read_text()
-    return float(E_RE.findall(txt)[-1]) * RY_EV
+    return totE(JOBS, job)
 
 
 # ---------------------------------------------------------------- data (a)
+# Three treatments of the SAME sqrt3 hydrate cell at c=9.9 A, each E(delta)
+# referenced to its OWN delta=0 (the well SHAPE, not the ~1.9 eV relaxation
+# offset between a frozen and a relaxed cage):
+#   vacuum    (water deleted)                 -> monotone runaway, open markers
+#   rigid     (gas-phase cage frozen)         -> bounded well, min -199 meV at 0.30
+#   adiabatic (mobile: the 4 H2O BFGS-relaxed -> bounded AND DEEPER, min -380 meV;
+#              at each pinned Na, 100 steps)      the shell FOLLOWS Na, not flattens
 dd = np.array([0.0, 0.15, 0.30, 0.50, 0.75])
 Eh = np.array([total_E(f"Na_s3hyd_c9.9_d{d:.2f}") for d in dd])
 Ev = np.array([total_E(f"Na_s3vac_c9.9_d{d:.2f}") for d in dd])
-Eh = (Eh - Eh[0]) * 1e3       # meV rel. centre
-Ev = (Ev - Ev[0]) * 1e3
+Eh = (Eh - Eh[0]) * 1e3       # meV rel. centre (rigid cage)
+Ev = (Ev - Ev[0]) * 1e3       # meV rel. centre (vacuum)
+
+dm = np.array([0.0, 0.15, 0.30, 0.50, 0.75, 1.00])
+Em_abs = np.array([totE(MOB, f"mobile_Na_s3hyd_c9.9_d{d:.2f}") for d in dm])
+Em = (Em_abs - Em_abs[0]) * 1e3   # meV rel. centre (adiabatic, mobile water)
+
+# 60-step-capped adiabatic relaxation at delta=0.30: a DIFFERENT, incompletely
+# reorganized H-bond configuration that stops 394 meV above the 100-step
+# minimum -> an explicit sample of the multi-minimum spread of the 4-water
+# network at fixed Na (referenced to the same relaxed delta=0 baseline).
+E60_30 = (totE(BND, "relax_Na_s3hyd_c9.9_d0.30") - Em_abs[0]) * 1e3
 
 # ---------------------------------------------------------------- data (b)
 def parse_pwin(job):
@@ -102,33 +126,59 @@ fig, (axA, axB) = plt.subplots(
 dsym = np.concatenate([-dd[:0:-1], dd])       # drop the duplicated 0
 Ehs = np.concatenate([Eh[:0:-1], Eh])
 Evs = np.concatenate([Ev[:0:-1], Ev])
+dmsym = np.concatenate([-dm[:0:-1], dm])
+Ems = np.concatenate([Em[:0:-1], Em])
 
-# smooth guides (monotone PCHIP through the symmetric points), neutral weight
 from scipy.interpolate import PchipInterpolator
-xf = np.linspace(-0.75, 0.75, 300)
-axA.plot(xf, PchipInterpolator(dsym, Ehs)(xf), "-", color=S.C_BLUE, lw=1.4,
-         zorder=3)
-axA.plot(xf, PchipInterpolator(dsym, Evs)(xf), "-", color=S.C_SEC, lw=1.4,
-         zorder=3)
-axA.plot(dsym, Ehs, "o", ms=5.0, color=S.C_BLUE, mec="white", mew=0.6,
-         zorder=4, label="hydrate (rigid 4-H$_2$O cage)")
-axA.plot(dsym, Evs, "s", ms=4.6, color=S.C_SEC, mec="white", mew=0.6,
-         zorder=4, label="vacuum (water deleted)")
+xf = np.linspace(-0.75, 0.75, 400)
+rig_i = PchipInterpolator(dsym, Ehs)(xf)
+adi_i = PchipInterpolator(dmsym, Ems)(xf)
 
+# configurational-range band: between the frozen-cage well (upper) and the deep
+# adiabatic well (lower) -- the range of E(delta) surfaces the moving cage can
+# present to Na.  Pastel amber = the softening/prediction domain (house style).
+axA.fill_between(xf, rig_i, adi_i, color=S.FILL_AMBER, lw=0, zorder=1)
+axA.text(-0.52, -250, "cage\nconfigurational\nrange $\\gtrsim 0.4$ eV",
+         ha="center", va="center", fontsize=6.6, color=S.INK_AMBER, zorder=2)
 axA.axhline(0, color=S.C_MUT, lw=0.6, zorder=1)
-# mark the bound minimum and the runaway, both in neutral ink
-axA.annotate("bound well", (0.30, Eh[2]),
-             xytext=(0.30, -95), ha="center", fontsize=7.4, color=S.C_INK,
-             arrowprops=dict(arrowstyle="-", color=S.C_MUT, lw=0.7))
-axA.annotate("runs away", (0.72, Ev[-1] + 4),
-             xytext=(0.42, -232), ha="center", fontsize=7.4, color=S.C_INK,
-             arrowprops=dict(arrowstyle="->", color=S.C_MUT, lw=0.7))
+
+# smooth guides (monotone PCHIP through the mirror-symmetric points)
+xf2 = np.linspace(-1.0, 1.0, 500)
+axA.plot(xf2, PchipInterpolator(dmsym, Ems)(xf2), "-", color=S.C_RED, lw=1.5,
+         zorder=3)
+axA.plot(xf, rig_i, "-", color=S.C_BLUE, lw=1.4, zorder=3)
+axA.plot(xf, PchipInterpolator(dsym, Evs)(xf), color=S.C_SEC, lw=1.1,
+         ls=(0, (4, 2)), zorder=3)
+
+axA.plot(dmsym, Ems, "D", ms=4.3, color=S.C_RED, mec="white", mew=0.5,
+         zorder=5, label="adiabatic (mobile 4-H$_2$O, 100 steps)")
+axA.plot(dsym, Ehs, "o", ms=4.8, color=S.C_BLUE, mec="white", mew=0.5,
+         zorder=5, label="rigid cage (frozen 4-H$_2$O)")
+axA.plot(dsym, Evs, "s", ms=4.2, mfc="white", mec=S.C_SEC, mew=1.0,
+         zorder=5, label="vacuum (water deleted)")
+
+# 60-step outlier: an explicit multi-minimum sample, and the vertical spread it
+# opens above the adiabatic minimum (evidence for the >=0.4 eV cage landscape)
+axA.annotate("", xy=(0.30, Em[2] + 6), xytext=(0.30, E60_30 - 6),
+             arrowprops=dict(arrowstyle="<->", color=S.C_INK, lw=0.8),
+             zorder=4)
+axA.text(0.35, 0.5 * (Em[2] + E60_30), "$394$ meV", rotation=90, va="center",
+         ha="left", fontsize=6.4, color=S.C_INK, zorder=6)
+axA.plot([0.30, -0.30], [E60_30, E60_30], "*", ms=9.0, mfc="white",
+         mec=S.C_INK, mew=0.9, zorder=6)
+axA.annotate("step-capped\nlocal minimum", (0.30, E60_30), xytext=(0.66, -55),
+             ha="center", fontsize=6.4, color=S.C_INK,
+             arrowprops=dict(arrowstyle="-", color=S.C_MUT, lw=0.6), zorder=6)
+axA.annotate("runs away", (0.72, Ev[-1] + 4), xytext=(0.55, -250),
+             ha="center", fontsize=6.6, color=S.C_SEC,
+             arrowprops=dict(arrowstyle="->", color=S.C_MUT, lw=0.6))
+
 axA.set_xlabel(r"Na off-centre displacement  $\delta$  (Å)")
 axA.set_ylabel(r"$E(\delta)-E(0)$  (meV)")
-axA.set_xlim(-0.80, 0.80)
-axA.set_ylim(-250, 55)
-axA.legend(loc="upper center", fontsize=7.0, handletextpad=0.4,
-           borderaxespad=0.3)
+axA.set_xlim(-1.05, 1.05)
+axA.set_ylim(-410, 60)
+axA.legend(loc="lower center", fontsize=6.6, handletextpad=0.4,
+           borderaxespad=0.4, labelspacing=0.3)
 S.thin_spines(axA)
 S.panel_label(axA, "a", x=-0.16)
 

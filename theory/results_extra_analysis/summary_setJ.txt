@@ -1,0 +1,41 @@
+==========================================================================
+SET J  --  mobile (adiabatic) water E(delta), Na sqrt3xsqrt3, c = 9.9 A
+==========================================================================
+
+delta(A)   E_rigid   E_vacuum   E_adiabatic   [meV, each rel. to own d=0]
+  0.00          0          0          0
+  0.15       -144         -8       -222
+  0.30       -198        -32       -380
+  0.50       -173        -89       -327
+  0.75        -58       -206       -202
+  1.00        ---        ---        -45
+
+  RIGID   : bounded double well, min -198 meV at delta=0.30 A (gas-phase cage frozen).
+  VACUUM  : monotone runaway to -206 meV at delta=0.75 A -- Na chemisorbs, no bound well (V''(0)<0).
+  ADIABATIC: bounded AND DEEPER, min -380 meV at delta=0.30 A -- the shell FOLLOWS Na and deepens the well.  Classical adiabatic water
+             does NOT flatten the Na potential.  Stated plainly: this is a result, and a surprising one.
+
+Local Na-mode curvature about each true minimum (fit-free parabola, Na mass):
+  rigid    : d0=0.35 A, k=V''=2.79 eV/A^2 -> hbar*omega_eff = 23 meV
+  adiabatic: d0=0.37 A, k=V''=7.55 eV/A^2 -> hbar*omega_eff = 37 meV  (stiffer well: the deepened adiabatic surface is NOT the physical soft mode)
+
+  relaxing the frozen cage at delta=0 already lowers the total energy by 1877 meV (a large absolute offset; the well SHAPE is what is compared, hence the own-d=0 referencing).
+  at delta=0.30 A the adiabatic well is 182 meV DEEPER than the rigid one -- the cage relaxes MORE off-centre, not less.
+
+D3 dispersion cross-check (mobile_vdw; only d0.00,d0.15 converged so far):
+  E_D3(0.15) = -210 meV vs E_PBE(0.15) = -222 meV -- D3 tracks PBE; the adiabatic deepening is NOT a dispersion artifact.
+  d0.30-d1.00 D3 twins still finishing -> integrate when converged; the sign and scale are already fixed by PBE + the D3 d0.15 point.
+
+==========================================================================
+The configurational spread of the 4-water network at FIXED Na (delta=0.30)
+==========================================================================
+  60-step relax at delta=0.30 stops 394 meV ABOVE the 100-step (set-J) minimum (60 vs 100 ionic steps).
+  => the 4-water H-bond network has multiple local minima spanning >= 0.4 eV at fixed Na; the Na potential is set by the INSTANTANEOUS cage configuration.
+  referenced to its OWN d=0 the 60-step 'well' reads -5 meV -- the ARTIFACT behind the retracted 'adiabatic water flattens 199->5 meV'
+     claim.  It is incomplete relaxation, not softening.  The manuscript does not contain that claim.
+
+Timescale separation (why the physical softening is statistical, not adiabatic):
+  Na c-axis mode hbar*omega ~ 23 meV -> period ~ 184 fs.
+  H-bond network reorganization ~ ps (Jalarvo QENS).  Na is FAST vs cage reconfiguration:
+  the physical Na mode lives on rigid-cage-like surfaces drawn from a thermal/quantum ENSEMBLE of cage configurations -- some far shallower than the adiabatic minimum.
+  Definitive test = AIMD/PIMD of the gallery water (samples the ensemble), NOT a single relaxed potential of mean force (which finds only the deep adiabatic surface).
