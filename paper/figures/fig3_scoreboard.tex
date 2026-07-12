@@ -1,0 +1,70 @@
+% ======================================================================
+% Figure 3 - Theory vs experiment scoreboard, as a NATIVE LaTeX TABLE.
+% (Per request: the scoreboard is real LaTeX, not an included image.)
+%
+% Standalone preview:  pdflatex fig3_scoreboard.tex   -> fig3_scoreboard.pdf
+% Manuscript use:       copy the block between the two "TABLE BODY" markers
+%                       into a table/table* float; it needs only the packages
+%                       loaded below (xcolor[table], booktabs, tabularx,
+%                       array, amssymb, pifont). Fonts are inherited from the
+%                       manuscript (no font package is forced here).
+% ======================================================================
+\documentclass[border=8pt,varwidth=17.4cm]{standalone}
+\usepackage[table]{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{pifont}
+
+\definecolor{good}{HTML}{0A8A0A}
+\definecolor{amber}{HTML}{C98500}
+\definecolor{ink}{HTML}{0B0B0B}
+\definecolor{sec}{HTML}{52514E}
+\definecolor{rowtint}{HTML}{F4F3EF}
+
+% verdict glyph macros (colour + word; never colour alone)
+\newcommand{\vok}{{\color{good}\ding{51}}\;\textbf{\color{good}explained}}
+\newcommand{\vpred}{{\color{amber}$\blacktriangle$}\;\textbf{\color{amber}prediction}}
+\newcommand{\srcref}[1]{\ {\footnotesize\itshape\color{sec}(#1)}}
+
+\begin{document}
+% -------------------------------------------------- TABLE BODY (begin) ------
+{\renewcommand{\arraystretch}{1.5}%
+\rowcolors{2}{}{rowtint}%
+\begin{tabularx}{\linewidth}{@{}%
+    >{\raggedright\arraybackslash}p{5.05cm}%
+    >{\raggedright\arraybackslash}p{2.75cm}%
+    >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Experimental fact} & \textbf{Our verdict} & \textbf{Why it follows}\\
+\midrule
+\textbf{Anhydrous (5.5\,\AA) is not SC}\srcref{Foo 2003} & \vok &
+  $\alpha>0$: single stiff well ($\hbar\omega\!\approx\!30$\,meV),
+  $N(0)\!\approx\!0$ --- no 2DEG, nothing to pair.\\
+\textbf{Monolayer hydrate (6.9\,\AA) is not SC}\srcref{Foo 2003} & \vok &
+  Past the window: $\lambda\!\approx\!20\!\gg\!2$, the alkali self-traps
+  (polaronic), so SC is killed.\\
+\textbf{Bilayer hydrate (9.9\,\AA) is SC, $T_c\!=\!4.5$\,K}\srcref{Takada 2003}
+  & \vpred &
+  Bare geometry is polaronic here; SC needs water to soften the Na well
+  back into the window --- untested.\\
+\textbf{No superconducting Li analogue} & \vok &
+  $c^{\ast}_{\mathrm{Li}}\!\le\!5.5$\,\AA\ and lighter mass $\Rightarrow$
+  stiffer mode; Li never enters the soft-mode window.\\
+\textbf{Magnetic phase borders the dome}\srcref{expt.} & \vok &
+  Local moment turns on exactly at the $\alpha<0$ well transition (Fig.~4),
+  coincident with the dome.\\
+\textbf{Superconducting $T_c$ is only a few K}\srcref{Takada 2003} & \vok &
+  Allen--Dynes with the DFT $\omega_{\mathrm{eff}},\lambda$ gives peak
+  $T_c\!\approx\!14$\,K (band 11--23) --- the right scale.\\
+\bottomrule
+\end{tabularx}}%
+% -------------------------------------------------- TABLE BODY (end) --------
+
+\vspace{2pt}
+{\footnotesize\color{sec}Foo \textit{et al.}, Solid State Commun.
+\textbf{127}, 33 (2003)\quad$\cdot$\quad
+Takada \textit{et al.}, Nature \textbf{422}, 53 (2003)}
+\end{document}

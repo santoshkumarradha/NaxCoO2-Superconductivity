@@ -78,7 +78,7 @@
           \fill[white] (\wx-0.11,\wy+0.06) circle (0.9pt);
           \fill[white] (\wx+0.11,\wy+0.06) circle (0.9pt);
         }
-        \node[water,font=\tiny,anchor=east] at (\W-0.05,\hg-0.20){H$_2$O};
+        \node[water,font=\tiny,anchor=west] at (-\W+0.08,\hg-0.32){H$_2$O};
       \fi
 
       % --- spacing brace on the right ---
@@ -90,7 +90,7 @@
 
   % ============================================================= WELLS
   % mini potential V(delta) under each stage: single / soft-double / deep-double
-  \def\wy{-2.55}       % well-plot baseline (top of frame)
+  \def\wy{-3.05}       % well-plot baseline (top of frame)
   \def\ww{1.55}        % well half-width
   \def\wh{1.65}        % well height
   \foreach \ox/\type/\lvl in {0/single/1, \dx/soft/2, {2*\dx}/deep/3}{
@@ -112,16 +112,16 @@
       \fi
       \ifnum\lvl=2  % ---- soft double well ----
         \draw[ink,line width=1.1pt,smooth,domain=-1.28:1.28,samples=80]
-          plot (\x,{-\wh + 0.35 + (-1.75*\x*\x + 1.15*\x*\x*\x*\x)});
-        \pgfmathsetmacro\eb{-\wh+0.30}
-        \draw[egas,line width=1.0pt] (-0.95,\eb)--(0.95,\eb);
+          plot (\x,{-\wh + 0.75 + (-1.20*\x*\x + 0.85*\x*\x*\x*\x)});
+        \pgfmathsetmacro\eb{-\wh+0.44}
+        \draw[egas,line width=1.0pt] (-0.92,\eb)--(0.92,\eb);
         \node[egas,font=\tiny,anchor=south] at (0,\eb+0.01){$E_0,E_1$};
       \fi
       \ifnum\lvl=3  % ---- deep double well ----
         \draw[ink,line width=1.1pt,smooth,domain=-1.30:1.30,samples=90]
-          plot (\x,{-\wh + 1.02 + (-4.6*\x*\x + 3.0*\x*\x*\x*\x)});
-        \pgfmathsetmacro\ec{-\wh+0.28}
-        \draw[egas,line width=1.0pt] (-1.02,\ec)--(1.02,\ec);
+          plot (\x,{-\wh + 1.00 + (-2.60*\x*\x + 1.70*\x*\x*\x*\x)});
+        \pgfmathsetmacro\ec{-\wh+0.30}
+        \draw[egas,line width=1.0pt] (-0.98,\ec)--(0.98,\ec);
         \node[egas,font=\tiny,anchor=south] at (0,\ec+0.01){$E_0,E_1$};
       \fi
     \end{scope}
