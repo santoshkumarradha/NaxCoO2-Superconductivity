@@ -37,6 +37,20 @@ E(delta).  All jobs are hydrate BFGS relaxations (c = 9.9, set-G ansatz):
 with run_zscan.sh): vacuum sqrt3 x sqrt3 Na_1/3CoO2 E(delta) scans at fixed
 c = 9.9 A and z_O = 0.90/1.02 A                              10 SCF
 
+`--stage ensemble` writes set L (the MD half of the "cage-ensemble" set L/M)
+into jobs_ensemble/md_cage/pw.in + manifest_ensemble.json (run pod-side with
+run_ensemble.sh):
+  L: Born-Oppenheimer MD of the set-G hydrate cell (sqrt3 x sqrt3, x = 1/3,
+     c = 9.9 A, 4 rigid-geometry waters, Na at delta = 0). ONLY the 12 water
+     atoms move (if_pos 0 0 0 on every Co/framework-O/Na, 1 1 1 on water);
+     ion_dynamics = 'verlet', ion_temperature = 'svr', tempw = 290 K,
+     dt = 10 Ry a.u. (~0.48 fs), nstep = 4000 (~1.9 ps). K_POINTS automatic
+     3 3 1, conv_thr = 1e-6, mixing local-TF, smearing mv 0.02, nspin = 2 as
+     in set G.                                                     1 MD job
+Set M (70 frozen-snapshot Na SCF scans) is generated POD-SIDE from the MD
+trajectory by runpod/make_ensemble_scans.py -- it is NOT part of this stage
+because it needs the finished MD output, which does not exist locally.
+
 stdlib + numpy only.
 """
 import argparse
@@ -125,19 +139,26 @@ def atoms_s3(element, c, delta, zo=Z_O):
 # ------------------------------------------------------------ input files ---
 def pw_input(calc, element, a, c, atoms, kpts, prefix="pw", outdir="./out",
              species=None, extra_system=None, notes=None, extra_control=None,
-             ions=False, if_pos=None, kpath=None):
+             ions=False, if_pos=None, kpath=None, conv_thr="1.0d-7",
+             ion_dynamics="bfgs", ion_extra=None):
     """Hexagonal (ibrav=4) pw.x input.
 
     species      : explicit ATOMIC_SPECIES order (default Co, O, element)
     extra_system : extra lines appended inside &SYSTEM (e.g. tot_charge)
     notes        : '!'-comment lines placed before ATOMIC_POSITIONS
                    (pw.x card parser skips lines starting with '!'/'#')
-    extra_control: extra lines appended inside &CONTROL (e.g. nstep)
-    ions         : append an &IONS namelist (BFGS) for calc = 'relax'
-    if_pos       : per-atom (ix,iy,iz) 0/1 movability flags (relax only)
+    extra_control: extra lines appended inside &CONTROL (e.g. nstep, dt)
+    ions         : append an &IONS namelist for calc = 'relax'/'md'/etc.
+    if_pos       : per-atom (ix,iy,iz) 0/1 movability flags (relax/md only)
     kpath        : list of (kx, ky, kz, npts) -> K_POINTS crystal_b card
                    (band-structure path) instead of an automatic grid; the
                    `kpts` argument is ignored (pass None)
+    conv_thr     : &ELECTRONS conv_thr string (default '1.0d-7'; MD stages
+                   use a looser '1.0d-6' for speed)
+    ion_dynamics : &IONS ion_dynamics string (default 'bfgs'; 'verlet' for
+                   Born-Oppenheimer MD)
+    ion_extra    : extra lines appended inside &IONS (e.g. ion_temperature,
+                   tempw for thermostatted MD)
     """
     if species is None:
         species = ["Co", "O", element]
@@ -176,14 +197,17 @@ def pw_input(calc, element, a, c, atoms, kpts, prefix="pw", outdir="./out",
     lines += [
         "/",
         "&ELECTRONS",
-        "  conv_thr = 1.0d-7",
+        f"  conv_thr = {conv_thr}",
         "  mixing_beta = 0.3",
         "  mixing_mode = 'local-TF'",
         "  electron_maxstep = 300",
         "/",
     ]
     if ions:
-        lines += ["&IONS", "  ion_dynamics = 'bfgs'", "/"]
+        lines += ["&IONS", f"  ion_dynamics = '{ion_dynamics}'"]
+        if ion_extra:
+            lines.extend(ion_extra)
+        lines += ["/"]
     lines.append("ATOMIC_SPECIES")
     for s in species:
         lines.append(f"  {s}  {MASS[s]:.5f}  {PSEUDOS[s]}")
@@ -925,10 +949,96 @@ def generate_zscan(root):
           f"+ manifest_zscan.json")
 
 
+# ---------------------------------------------------------- ensemble stage --
+# Set L (thermal cage MD), written to jobs_ensemble/ + manifest_ensemble.json,
+# run via run_ensemble.sh.  Set M (70 frozen-snapshot Na SCF scans) is
+# generated POD-SIDE by make_ensemble_scans.py after the MD finishes; it is
+# NOT written here (the MD trajectory does not exist at generate-time).
+#
+# Physics: set J showed that a single ADIABATIC (fully-relaxed) water cage is
+# the wrong statistical object -- the H-bond network has multiple local
+# minima spanning >= 0.4 eV at fixed Na, and Na (~200 fs mode) is fast against
+# H-bond reorganization (~ps). The physical Na potential is drawn from a
+# THERMAL ENSEMBLE of instantaneous cage configurations sampled by classical
+# BOMD at T = 290 K, not the single deepest adiabatic minimum. Set L runs
+# that MD (water free, Na + CoO2 frozen so Na cannot itself respond to the
+# ensemble -- this isolates the cage-configuration effect on the Na
+# potential); set M then freezes 10 thermal snapshots and re-scans Na
+# rigidly through each, exactly reproducing the set-G SCF protocol so the
+# resulting E(delta) curves are directly comparable to the rigid-cage (set G)
+# and adiabatic (set J) results.
+ENSEMBLE_DIR = "jobs_ensemble"
+KPTS_L = (3, 3, 1)                     # coarse k-mesh, MD speed
+MD_DT = 10.0                            # Ry a.u. ~ 0.4838 fs/step
+MD_NSTEP = 4000                         # ~1.9 ps
+MD_TEMPW = 290.0                        # K, svr thermostat target
+
+L_NOTES = [
+    "! Set L (cage-ensemble MD, jobs_ensemble/md_cage): Born-Oppenheimer MD",
+    "! of the set-G hydrate ansatz (see G_NOTES in generate_inputs.py) at",
+    "! Na delta = 0 (z = c/2). ONLY the 12 water atoms move: if_pos = 0 0 0",
+    "! on every Co, framework O, and Na atom; 1 1 1 on water O and H (same",
+    "! atom ordering/mask as set J's IF_POS_J_PINNED). ion_dynamics =",
+    "! 'verlet', ion_temperature = 'svr', tempw = 290 K, dt = 10 Ry a.u.",
+    "! (~0.48 fs), nstep = 4000 (~1.9 ps). K_POINTS coarsened to 3 3 1 and",
+    "! conv_thr loosened to 1e-6 purely for MD throughput -- NOT used for",
+    "! the set-M snapshot SCFs, which revert to the exact set-G electronic",
+    "! settings (K_POINTS 6 6 2, conv_thr 1e-7) for comparability.",
+    "! Purpose: sample a thermal ensemble of cage configurations at 290 K;",
+    "! set M (generated pod-side by make_ensemble_scans.py after this MD",
+    "! finishes) freezes 10 snapshots (first 1000 steps discarded as",
+    "! equilibration) and rigidly scans Na through delta = +/-0.45..0.00 A",
+    "! at each -- the ensemble of resulting E(delta) curves is the physical",
+    "! (statistical, non-adiabatic) counterpart to the set-G rigid-cage and",
+    "! set-J single-adiabatic-minimum curves.",
+]
+
+
+def generate_ensemble(root):
+    el, c = "Na", 9.9
+    a = A_LAT[el] * np.sqrt(3.0)
+    atoms = atoms_s3_hydrate(c, 0.0, with_water=True)          # 22 atoms
+    assert len(atoms) == 22, f"expected 22 atoms, got {len(atoms)}"
+    species = ["Co", "O", "Na", "H"]
+    # atoms_s3_hydrate order: 3 Co (0-2), 6 lattice O (3-8), Na (9), then 4x
+    # (O,H,H) water (10-21) -- reuse set J's frozen-cage/free-water mask.
+    if_pos = IF_POS_J_PINNED
+    text = pw_input(
+        "md", el, a, c, atoms, KPTS_L, species=species,
+        ions=True, if_pos=if_pos, notes=L_NOTES,
+        conv_thr="1.0d-6", ion_dynamics="verlet",
+        ion_extra=["  ion_temperature = 'svr'", f"  tempw = {MD_TEMPW:.1f}"],
+        extra_control=[f"  dt = {MD_DT:.1f}", f"  nstep = {MD_NSTEP}"],
+    )
+    name = "md_cage"
+    write_job(root, name, text, jobs_dir=ENSEMBLE_DIR)
+    job = dict(name=name, set="L", element=el, cell="s3", c=c, delta=0.0,
+               water=True, na_constraint="frozen", type="md",
+               kpts=list(KPTS_L), nat=len(atoms), nstep=MD_NSTEP,
+               dt_ryau=MD_DT, tempw_K=MD_TEMPW)
+    manifest = dict(
+        pseudos=PSEUDOS, zval=ZVAL, a_lat=A_LAT, z_O=Z_O, c=c, a=a,
+        analyze=("Set M (generated pod-side by make_ensemble_scans.py once "
+                 "the md_cage MD reaches >= 3000 steps) discards the first "
+                 "1000 MD steps as equilibration, takes 10 snapshots evenly "
+                 "spaced over the remainder, and for each writes 7 SCF Na "
+                 "delta scans (delta = -0.45..+0.45 A step 0.15) with the "
+                 "water frozen at the snapshot coordinates and the exact "
+                 "set-G electronic settings. Compare the resulting ensemble "
+                 "of E(delta) curves against the rigid-cage set-G curve "
+                 "(results_extra/jobs_extra/Na_s3hyd_c9.9_d*) and the "
+                 "adiabatic set-J minimum (results_mobile)."),
+        jobs=[job])
+    with open(os.path.join(root, "manifest_ensemble.json"), "w") as f:
+        json.dump(manifest, f, indent=2)
+    print(f"wrote 1 ensemble MD job (set L, nat={len(atoms)}) "
+          f"+ manifest_ensemble.json")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--stage", choices=["scf", "nscf", "extra", "bands",
-                                       "mobile", "zscan"],
+                                       "mobile", "zscan", "ensemble"],
                    default="scf")
     p.add_argument("--root", default=os.path.dirname(os.path.abspath(__file__)))
     args = p.parse_args()
@@ -942,6 +1052,8 @@ def main():
         generate_mobile(args.root)
     elif args.stage == "zscan":
         generate_zscan(args.root)
+    elif args.stage == "ensemble":
+        generate_ensemble(args.root)
     else:
         generate_nscf(args.root)
 

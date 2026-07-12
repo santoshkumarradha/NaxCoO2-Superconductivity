@@ -1,0 +1,51 @@
+{
+  "pseudos": {
+    "Co": "Co.pbe-spn-kjpaw_psl.0.3.1.UPF",
+    "O": "O.pbe-n-kjpaw_psl.1.0.0.UPF",
+    "Na": "Na.pbe-spn-kjpaw_psl.1.0.0.UPF",
+    "Li": "Li.pbe-s-kjpaw_psl.1.0.0.UPF",
+    "K": "K.pbe-spn-kjpaw_psl.1.0.0.UPF",
+    "Se": "Se.pbe-dn-kjpaw_psl.1.0.0.UPF",
+    "H": "H.pbe-kjpaw_psl.1.0.0.UPF"
+  },
+  "zval": {
+    "Co": 17,
+    "O": 6,
+    "Na": 9,
+    "Li": 3,
+    "K": 9,
+    "Se": 16,
+    "H": 1
+  },
+  "a_lat": {
+    "Na": 2.888,
+    "Li": 2.82,
+    "K": 2.9
+  },
+  "z_O": 0.96,
+  "c": 9.9,
+  "a": 5.002162732258917,
+  "analyze": "Set M (generated pod-side by make_ensemble_scans.py once the md_cage MD reaches >= 3000 steps) discards the first 1000 MD steps as equilibration, takes 10 snapshots evenly spaced over the remainder, and for each writes 7 SCF Na delta scans (delta = -0.45..+0.45 A step 0.15) with the water frozen at the snapshot coordinates and the exact set-G electronic settings. Compare the resulting ensemble of E(delta) curves against the rigid-cage set-G curve (results_extra/jobs_extra/Na_s3hyd_c9.9_d*) and the adiabatic set-J minimum (results_mobile).",
+  "jobs": [
+    {
+      "name": "md_cage",
+      "set": "L",
+      "element": "Na",
+      "cell": "s3",
+      "c": 9.9,
+      "delta": 0.0,
+      "water": true,
+      "na_constraint": "frozen",
+      "type": "md",
+      "kpts": [
+        3,
+        3,
+        1
+      ],
+      "nat": 22,
+      "nstep": 4000,
+      "dt_ryau": 10.0,
+      "tempw_K": 290.0
+    }
+  ]
+}
