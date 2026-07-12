@@ -65,6 +65,64 @@ SERIES = {
 RAMP_BLUE = ["#9ec5f4", "#3987e5", "#1c5cab", "#0d366b"]   # Na 1x1 panel
 RAMP_YELL = ["#f6d489", "#eda100", "#b97a00", "#7a4f00"]   # Na s3  panel
 
+# ----------------------------------------------------------------------
+# Region-fill vocabulary (the spin_phase_diagram.pdf house style).
+# Muted pastel fills name a physical DOMAIN; the physics is labelled INSIDE
+# the fill in a matching darker ink, so a region's meaning is carried by
+# text, not colour alone.  Four semantic domains, reused across every figure
+# so "amber = the good/SC window", "red = magnetic / killed", "blue =
+# gas-on / paramagnetic metal", "neutral = off / empty" read the same
+# everywhere.  Colours lifted verbatim from spin_analysis/stoner_model.py.
+# ----------------------------------------------------------------------
+FILL_NONE  = "#ebebe8"   # neutral: gallery empty / mechanism off
+FILL_RED   = "#f5c4c4"   # magnetic order / polaronic freeze-out (SC killed)
+FILL_AMBER = "#f8e2b4"   # the pairing window / paramagnon-boosted / prediction
+FILL_BLUE  = "#cde2fb"   # gas-on paramagnetic metal / carriers present
+
+INK_NONE   = C_SEC       # label ink inside a neutral fill
+INK_RED    = "#7c1f1e"   # label ink inside a red fill
+INK_AMBER  = "#6d4c00"   # label ink inside an amber fill
+INK_BLUE   = "#184f95"   # label ink inside a blue fill
+
+# Boundary strokes between domains (thin, coloured to the harder-edge domain).
+EDGE_TURNON = "#3d3c39"  # carrier turn-on  (Gamma = 2 delta)
+EDGE_STONER = "#b23230"  # Stoner boundary  (I_s N(0) = 1)
+EDGE_SSTAR  = "#8a6100"  # paramagnon edge  (S = S*)
+
+# Fill -> matching label ink, for the region-labelling helper.
+_FILL_INK = {FILL_NONE: INK_NONE, FILL_RED: INK_RED,
+             FILL_AMBER: INK_AMBER, FILL_BLUE: INK_BLUE}
+
+
+def vspan_region(ax, x0, x1, fill, label=None, ytext=0.5, fontsize=8.2,
+                 ha="center", **txt):
+    """Shade a vertical domain [x0,x1] with a pastel fill and (optionally)
+    label the physics INSIDE it in the matching darker ink.  ytext is in
+    axes-fraction; the fill sits at zorder 0 so data/annotations stay on top."""
+    ax.axvspan(x0, x1, color=fill, lw=0, zorder=0)
+    if label:
+        ink = _FILL_INK.get(fill, C_INK)
+        ax.text(0.5 * (x0 + x1) if ha == "center" else x0, ytext, label,
+                transform=ax.get_xaxis_transform(), ha=ha, va="center",
+                color=ink, fontsize=fontsize, zorder=1.5, **txt)
+
+
+def hspan_region(ax, y0, y1, fill, label=None, xtext=0.5, fontsize=8.2,
+                 va="center", **txt):
+    """Shade a horizontal domain [y0,y1] with a pastel fill and label inside."""
+    ax.axhspan(y0, y1, color=fill, lw=0, zorder=0)
+    if label:
+        ink = _FILL_INK.get(fill, C_INK)
+        ax.text(xtext, 0.5 * (y0 + y1) if va == "center" else y0, label,
+                transform=ax.get_yaxis_transform(), ha="center", va=va,
+                color=ink, fontsize=fontsize, zorder=1.5, **txt)
+
+
+def panel_title(ax, text, fontsize=9.5, pad=4):
+    """Left-aligned descriptive panel title, '(a) ...', the reference-figure
+    convention (spin_phase_diagram.pdf).  Use for the phase-diagram family."""
+    ax.set_title(text, fontsize=fontsize, color=C_INK, loc="left", pad=pad)
+
 # Experimental anchors (spacing -> (label, colour, is_SC))
 ANCHORS = [
     (5.5, "anhydrous\n(not SC)", C_SEC, False),

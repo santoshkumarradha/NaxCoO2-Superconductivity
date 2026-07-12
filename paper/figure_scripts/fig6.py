@@ -117,11 +117,11 @@ axA.plot(dsym, Evs, "s", ms=4.6, color=S.C_SEC, mec="white", mew=0.6,
 
 axA.axhline(0, color=S.C_MUT, lw=0.6, zorder=1)
 # mark the bound minimum and the runaway, both in neutral ink
-axA.annotate("bound well\n$\\delta_0\\approx0.30$ Å", (0.30, Eh[2]),
-             xytext=(0.30, -95), ha="center", fontsize=7.0, color=S.C_INK,
+axA.annotate("bound well", (0.30, Eh[2]),
+             xytext=(0.30, -95), ha="center", fontsize=7.4, color=S.C_INK,
              arrowprops=dict(arrowstyle="-", color=S.C_MUT, lw=0.7))
-axA.annotate("runs away\n(Na adsorbs)", (0.72, Ev[-1] + 4),
-             xytext=(0.40, -232), ha="center", fontsize=7.0, color=S.C_INK,
+axA.annotate("runs away", (0.72, Ev[-1] + 4),
+             xytext=(0.42, -232), ha="center", fontsize=7.4, color=S.C_INK,
              arrowprops=dict(arrowstyle="->", color=S.C_MUT, lw=0.7))
 axA.set_xlabel(r"Na off-centre displacement  $\delta$  (Å)")
 axA.set_ylabel(r"$E(\delta)-E(0)$  (meV)")

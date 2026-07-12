@@ -22,12 +22,13 @@ cp = S.load_coupling().sort_values("c_A")
 
 SC_LO, SC_HI = 6.35, 6.45        # SC window (task)
 LAM_C = 6.44                     # first c with lambda > 2 (polaronic)
+XLO, XHI = 5.4, 10.0             # panel x-range
 CG = np.linspace(5.5, 9.9, 400)
 
-# Aesthetic-sobriety palette: colour only on the data series (curves/markers);
-# every decorative element is neutral grey/black.
-C_SHADE = "#e2e1db"              # light-grey fill (narrow SC-window band)
-C_SHADE_LT = "#f1f0eb"           # very light grey (large polaronic region)
+# House style (spin_phase_diagram.pdf): pastel region fills name domains and
+# the physics is labelled INSIDE each fill in matching darker ink; data curves
+# and annotation text ride on top.  amber = pairing window, red = polaronic
+# (SC killed), neutral = mechanism off.
 C_ANN = S.C_INK                  # annotation text: black
 C_ANN2 = S.C_SEC                 # secondary annotation text: ~40% grey
 
@@ -36,7 +37,8 @@ axA, axB, axC = axes
 
 
 def shade_window(ax):
-    ax.axvspan(SC_LO, SC_HI, color=C_SHADE, alpha=0.9, lw=0, zorder=0)
+    # the pairing window as an amber strip, echoing panel (c)
+    ax.axvspan(SC_LO, SC_HI, color=S.FILL_AMBER, lw=0, zorder=0)
 
 
 def anchors(ax, star=False):
@@ -80,7 +82,7 @@ for (el, cell), st in S.SERIES.items():
     axB.text(lx, ly, st["label"], color=C_ANN, fontsize=8,
              ha=lha, va="center")
 axB.axhline(0.10, color=S.C_MUT, ls=":", lw=1.0, zorder=2)
-axB.text(7.35, 0.30, "2DEG gate  " r"$N(0){=}0.1$", ha="left", va="bottom",
+axB.text(7.35, 0.28, r"$N(0){=}0.1$ gate", ha="left", va="bottom",
          fontsize=7.6, color=C_ANN2)
 shade_window(axB)
 anchors(axB)
@@ -88,9 +90,6 @@ axB.set_ylim(-0.12, 4.3)
 axB.set_ylabel(r"DFT $N(0)$" "\n" r"(states eV$^{-1}$ cell$^{-1}$ spin$^{-1}$)")
 S.thin_spines(axB)
 S.panel_label(axB, "b")
-axB.annotate("2DEG switches on", xy=(6.55, 0.9), xytext=(6.75, 2.3),
-             fontsize=8, color=C_ANN, ha="left",
-             arrowprops=dict(arrowstyle="->", color=C_ANN2, lw=0.8))
 
 # ---------------------------------------------------------------- (c) Tc dome
 c = cp["c_A"].values
@@ -105,16 +104,23 @@ def draw_dome(ax, lw_line=1.8, band_lab=None, line_lab=None):
     ax.plot(c, tc0, color=S.C_BLUE, lw=lw_line, zorder=4, label=line_lab)
 
 
+# three labelled domains (the reference-figure region-fill style):
+#   neutral  no 2DEG (carriers off, no pairing)  [XLO, SC_LO]
+#   amber    the SC window (the narrow dome)      [SC_LO, LAM_C]
+#   red      polaronic, lambda>2, SC killed       [LAM_C, XHI]
+S.vspan_region(axC, XLO, SC_LO, S.FILL_NONE, "no 2DEG", ytext=0.5,
+               ha="center", fontsize=8.5)
+axC.axvspan(SC_LO, LAM_C, color=S.FILL_AMBER, lw=0, zorder=0)
+S.vspan_region(axC, LAM_C, XHI, S.FILL_RED, r"polaronic ($\lambda>2$)",
+               ytext=0.93, ha="center", fontsize=8.5)
+axC.axvline(LAM_C, color=S.EDGE_STONER, lw=1.0, zorder=1)
+
 draw_dome(axC, band_lab=r"$\gamma$ band (11$-$23 K)",
           line_lab=r"$T_c$ (Allen$-$Dynes)")
-# polaronic wall: lambda > 2 -> SC killed. No area fill (a fill covering
-# three-quarters of the panel reads as a bad background, not a region); the
-# wall is a thin grey boundary line at the lambda=2 crossing, labelled in
-# clear space above the inset.
-axC.axvline(LAM_C, color=S.C_MUT, lw=0.8, zorder=1)
-axC.text(6.92, 24.2, r"polaronic ($\lambda>2$), SC killed", fontsize=8,
-         color=C_ANN, ha="left", va="center")
-shade_window(axC)
+# point to the hairline amber window (too narrow to label in place)
+axC.annotate("SC window", xy=(SC_LO, 6.0), xytext=(6.62, 19.0),
+             fontsize=8.5, color=S.INK_AMBER, ha="left", va="center",
+             arrowprops=dict(arrowstyle="->", color=S.INK_AMBER, lw=0.9))
 anchors(axC, star=True)
 # experimental SC anchor: distinct star marker at 9.9 A, Tc = 4.5 K (black)
 axC.plot(9.9, 4.5, marker="*", ms=16, color=C_ANN, mec="white", mew=0.6,

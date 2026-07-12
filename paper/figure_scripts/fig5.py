@@ -20,12 +20,12 @@ fits = S.load_well_fits()
 
 fig, ax = plt.subplots(figsize=(3.4, 3.5))
 
-# quantum-paraelectric (soft-mode) window: omega < 1 meV  (very light neutral
-# shading with a thin dashed boundary line)
-ax.axhspan(1e-3, 1.0, color="#f1f0eb", lw=0, zorder=0)
-ax.axhline(1.0, color=S.C_MUT, lw=0.7, ls=(0, (4, 3)), alpha=0.8, zorder=1)
-ax.text(5.42, 0.0068, "quantum-paraelectric\n(soft-mode) window", ha="left",
-        va="bottom", fontsize=7.6, color=S.C_SEC)
+# quantum-paraelectric (soft-mode) window: omega < 1 meV.  Amber pastel (the
+# reference-figure "favourable window" colour), labelled inside in matching ink.
+ax.axhspan(5e-3, 1.0, color=S.FILL_AMBER, lw=0, zorder=0)
+ax.axhline(1.0, color=S.EDGE_SSTAR, lw=0.9, ls=(0, (4, 3)), zorder=1)
+ax.text(5.42, 0.0075, "soft-mode window", ha="left", va="bottom",
+        fontsize=8, color=S.INK_AMBER)
 
 for (el, cell), st in S.SERIES.items():
     q = qw[(qw.element == el) & (qw.cell == cell) & (qw.mass == el)]

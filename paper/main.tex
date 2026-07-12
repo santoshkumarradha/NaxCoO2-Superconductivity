@@ -497,6 +497,9 @@ paraelectric, dynamically centred despite the negative $\alpha$, and a centred i
 ion with no soft anharmonic mode to offer. Lithium fails on the glue, and it fails for the
 plain reason that it is light.
 
+\subsection{The gallery spin phase diagram}
+\label{sec:spinpd}
+
 The gas brings a magnetic phase with it, and that phase settles an old contradiction.
 Right where the gas first condenses, the gallery band is narrow and its density of states is
 high, and a narrow band with a high density of states is a {Stoner} magnet. The
@@ -515,6 +518,23 @@ with the normal-state {Stoner} enhancement. Both symmetry-allowed states of Mazi
 Johannes~\cite{MazinJohannes2005} are consistent with the muon null~\cite{Higemoto2004}, and
 we do not need the chiral $d+id$ scenario~\cite{Kiesel2013} to fit the record, though our data
 do not exclude it.
+
+All of this is one phase diagram, and Fig.~\ref{fig:spinpd} draws it. Carrying the surface-charge
+model into the gallery and applying a {Stoner} criterion to the gallery band gives a polarized
+strip that hugs the carrier turn-on line, boosted to a paramagnon-rich metal just outside it and
+a plain paramagnet beyond---the spacing dependence of the enhancement is the cut in
+Fig.~\ref{fig:spinpd}(b). The diagram is anchored to our own numbers: the density-functional
+moment of Fig.~\ref{fig:spin} switches on exactly at the well transition, which is where the model
+places the carrier turn-on at full coverage, and the red bar in Fig.~\ref{fig:spinpd}(a) marks
+that coincidence; the gallery moment is antiparallel to the cobalt. Proximity to the {Stoner}
+boundary is also what makes the singlet--triplet question one of position rather than of choosing a
+winner: right at the boundary an equal-spin channel of $f$ symmetry lies close in energy to the
+singlet, the link to the two surviving $f$-wave states of Table~\ref{tab:gauntlet} that Mazin and
+Johannes could not eliminate~\cite{MazinJohannes2005}, so a sample nearer the boundary leans
+triplet and one past it leans singlet. The one number we do not trust is the moment of the
+$\sqrt{3}\times\sqrt{3}$ cell, over-polarized in the local-spin-density approximation and excluded
+from the diagram; the well energies on which the mechanism rests shift by less than $6\%$ under the
+spin treatment (Sec.~\ref{sec:inadequacies}), so the exclusion leaves the structural story intact.
 
 One might worry that spin--orbit coupling selects or mixes the pairing. It does not, at any
 level that matters here. The gallery state is sodium-derived, with only a few percent cobalt
@@ -651,6 +671,28 @@ sodium---which the nitride does not have.
   \label{fig:spin}
 \end{figure}
 
+% ---- FIG 10: gallery spin phase diagram (wide) ----
+\begin{figure*}[t]
+  \centering
+  \figorbox{fig10}{fig10}{0.92\textwidth}
+  \caption{The gallery-2DEG spin phase diagram. (a)~{Stoner} phase diagram of the interlayer gas,
+  built by carrying the {SSH}-type surface-charge model of Radha and
+  Lambrecht~\cite{RadhaLambrecht2021} into the gallery: in the plane of Na content $x$ and
+  {CoO$_2$} spacing $c$ (right axis, the full-coverage gallery half-width $\Gamma_0(c)$) the gallery
+  band is empty below the carrier turn-on ($\Gamma=2\delta$, dark line); just above it the band is
+  narrow and its density of states high, so the gas is {Stoner}-polarized (red) before widening
+  into a paramagnon-boosted ($S>S^\ast$, amber) and then a plain paramagnetic (blue) metal. The
+  polarized strip hugs the turn-on line. Markers: the monolayer ($6.9$~\AA, $\times$) and bilayer
+  ($9.9$~\AA, $\circ$) hydrates at the physical $x=0.35$; the red bar at $x=1$ marks where the {DFT}
+  cell-integrated moment turns on (Fig.~\ref{fig:spin}), coincident with the well transition and so
+  with the model turn-on. The $\sqrt{3}\times\sqrt{3}$ ($x=1/3$) cell is over-polarized in {LSDA}
+  and excluded (the wells shift $<6\%$ under the spin treatment). (b)~Cuts at $x=0.35$: the carrier
+  fraction $q$ per Na and the {Stoner} enhancement $S$ against $c$. The model is an ansatz
+  calibrated to the one on/off hydrate anchor pair; every parameter is source-tagged in the
+  generating script.}
+  \label{fig:spinpd}
+\end{figure*}
+
 % ---- TABLE I: scoreboard (wide) ----
 \begin{table*}[t]
   \caption{The mechanism against the record. Six established facts about {Na$_x$CoO$_2\cdot y$H$_2$O}
@@ -748,6 +790,29 @@ scaling and survives the convergence checks, and the polaronic coupling in the f
 is an order of magnitude past the limit, so no conclusion turns on the soft depths. But the
 peak height of the dome does depend on them, and we do not claim $14$~K to better than the
 factor of two already stated.
+
+\subsection{Electronic correlations}
+\label{sec:correlations}
+
+Our bands are Kohn--Sham bands, and the cobaltates are correlated; the same photoemission we
+leaned on for the Fermi-surface topology says so directly. Angle-resolved photoemission on the
+anhydrous parent finds dispersions roughly twice flatter than {LDA}, with $a_{1g}$ velocities
+$v_F\approx0.3$--$0.6$~eV\,\AA{} against a band value about twice larger~\cite{Geck2007}. The
+correlations are real and our local treatment underestimates them, and it is worth saying plainly
+which way that cuts. A mass renormalization $m^\ast/m\approx2$ raises the density of states $N(0)$
+and lowers $v_F$ in the same proportion, and $N(0)$ enters our coupling in the direction that
+\emph{increases} it: since $\lambda=2N(0)g^2/\hbar\Omega$ was built on the unrenormalized
+density-functional $N(0)$, the $\lambda$ and $T_c$ estimates of Sec.~\ref{sec:model} are, if
+anything, conservative. The same flattening deepens the narrow-band limit the gallery gas already
+sits in, and a flatter band at fixed filling carries a higher $N(0)$, which only sharpens the
+{Stoner}-strip argument of Sec.~\ref{sec:spinpd}---correlations widen the polarized region of
+Fig.~\ref{fig:spinpd} rather than narrow it. The natural next step is therefore a {DFT}+{DMFT}
+calculation on the gallery band, which we have not attempted. One honest caution runs the other
+way: correlations do not only renormalize the band, they can also broaden and damp the sodium mode
+that carries the pairing, and a strongly overdamped mode would couple less efficiently than the
+sharp {Einstein} boson we assumed. We note again that the local-spin-density over-polarization at
+$x=1/3$, which we exclude from the magnetic story, leaves the well energies themselves unchanged to
+within $6\%$, so none of the structural conclusions turn on the spin or correlation treatment.
 
 The rest of the list is shorter. Our transition spacing is computed at full sodium coverage,
 $x=1$, and only checked at the physical $x=1/3$ in a single cell, where it moves by about

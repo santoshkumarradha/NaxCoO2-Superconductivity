@@ -30,19 +30,25 @@ def series_stats(el, cell):
 
 fig, ax = plt.subplots(figsize=(3.4, 3.05))
 
-C_SHADE = "#e2e1db"     # neutral light-grey fill (sobriety: no decorative colour)
+C_TR = 6.40             # well transition / moment turn-on (c*_Na)
 
-# --- s3 LSDA over-polarisation caveat band (top) ---
+# --- two pastel domains along c (reference-figure region-fill style):
+#     neutral  no local moment (paramagnetic)   [5.3, C_TR]
+#     red      magnetic: gallery moment on       [C_TR, 10.0]
+S.vspan_region(ax, 5.3, C_TR, S.FILL_NONE)
+S.vspan_region(ax, C_TR, 10.0, S.FILL_RED, "magnetic", ytext=0.60,
+               ha="center", fontsize=8.5)
+ax.axvline(C_TR, color=S.EDGE_STONER, lw=1.0, zorder=1)
+ax.text(5.95, 1.4, "no moment", ha="center", va="center", rotation=90,
+        fontsize=8, color=S.INK_NONE)
+ax.text(C_TR - 0.06, 0.10, "well transition", ha="right", va="bottom",
+        rotation=90, fontsize=6.8, color=S.INK_RED)
+
+# --- s3 LSDA over-polarisation caveat band (top), kept neutral ---
 s3 = mag[(mag.alkali == "Na") & (mag.cell == "s3")]["abs_mag_muB"]
-ax.axhspan(s3.min(), s3.max(), color=C_SHADE, alpha=0.9, lw=0, zorder=0)
-ax.text(9.85, s3.max(), r"Na $\sqrt{3}$: LSDA over-polarised," "\n"
-        r"$|m|\!\approx\!$const (excluded)", ha="right", va="top",
+ax.axhspan(s3.min(), s3.max(), color=S.FILL_NONE, lw=0, zorder=0.5)
+ax.text(9.85, s3.max() - 0.04, r"$\sqrt{3}$ (excluded)", ha="right", va="top",
         fontsize=7.0, color=S.C_SEC)
-
-# --- well-transition band (consistent with Fig. 2) ---
-ax.axvspan(6.35, 6.45, color=C_SHADE, alpha=0.9, lw=0, zorder=0)
-ax.text(6.31, 1.55, "well transition", ha="right", va="center", rotation=90,
-        fontsize=7.2, color=S.C_SEC)
 
 for el in ("Na", "Li"):
     st = S.SERIES[(el, "1x1")]
@@ -51,20 +57,14 @@ for el in ("Na", "Li"):
     ax.plot(cs, mean, st["marker"] + "-", ms=5.5, lw=1.4, color=st["color"],
             mfc=st["color"], mew=0, zorder=4, label=st["label"])
 
-ax.annotate("moment switches on\n" r"at $\alpha<0$", xy=(6.99, 0.34),
-            xytext=(7.95, 0.06), fontsize=7.2, color=S.C_SEC, ha="center",
-            arrowprops=dict(arrowstyle="->", color=S.C_SEC, lw=0.7))
-ax.text(9.85, 1.66, r"gallery moment"
-        "\n" r"antiparallel to Co"
-        "\n" r"($m_{\mathrm{alkali}}\!<\!0$)", fontsize=7.2, color=S.C_MUT,
-        va="center", ha="right", style="italic", linespacing=1.4)
-
 ax.set_xlim(5.3, 10.0)
 ax.set_ylim(-0.05, 2.82)
 ax.set_xlabel(r"CoO$_2$$-$CoO$_2$ spacing  $c$  (Å)")
 ax.set_ylabel(r"cell moment  $\langle|m|\rangle$  ($\mu_B$)")
-ax.legend(loc="lower left", bbox_to_anchor=(0.035, 0.62), handletextpad=0.4,
-          fontsize=7.6)
+leg = ax.legend(loc="upper left", bbox_to_anchor=(0.16, 0.80),
+                handletextpad=0.4, fontsize=7.6, frameon=True,
+                facecolor="white", edgecolor=S.C_GRID, framealpha=0.92)
+leg.get_frame().set_linewidth(0.6)
 S.thin_spines(ax)
 
 fig.subplots_adjust(left=0.145, right=0.97, top=0.97, bottom=0.145)
