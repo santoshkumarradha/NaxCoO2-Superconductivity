@@ -55,19 +55,22 @@ count_md_steps() {  # $1 = pw.out; cheap proxy, matches make_ensemble_scans.py
 # ------------------------------------------------------------- phase 1: MD --
 echo "== phase 1: set L Born-Oppenheimer MD (md_cage, all $NGPU GPUs) =="
 MD_DIR="jobs_ensemble/md_cage"
+# comma-joined GPU id list, no trailing comma (some `seq -s,` implementations
+# append a trailing separator, which would make CUDA_VISIBLE_DEVICES invalid)
+GPU_LIST=$(seq 0 $((NGPU - 1)) | paste -sd, -)
 if step_done "$MD_DIR/pw.out"; then
   echo "  md_cage: already JOB DONE, skip"
 else
   rm -rf /tmp/pmix* 2>/dev/null || true
   echo "  md_cage: mpirun -np $NGPU pw.x -nk 2 start $(date +%H:%M:%S)"
   ( cd "$MD_DIR" \
-    && CUDA_VISIBLE_DEVICES=$(seq -s, 0 $((NGPU - 1))) \
+    && CUDA_VISIBLE_DEVICES="$GPU_LIST" \
        mpirun -np "$NGPU" "$PW_BIN" -nk 2 -input pw.in > pw.out 2>&1 )
   if ! step_done "$MD_DIR/pw.out"; then
     echo "  md_cage: -nk 2 did not finish cleanly, retrying with -nk 1"
     rm -rf /tmp/pmix* 2>/dev/null || true
     ( cd "$MD_DIR" \
-      && CUDA_VISIBLE_DEVICES=$(seq -s, 0 $((NGPU - 1))) \
+      && CUDA_VISIBLE_DEVICES="$GPU_LIST" \
          mpirun -np "$NGPU" "$PW_BIN" -nk 1 -input pw.in > pw.out 2>&1 )
   fi
 fi
