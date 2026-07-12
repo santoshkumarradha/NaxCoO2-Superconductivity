@@ -12,6 +12,7 @@ cd "$ROOT"
 
 export PATH=/usr/local/qe/bin:/usr/local/openmpi/bin:/usr/local/ucx/bin:/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH
 export LD_LIBRARY_PATH=/usr/local/cuda/lib:/usr/local/cuda/lib64:/usr/local/fftw/lib:/opt/nvidia/hpc_sdk/Linux_x86_64/24.7/compilers/lib:$LD_LIBRARY_PATH
+export PMIX_MCA_gds=hash
 export OMP_NUM_THREADS="${OMP_NUM_THREADS:-14}"
 PW_BIN="${PW_BIN:-pw.x}"
 DOS_BIN="${DOS_BIN:-dos.x}"
@@ -81,6 +82,18 @@ run_pool .queue_scf
 [ -f STOP ] && { echo "stopped by STOP file"; exit 1; }
 
 echo "== Phase 2: generating NSCF inputs at E(delta) minima =="
+ensure_pp_tools() {
+  command -v dos.x >/dev/null 2>&1 && command -v pp.x >/dev/null 2>&1 && return 0
+  echo "== compiling QE 7.3.1 PP tools (CPU) =="
+  apt-get install -y -qq gfortran gcc make libfftw3-dev >/dev/null 2>&1
+  ( cd /opt \
+    && curl -fsSL -o qe.tar.gz https://gitlab.com/QEF/q-e/-/archive/qe-7.3.1/q-e-qe-7.3.1.tar.gz \
+    && tar xzf qe.tar.gz && cd q-e-qe-7.3.1 \
+    && FC=gfortran F90=gfortran CC=gcc ./configure --disable-parallel > configure.log 2>&1 \
+    && make -j"$(nproc)" pp > make_pp.log 2>&1 \
+    && cp bin/dos.x bin/pp.x /usr/local/bin/ ) || echo "PP TOOLS BUILD FAILED"
+}
+ensure_pp_tools
 python3 generate_inputs.py --stage nscf
 
 echo "== Phase 3: NSCF + DOS jobs =="
@@ -96,4 +109,5 @@ for d in jobs/*/; do
 done
 echo "  $n_ok done, $n_bad incomplete"
 bash bader_setup.sh > bader.log 2>&1 && echo "BADER OK"
-echo "ALL COMPLETE (scf+nscf+dos+bader)"
+bash verify_convergence.sh > setd.log 2>&1
+echo "ALL COMPLETE (scf+nscf+dos+bader+setd)"
