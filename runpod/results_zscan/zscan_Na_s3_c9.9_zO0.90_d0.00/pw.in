@@ -1,0 +1,51 @@
+&CONTROL
+  calculation = 'scf'
+  prefix = 'pw'
+  outdir = './out'
+  pseudo_dir = '../../pseudo'
+  verbosity = 'high'
+  tprnfor = .true.
+/
+&SYSTEM
+  ibrav = 4
+  celldm(1) = 9.45271759
+  celldm(3) = 1.97914393
+  nat = 10
+  ntyp = 3
+  nbnd = 64
+  ecutwfc = 60.0
+  ecutrho = 480.0
+  occupations = 'smearing'
+  smearing = 'mv'
+  degauss = 0.02
+  nspin = 2
+  starting_magnetization(1) = 0.3
+/
+&ELECTRONS
+  conv_thr = 1.0d-7
+  mixing_beta = 0.3
+  mixing_mode = 'local-TF'
+  electron_maxstep = 300
+/
+ATOMIC_SPECIES
+  Co  58.93300  Co.pbe-spn-kjpaw_psl.0.3.1.UPF
+  O  15.99900  O.pbe-n-kjpaw_psl.1.0.0.UPF
+  Na  22.98977  Na.pbe-spn-kjpaw_psl.1.0.0.UPF
+! Set K: vacuum sqrt3 x sqrt3 Na_1/3CoO2 z_O sensitivity scan.
+! At fixed c = 9.9 A, vary the CoO2 layer thickness (O height z_O)
+! and scan Na displacement delta to extract the well-shape parameter
+! alpha(z_O).  The z_O = 0.96 A baseline is the existing set-G vacuum
+! scan in results_extra (Na_s3vac_c9.9_d*); it is not regenerated.
+ATOMIC_POSITIONS crystal
+  Co  0.0000000000  0.0000000000  0.0000000000
+  Co  0.3333333333  0.6666666667  0.0000000000
+  Co  0.6666666667  0.3333333333  0.0000000000
+  O  0.3333333333  0.3333333333  0.0909090909
+  O  0.6666666667  0.0000000000  0.0909090909
+  O  0.0000000000  0.6666666667  0.0909090909
+  O  0.3333333333  0.0000000000  0.9090909091
+  O  0.6666666667  0.6666666667  0.9090909091
+  O  0.0000000000  0.3333333333  0.9090909091
+  Na  0.0000000000  0.0000000000  0.5000000000
+K_POINTS automatic
+  6 6 2 0 0 0
