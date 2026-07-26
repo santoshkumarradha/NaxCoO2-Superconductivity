@@ -51,13 +51,15 @@ for ax, (el, cell, ramp, ylim, letter) in zip(axes, PANELS):
             for sgn in (-1, 1):
                 ax.plot(sgn * d0, y0, marker="|", ms=7, color=col,
                         mew=1.3, zorder=5)
-        # --- unterminated: down-arrow at the last sampled point ---
+        # --- unterminated scan: small uniform down-arrow at the last sampled
+        # point (encodes "well still falling, depth is a lower bound").  Fixed
+        # 40 meV drop so every arrow is the same short length. ---
         if unterm:
             for sgn in (-1, 1):
-                ax.annotate("", xy=(sgn * dmax, E[-1] - 0.16 * (ylim[1] - ylim[0])),
+                ax.annotate("", xy=(sgn * dmax, E[-1] - 40),
                             xytext=(sgn * dmax, E[-1]),
-                            arrowprops=dict(arrowstyle="-|>", color=col, lw=1.0),
-                            zorder=5)
+                            arrowprops=dict(arrowstyle="-|>", color=col, lw=0.9,
+                                            mutation_scale=8), zorder=5)
     ax.axhline(0, color=S.C_MUT, lw=0.6, ls=(0, (4, 3)), zorder=1)
     ax.set_ylim(*ylim)
     ax.set_xlim(-1.15, 1.15)
@@ -74,15 +76,9 @@ for ax, (el, cell, ramp, ylim, letter) in zip(axes, PANELS):
 
 axes[-1].set_xlabel(r"off-centre displacement  $\delta$  (Å)")
 
-# single -> double-well crossover annotation (alpha changes sign 5.5 -> 6.9 A)
-axes[0].annotate("single well\n" r"($\alpha>0$)", xy=(0.0, 250),
-                 xytext=(0.62, 250), fontsize=6.6, color=S.C_SEC,
-                 ha="center", va="center",
-                 arrowprops=dict(arrowstyle="->", color=S.C_SEC, lw=0.7))
-axes[0].annotate("double well\n" r"($\alpha<0$)", xy=(-0.69, -110),
-                 xytext=(-0.62, -330), fontsize=6.6, color=S.C_SEC,
-                 ha="center", va="center",
-                 arrowprops=dict(arrowstyle="->", color=S.C_SEC, lw=0.7))
+# The single-well (c=5.5, stiff) -> double-well (c>=6.9, off-centre minima)
+# crossover is read directly from the colour-graded curves and the c-legend;
+# the sign change of alpha is described in the caption, so no in-plot arrows.
 
 fig.subplots_adjust(hspace=0.08, left=0.17, right=0.97, top=0.97, bottom=0.09)
 S.save(fig, "fig1")

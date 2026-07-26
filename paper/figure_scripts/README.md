@@ -18,11 +18,22 @@ from the real DFT / theory data under `runpod/`, `theory/`, and `spin_analysis/`
 ```sh
 # from this directory (paper/figure_scripts/)
 PY=../../theory/.venv/bin/python
-for n in 1 2 3 4 5 6 7 8 9; do $PY fig$n.py; done   # -> ../figures/figN.{pdf,png}
-# LaTeX pieces (need pdflatex on PATH, e.g. /Library/TeX/texbin)
-pdflatex fig0_schematic.tex   && pdftocairo -png -r 300 -singlefile fig0_schematic.pdf   fig0_schematic
-pdflatex fig3_scoreboard.tex  && pdftocairo -png -r 300 -singlefile fig3_scoreboard.pdf  fig3_scoreboard
+for n in 1 2 5 6 7 8 9 10; do $PY fig$n.py; done               # -> ../figures/figN.{pdf,png}
+for s in dome thresholds zrncl zscan; do $PY figS_$s.py; done  # -> ../figures/figS_*.{pdf,png}
+# LaTeX pieces (need pdflatex on PATH, e.g. /Library/TeX/texbin); copy the PDF to
+# ../figures/ and rasterize a PNG preview there, keeping this folder sources-only:
+for t in fig0_schematic fig3_model; do
+  pdflatex -interaction=nonstopmode $t.tex
+  cp $t.pdf ../figures/$t.pdf
+  pdftoppm -png -r 150 $t.pdf ../figures/$t && mv ../figures/$t-1.png ../figures/$t.png
+  rm -f $t.aux $t.log $t.pdf
+done
 ```
+
+Superseded generators (old `fig3.py`, `fig4.py`, `fig3_scoreboard.tex`) live in
+`../archive/superseded_figure_scripts/`, with their rendered outputs in
+`../archive/superseded_figures/`. `fig0_hero.{pdf,png}` in `../figures/` is the
+AI-illustrated hero (Fig. 1); `fig0_schematic` is its deterministic TikZ fallback.
 
 Each figure is emitted as a **vector PDF** (for the manuscript) and a **300 dpi PNG**
 (for previews). `_style.py` holds the shared house style and the read-only data

@@ -100,23 +100,20 @@ th = np.linspace(0, 2 * np.pi, 200)
 for r in kf_exp:
     ax.plot(r * np.cos(th), r * np.sin(th), ls=(0, (4, 3)), color=S.C_SEC,
             lw=0.9, zorder=3)
-rr = kf_exp.mean()
-ax.annotate(r"ARPES $a_{1g}\,k_F$" "\n" r"(Na$_{0.73}$, dry)",
-            xy=(rr * np.cos(np.deg2rad(215)), rr * np.sin(np.deg2rad(215))),
-            xytext=(-0.55, -0.40), fontsize=6.0, color=S.C_SEC,
-            ha="center", va="center",
-            arrowprops=dict(arrowstyle="-", color=S.C_SEC, lw=0.7))
-
-# high-symmetry points
-ax.plot(0, 0, "o", ms=3.2, color=S.C_INK, zorder=4)
-ax.text(0.02, 0.02, r"$\Gamma$", fontsize=9, color=S.C_INK, zorder=4)
-ax.plot(*hexK[0], "o", ms=3.0, color=S.C_INK, zorder=4)
-ax.text(hexK[0, 0] + 0.015, hexK[0, 1] + 0.02, "K", fontsize=9,
-        color=S.C_INK, ha="left", va="bottom", zorder=4)
+# high-symmetry points (labels enlarged for legibility; small white halo so
+# the letters read cleanly over the BZ frame and the spectral map)
+import matplotlib.patheffects as pe
+_halo = [pe.withStroke(linewidth=2.0, foreground="white")]
+ax.plot(0, 0, "o", ms=3.4, color=S.C_INK, zorder=4)
+ax.text(0.035, 0.035, r"$\Gamma$", fontsize=12, color=S.C_INK, zorder=5,
+        path_effects=_halo)
+ax.plot(*hexK[0], "o", ms=3.2, color=S.C_INK, zorder=4)
+ax.text(hexK[0, 0] + 0.02, hexK[0, 1] + 0.025, "K", fontsize=12,
+        color=S.C_INK, ha="left", va="bottom", zorder=5, path_effects=_halo)
 Mpt = np.array([R_M * np.cos(np.deg2rad(30)), R_M * np.sin(np.deg2rad(30))])
-ax.plot(*Mpt, "o", ms=3.0, color=S.C_INK, zorder=4)
-ax.text(Mpt[0] + 0.02, Mpt[1], "M", fontsize=9, color=S.C_INK,
-        ha="left", va="center", zorder=4)
+ax.plot(*Mpt, "o", ms=3.2, color=S.C_INK, zorder=4)
+ax.text(Mpt[0] + 0.025, Mpt[1], "M", fontsize=12, color=S.C_INK,
+        ha="left", va="center", zorder=5, path_effects=_halo)
 
 # colourbar (intensity = data)
 cb = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.03)
@@ -131,14 +128,11 @@ ax.set_xlim(-lim, lim)
 ax.set_ylim(-lim, lim)
 ax.set_xticks([-0.5, 0.0, 0.5])
 ax.set_yticks([-0.5, 0.0, 0.5])
+ax.tick_params(labelsize=8.5)
 
-# neutral annotations: name the single sheet, flag the empty K corners
-ax.annotate("electron barrel\n(Na 2DEG)", xy=(0.0, 0.36), xytext=(-0.30, 0.50),
-            fontsize=6.8, color=S.C_INK, ha="center", va="center",
-            arrowprops=dict(arrowstyle="-", color=S.C_SEC, lw=0.7))
-ax.annotate(r"no $e_g'$ pocket", xy=hexK[0] * 0.93, xytext=(0.30, -0.52),
-            fontsize=6.8, color=S.C_INK, ha="center", va="center",
-            arrowprops=dict(arrowstyle="->", color=S.C_SEC, lw=0.7))
+# All descriptive text (single Na-2DEG barrel, absent e_g' pockets, the ARPES
+# k_F reference) is deferred to the caption; the map, BZ frame, Gamma/M/K marks
+# and the dashed ARPES-k_F circle carry the physics on their own.
 
 fig.subplots_adjust(left=0.14, right=0.99, top=0.97, bottom=0.12)
 S.save(fig, "fig8")

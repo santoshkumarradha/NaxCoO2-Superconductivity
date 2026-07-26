@@ -1,0 +1,77 @@
+&CONTROL
+  calculation = 'relax'
+  prefix = 'pw'
+  outdir = './out'
+  pseudo_dir = '../../pseudo'
+  verbosity = 'high'
+  tprnfor = .true.
+  forc_conv_thr = 1.0d-3
+  nstep = 100
+/
+&SYSTEM
+  ibrav = 4
+  celldm(1) = 9.45271759
+  celldm(3) = 1.97914393
+  nat = 22
+  ntyp = 4
+  nbnd = 85
+  ecutwfc = 60.0
+  ecutrho = 480.0
+  occupations = 'smearing'
+  smearing = 'mv'
+  degauss = 0.02
+  nspin = 2
+  starting_magnetization(1) = 0.3
+  vdw_corr = 'grimme-d3'
+/
+&ELECTRONS
+  conv_thr = 1.0d-7
+  mixing_beta = 0.3
+  mixing_mode = 'local-TF'
+  electron_maxstep = 300
+/
+&IONS
+  ion_dynamics = 'bfgs'
+/
+ATOMIC_SPECIES
+  Co  58.93300  Co.pbe-spn-kjpaw_psl.0.3.1.UPF
+  O  15.99900  O.pbe-n-kjpaw_psl.1.0.0.UPF
+  Na  22.98977  Na.pbe-spn-kjpaw_psl.1.0.0.UPF
+  H  1.00800  H.pbe-kjpaw_psl.1.0.0.UPF
+! Set J (mobile-water adiabatic E(delta), manuscript TODO): same
+! hydrate ansatz as set G (see G_NOTES in generate_inputs.py), but
+! calculation='relax' (BFGS) with Na FULLY FROZEN (if_pos 0 0 0) at
+! z = c/2 + delta while ALL 12 H2O atoms are free (if_pos 1 1 1); the
+! CoO2 framework (3 Co + 6 lattice O) is frozen as in set I2.
+! E_mobile(delta) = relaxed total energy at this pinned delta.  The
+! rigid cage (set G) bounds the Na runaway but leaves a ~198 meV
+! off-center well; the claim under test is that adiabatically
+! relaxing the water at each Na position flattens that well.
+! Set J2 twin: identical geometry and constraints, plus
+! vdw_corr = 'grimme-d3' (DFT-D3) -> dispersion sensitivity of the
+! adiabatic E_mobile(delta) curve.
+ATOMIC_POSITIONS crystal
+  Co  0.0000000000  0.0000000000  0.0000000000  0 0 0
+  Co  0.3333333333  0.6666666667  0.0000000000  0 0 0
+  Co  0.6666666667  0.3333333333  0.0000000000  0 0 0
+  O  0.3333333333  0.3333333333  0.0969696970  0 0 0
+  O  0.6666666667  0.0000000000  0.0969696970  0 0 0
+  O  0.0000000000  0.6666666667  0.0969696970  0 0 0
+  O  0.3333333333  0.0000000000  0.9030303030  0 0 0
+  O  0.6666666667  0.6666666667  0.9030303030  0 0 0
+  O  0.0000000000  0.3333333333  0.9030303030  0 0 0
+  Na  0.0000000000  0.0000000000  0.6010101010  0 0 0
+  O  0.3333333333  0.0000000000  0.3787878788  1 1 1
+  H  0.5340199106  0.0303423465  0.3984293317  1 1 1
+  H  0.3120938818  0.9696576535  0.2830660485  1 1 1
+  O  0.0000000000  0.3333333333  0.3787878788  1 1 1
+  H  0.9696576535  0.5036775641  0.3984293317  1 1 1
+  H  0.0303423465  0.3424362283  0.2830660485  1 1 1
+  O  0.3333333333  0.6666666667  0.6212121212  1 1 1
+  H  0.3581077436  0.8675400977  0.6085279256  1 1 1
+  H  0.4121627694  0.6730009283  0.7099766943  1 1 1
+  O  0.6666666667  0.3333333333  0.6212121212  1 1 1
+  H  0.8675400977  0.5094323541  0.6085279256  1 1 1
+  H  0.6730009283  0.2608381589  0.7099766943  1 1 1
+K_POINTS automatic
+  6 6 2 0 0 0

@@ -55,42 +55,45 @@ E0, E1, E2 = lv["E0_meV"], lv["E1_meV"], lv["E2_meV"]
 import matplotlib.patches as mpatches
 # The card sits in the data-free pocket below the legend and above the
 # low-lying (c >= 7.5 A) curve segments; verified against the log-scale
-# curve positions so NO data point or curve segment is occluded.
+# curve positions so NO data point or curve segment is occluded.  Enlarged
+# so the inset tick/axis labels read at >= 7 pt.
 card = mpatches.FancyBboxPatch(
-    (0.475, 0.365), 0.515, 0.435, transform=ax.transAxes,
+    (0.455, 0.285), 0.535, 0.475, transform=ax.transAxes,
     boxstyle="square,pad=0", facecolor="white", edgecolor="none",
     zorder=5)
 ax.add_patch(card)
 
-axi = ax.inset_axes([0.565, 0.43, 0.41, 0.315])
+axi = ax.inset_axes([0.555, 0.37, 0.42, 0.35])
 axi.set_facecolor("white")
 axi.patch.set_alpha(1.0)
 axi.set_zorder(6)
 dd = np.linspace(-0.95, 0.95, 300)
 V = S.vpoly(dd, r["a_q"], r["b_q"], r["g_q"]) * 1e3
-axi.plot(dd, V, color=S.C_INK, lw=1.1, zorder=3)
+axi.plot(dd, V, color=S.C_INK, lw=1.2, zorder=3)
 
 
-def level(E, col, lab, lw=1.3):
-    # draw the level across its classically allowed width
+def level(E, col, lab, lab_dy=3.0):
+    # draw the level across its classically allowed width; label at the LEFT
+    # end just above the line, inside the well mouth where the curve is clear.
     within = np.where(V <= E)[0]
     if len(within):
         x0, x1 = dd[within[0]], dd[within[-1]]
     else:
         x0, x1 = -0.2, 0.2
-    axi.plot([x0, x1], [E, E], color=col, lw=lw, zorder=4)
-    axi.text(0.94, E, lab, transform=axi.get_yaxis_transform(), ha="right",
-             va="bottom", fontsize=7, color=S.C_INK)
+    axi.plot([x0, x1], [E, E], color=col, lw=1.6, zorder=4)
+    axi.text(0.0, E + lab_dy, lab, ha="center", va="bottom",
+             fontsize=7.5, color=col, zorder=5)
 
 
-level(E2, S.C_YELL, r"$E_2$")
-level(E0, S.C_BLUE, r"$E_0,E_1$")   # near-degenerate tunnelling doublet
-axi.set_ylim(V.min() - 8, 40)
+level(E2, S.C_YELL, r"$E_2$", lab_dy=2.5)
+level(E0, S.C_BLUE, r"$E_0,E_1$", lab_dy=2.5)   # tunnelling doublet
+axi.set_ylim(V.min() - 8, 42)
 axi.set_xlim(-1.0, 1.0)
-axi.tick_params(labelsize=6.5, length=2)
-axi.set_xlabel(r"$\delta$ (Å)", fontsize=7, labelpad=1)
-axi.set_ylabel("meV", fontsize=7, labelpad=1)
-axi.set_title(r"$c=6.9$ Å Na double well", fontsize=7, pad=3)
+axi.set_xticks([-0.5, 0.0, 0.5])
+axi.tick_params(labelsize=7, length=2.4)
+axi.set_xlabel(r"$\delta$ (Å)", fontsize=7.5, labelpad=1.5)
+axi.set_ylabel("meV", fontsize=7.5, labelpad=1.5)
+axi.set_title(r"$c=6.9$ Å Na double well", fontsize=7.5, pad=3)
 for s in axi.spines.values():           # full square border
     s.set_visible(True)
     s.set_color(S.C_SEC)
