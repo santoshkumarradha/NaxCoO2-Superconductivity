@@ -143,14 +143,10 @@ for cval, band in (("5.5", 56), ("9.9", 50)):
 a.axhline(0, color=S.C_MUT, lw=0.8, ls=(0, (4, 3)))
 x55, e55, _ = curves["5.5"]
 x99, e99, _ = curves["9.9"]
-a.annotate(r"5.5 $\AA$: empty, $W=2.9$ eV", xy=(x55[3], e55[3]),
-           xytext=(0.03, 5.1), fontsize=7.8, color=S.C_SEC,
-           arrowprops=dict(arrowstyle="-", color=S.C_SEC, lw=0.7))
-a.annotate(r"9.9 $\AA$: crosses $E_F$, $W=1.5$ eV", xy=(x99[3], e99[3]),
-           xytext=(0.03, 2.3), fontsize=7.8, color=S.C_RED,
-           arrowprops=dict(arrowstyle="-", color=S.C_RED, lw=0.7))
-a.text(0.985, 0.05, "$E_F$", transform=a.transAxes, ha="right",
-       color=S.C_MUT, fontsize=8)
+a.text(0.635, 9.15, r"5.5 $\AA$", color=S.C_SEC, fontsize=8.2,
+       ha="center")
+a.text(0.335, 2.35, r"9.9 $\AA$", color=S.C_RED, fontsize=8.2,
+       ha="center")
 a.set_xticks([0, 1 / 3, 2 / 3, 1])
 a.set_xticklabels([r"$\Gamma$", "M", "K", r"$\Gamma$"])
 a.set_ylabel(r"$\varepsilon_{\rm gal}(k)-E_F$ (eV)")
@@ -165,8 +161,7 @@ for delta, mk, lab in ((0.00, "o", r"$\delta=0$"), (0.75, "s", r"$\delta=0.75$ $
            lw=1.2, label=lab)
 b.axhline(0, color=S.C_MUT, lw=0.8, ls=(0, (4, 3)))
 b.axvspan(8.4, 9.9, color=S.C_RED, alpha=0.07)
-b.text(9.12, 1.05, "pocket opens\n(occ. 0.92)", ha="center", fontsize=7.6,
-       color=S.C_RED)
+b.text(9.13, 1.32, "2DEG", ha="center", fontsize=8.2, color=S.C_RED)
 b.set_xlabel(r"gallery spacing $c$ ($\AA$)")
 b.set_ylabel(r"$\varepsilon_{\rm gal}(\Gamma)-E_F$ (eV)")
 b.legend(frameon=False, fontsize=7.6, loc="lower right")
@@ -190,26 +185,17 @@ S.thin_spines(cax)
 for cv in CS:
     ds = np.array([r["delta"] for r in tab[cv]])
     E = np.array([r["E_ry"] for r in tab[cv]]) * RY_EV
-    d.plot(ds, (E - E[0]) * 1e3, marker="o", ms=4, lw=1.2, color=C_COL[cv])
+    d.plot(ds, (E - E[0]) * 1e3, marker="o", ms=4, lw=1.2, color=C_COL[cv],
+           label=rf"{cv} $\AA$")
 d.axhline(0, color=S.C_MUT, lw=0.8, ls=(0, (4, 3)))
 d.set_xlabel(r"Na displacement $\delta$ ($\AA$)")
 d.set_ylabel(r"$E(\delta)-E(0)$ (meV)")
-d.annotate(r"5.5 $\AA$", xy=(0.75, 2560), xytext=(0.30, 2100), fontsize=7.8,
-           color=S.C_SEC,
-           arrowprops=dict(arrowstyle="-", color=S.C_SEC, lw=0.7))
+d.set_ylim(-260, 210)
+d.annotate("5.5 $\AA$:\n$+2.56$ eV", xy=(0.72, 205), xytext=(0.30, 150),
+           fontsize=7.8, color=S.C_SEC,
+           arrowprops=dict(arrowstyle="->", color=S.C_SEC, lw=0.8))
+d.legend(frameon=False, fontsize=7.4, loc="lower left", handlelength=1.3)
 S.thin_spines(d)
-din = d.inset_axes([0.08, 0.14, 0.42, 0.42])
-for cv in CS[1:]:
-    ds = np.array([r["delta"] for r in tab[cv]])
-    E = np.array([r["E_ry"] for r in tab[cv]]) * RY_EV
-    din.plot(ds, (E - E[0]) * 1e3, marker="o", ms=2.6, lw=1.0,
-             color=C_COL[cv], label=rf"{cv} $\AA$")
-din.axhline(0, color=S.C_MUT, lw=0.7, ls=(0, (4, 3)))
-din.set_ylim(-240, 60)
-din.tick_params(labelsize=6.4, length=2)
-din.legend(frameon=False, fontsize=6.2, loc="lower left", handlelength=1.2)
-for spn in ("top", "right"):
-    din.spines[spn].set_visible(False)
 
 for ax, lt in zip(axs, "abcd"):
     S.panel_label(ax, lt)
