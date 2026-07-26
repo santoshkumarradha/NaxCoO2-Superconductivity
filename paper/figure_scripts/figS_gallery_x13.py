@@ -151,7 +151,7 @@ a.set_xticks([0, 1 / 3, 2 / 3, 1])
 a.set_xticklabels([r"$\Gamma$", "M", "K", r"$\Gamma$"])
 a.set_ylabel(r"$\varepsilon_{\rm gal}(k)-E_F$ (eV)")
 a.set_ylim(-1.2, 10.4)
-S.thin_spines(a)
+S.thin_spines(a, hide=())
 
 # (b) Gamma energy and occupation vs c ---------------------------------------
 cc = np.array([float(x) for x in CS])
@@ -166,36 +166,36 @@ b.set_xlabel(r"gallery spacing $c$ ($\AA$)")
 b.set_ylabel(r"$\varepsilon_{\rm gal}(\Gamma)-E_F$ (eV)")
 b.legend(frameon=False, fontsize=7.6, loc="lower right")
 b.set_xticks(cc)
-S.thin_spines(b)
+S.thin_spines(b, hide=())
 
 # (c) Bader donated charge vs delta ------------------------------------------
+endlab = {"5.5": -0.020, "6.9": 0.032, "8.4": -0.036, "9.9": 0.0}
 for cv in CS:
     ds = [r["delta"] for r in tab[cv]]
     dn = [r["donated"] for r in tab[cv]]
-    cax.plot(ds, dn, marker="o", ms=4, lw=1.2, color=C_COL[cv],
-             label=rf"{cv} $\AA$")
+    cax.plot(ds, dn, marker="o", ms=4, lw=1.2, color=C_COL[cv])
+    cax.text(0.775, dn[-1] + endlab[cv], rf"{cv} $\AA$", color=C_COL[cv],
+             fontsize=7.8, va="center", clip_on=False)
 cax.set_xlabel(r"Na displacement $\delta$ ($\AA$)")
 cax.set_ylabel(r"charge donated to CoO$_2$ ($e$)")
+cax.set_xlim(-0.03, 0.78)
 cax.set_ylim(0.55, 1.0)
-cax.legend(frameon=False, fontsize=7.6, ncol=2, loc="lower left",
-           columnspacing=0.9, handlelength=1.4)
-S.thin_spines(cax)
+S.thin_spines(cax, hide=())
 
 # (d) E(delta) wells ----------------------------------------------------------
-for cv in CS:
+for cv in CS[1:]:
     ds = np.array([r["delta"] for r in tab[cv]])
     E = np.array([r["E_ry"] for r in tab[cv]]) * RY_EV
     d.plot(ds, (E - E[0]) * 1e3, marker="o", ms=4, lw=1.2, color=C_COL[cv],
            label=rf"{cv} $\AA$")
 d.axhline(0, color=S.C_MUT, lw=0.8, ls=(0, (4, 3)))
+d.text(0.04, 0.945, "5.5 $\AA$: $+2.56$ eV at $\delta=0.75$ $\AA$",
+       transform=d.transAxes, fontsize=7.6, color=S.C_SEC, va="top")
 d.set_xlabel(r"Na displacement $\delta$ ($\AA$)")
 d.set_ylabel(r"$E(\delta)-E(0)$ (meV)")
-d.set_ylim(-260, 210)
-d.annotate("5.5 $\AA$:\n$+2.56$ eV", xy=(0.72, 205), xytext=(0.30, 150),
-           fontsize=7.8, color=S.C_SEC,
-           arrowprops=dict(arrowstyle="->", color=S.C_SEC, lw=0.8))
-d.legend(frameon=False, fontsize=7.4, loc="lower left", handlelength=1.3)
-S.thin_spines(d)
+d.set_ylim(-260, 120)
+d.legend(frameon=False, fontsize=7.4, loc="upper right", handlelength=1.3)
+S.thin_spines(d, hide=())
 
 for ax, lt in zip(axs, "abcd"):
     S.panel_label(ax, lt)
