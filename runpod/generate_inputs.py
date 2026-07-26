@@ -925,10 +925,154 @@ def generate_zscan(root):
           f"+ manifest_zscan.json")
 
 
+# ------------------------------------------------------------ wscan stage ---
+# Set W, written to jobs_wscan/ + manifest_wscan.json, run via run_wscan.sh.
+# Referee-response set: does the four-water hydrogen-bond network of the
+# c = 9.9 A hydrate gallery have a rough configurational landscape of LOCAL
+# MINIMA (the SM's "0.4 eV configurational spread" claim)?  The earlier
+# evidence (a relaxation stopped at 60 steps landing 394 meV above the
+# converged minimum) only shows an unconverged run stops high; it does NOT
+# prove distinct minima exist.  Set W tests this directly: take the same
+# delta = 0.30 A hydrate cell, RANDOMIZE the four H2O orientations (fixed
+# water-O sites as in the set-G ansatz, random dipole orientation per water,
+# seeded RNG for reproducibility), then run a FULLY CONVERGED BFGS relax
+# (nstep = 250, same constraints as set I2: CoO2 framework frozen, Na pinned
+# to its Co-top column with z free, all 12 H2O atoms free) from each start.
+# If the runs converge to distinct stationary points with an O(0.1-1 eV)
+# energy spread, the rough-landscape claim is demonstrated from first
+# principles; if they all funnel into the same minimum, it is not.  A small
+# set of delta = 0.00 A controls checks the symmetric-position landscape.
+WSCAN_DIR = "jobs_wscan"
+WSCAN_CONFIGS_D30 = 12   # randomized-water starts at delta = 0.30 A
+WSCAN_CONFIGS_D00 = 4    # controls at delta = 0.00 A
+WSCAN_SEED = 20260714
+
+W_NOTES = [
+    "! Set W (referee response, water-landscape local minima): same hydrate",
+    "! ansatz and constraints as set I2 (see G_NOTES/I2_NOTES), but the four",
+    "! H2O orientations are RANDOMIZED per config (seeded RNG; water-O sites",
+    "! unchanged) and each start is relaxed to full BFGS convergence",
+    "! (nstep = 250, forc_conv_thr = 1.0d-3).  Distinct converged energies",
+    "! across configs demonstrate a rough multi-minimum landscape of the",
+    "! hydrogen-bond network at fixed Na position; identical energies would",
+    "! falsify the SM's configurational-spread interpretation.",
+]
+
+
+def water_at_rand(site_uv, a, c, z_ow, sgn, rng):
+    """One rigid H2O (gas-phase geometry, as water_at) with a RANDOM
+    orientation: bisector along a uniformly random direction biased toward
+    the nearest CoO2 plane (hemisphere sgn*z), H-H axis uniform in the
+    plane perpendicular to the bisector.  O site fixed at the set-G ansatz
+    position.  rng is a numpy Generator (seeded per config for
+    reproducibility)."""
+    x0, y0 = _cart_hex(site_uv[0], site_uv[1], a)
+    o = np.array([x0, y0, z_ow])
+    # random bisector: cos(theta) uniform in [0.25, 1] off the sgn*z axis
+    # (tilts up to ~75 deg), azimuth uniform in [0, 2 pi)
+    ct = rng.uniform(0.25, 1.0)
+    st = np.sqrt(1.0 - ct ** 2)
+    az = rng.uniform(0.0, 2.0 * np.pi)
+    b = np.array([st * np.cos(az), st * np.sin(az), sgn * ct])
+    # H-H axis: unit vector perpendicular to b, uniform azimuth around b
+    t1 = np.cross(b, [0.0, 0.0, 1.0])
+    if np.linalg.norm(t1) < 1e-6:
+        t1 = np.array([1.0, 0.0, 0.0])
+    t1 /= np.linalg.norm(t1)
+    t2 = np.cross(b, t1)
+    ph = rng.uniform(0.0, 2.0 * np.pi)
+    e = np.cos(ph) * t1 + np.sin(ph) * t2
+    half = np.radians(ANG_HOH / 2.0)
+    lb, lt = R_OH * np.cos(half), R_OH * np.sin(half)
+    atoms = [("O", *_frac_hex(x0, y0, a), z_ow / c)]
+    for s in (1.0, -1.0):
+        p = o + lb * b + s * lt * e
+        atoms.append(("H", *_frac_hex(p[0], p[1], a), p[2] / c))
+    return atoms
+
+
+def _min_contact(atoms, a, c):
+    """Minimum non-bonded interatomic distance (A), with proper hex PBC
+    wrapping.  Framework/water-O positions are those of the set-G ansatz
+    (all >= 2.05 A apart), so only pairs involving H are screened."""
+    M = np.array([[a, -a / 2.0, 0.0],
+                  [0.0, a * np.sqrt(3.0) / 2.0, 0.0],
+                  [0.0, 0.0, c]])
+    Minv = np.linalg.inv(M)
+    frac = np.array([[x, y, z] for _, x, y, z in atoms])
+    dmin = np.inf
+    for j in range(len(atoms)):
+        if atoms[j][0] != "H":
+            continue
+        for i in range(len(atoms)):
+            if i == j or (i >= 10 and (i - 10) // 3 == (j - 10) // 3):
+                continue  # self or own water O/H
+            df = frac[j] - frac[i]
+            df -= np.round(df)
+            dmin = min(dmin, np.linalg.norm(M @ df))
+    return dmin
+
+
+def atoms_s3_hydrate_rand(c, delta, seed):
+    """atoms_s3_hydrate with randomized water orientations (set W).
+    Rejection-samples until every non-bonded contact is >= 1.5 A so the
+    random starts are physically reasonable basins, not fused atoms."""
+    a = A_LAT["Na"] * np.sqrt(3.0)
+    rng = np.random.default_rng(seed)
+    for _attempt in range(200):
+        atoms = list(atoms_s3("Na", c, delta))
+        for site, sgn in WATER_SITES:
+            atoms += water_at_rand(site, a, c, c / 2.0 + sgn * D_OW,
+                                   sgn, rng)
+        if _min_contact(atoms, a, c) >= 1.5:
+            return atoms
+    raise RuntimeError(f"no valid random water config for seed {seed}")
+
+
+def generate_wscan(root):
+    jobs = []
+    el, c = "Na", 9.9
+    a = A_LAT[el] * np.sqrt(3.0)
+    # same constraint pattern as set I2: 9 frozen framework atoms,
+    # Na free in z only, 12 free water atoms
+    if_pos = ([(0, 0, 0)] * 9) + [(0, 0, 1)] + ([(1, 1, 1)] * 12)
+
+    for d, ncfg in ((0.30, WSCAN_CONFIGS_D30), (0.00, WSCAN_CONFIGS_D00)):
+        for k in range(ncfg):
+            seed = WSCAN_SEED + 1000 * int(round(d * 100)) + k
+            atoms = atoms_s3_hydrate_rand(c, d, seed)
+            name = f"wscan_{el}_s3hyd_c{c:.1f}_d{d:.2f}_k{k:02d}"
+            text = pw_input("relax", el, a, c, atoms, KPTS_G,
+                            species=["Co", "O", "Na", "H"], ions=True,
+                            if_pos=if_pos, notes=W_NOTES,
+                            extra_control=["  forc_conv_thr = 1.0d-3",
+                                           "  nstep = 250"])
+            write_job(root, name, text, jobs_dir=WSCAN_DIR)
+            jobs.append(dict(name=name, set="W", element=el, cell="s3hyd",
+                             c=c, delta=d, config=k, seed=seed, water=True,
+                             type="relax", kpts=list(KPTS_G),
+                             nat=len(atoms)))
+
+    manifest = dict(pseudos=PSEUDOS, zval=ZVAL, a_lat=A_LAT, z_O=Z_O,
+                    analyze=("For each config: did BFGS converge, in how many"
+                             " ionic steps, and at what final total energy? "
+                             "Histogram the converged energies per delta; "
+                             "the spread and multiplicity of distinct final "
+                             "energies/structures quantify the water "
+                             "hydrogen-bond landscape roughness. Also record "
+                             "final Na z per config (does the off-center "
+                             "minimum survive in every basin?)."),
+                    jobs=jobs)
+    with open(os.path.join(root, "manifest_wscan.json"), "w") as f:
+        json.dump(manifest, f, indent=2)
+    print(f"wrote {len(jobs)} wscan-set jobs (W: {len(jobs)}) "
+          f"+ manifest_wscan.json")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--stage", choices=["scf", "nscf", "extra", "bands",
-                                       "mobile", "zscan"],
+                                       "mobile", "zscan", "wscan"],
                    default="scf")
     p.add_argument("--root", default=os.path.dirname(os.path.abspath(__file__)))
     args = p.parse_args()
@@ -942,6 +1086,8 @@ def main():
         generate_mobile(args.root)
     elif args.stage == "zscan":
         generate_zscan(args.root)
+    elif args.stage == "wscan":
+        generate_wscan(args.root)
     else:
         generate_nscf(args.root)
 
