@@ -14,8 +14,8 @@ one declared exception: fig2_kinetics.py overlays the digitized Crowley et al.
 results/digitized/crowley2020_figS5.csv and reduced to DeltaR/R_P by a change
 of variable that is documented in that script's docstring.  Nothing anywhere in
 this directory is FITTED to an experimental trace: no model parameter is
-adjusted to improve agreement.  Published scalar values (onset near 146 K,
-collapse near 240 K) enter only as model parameters and axis ranges.
+adjusted to improve agreement.  Published scalar values (rise midpoint near
+152 K, collapse near 240 K) enter only as model parameters and axis ranges.
 """
 from __future__ import annotations
 
@@ -161,7 +161,8 @@ def save(fig, stem, png_dir=None):
 # ======================================================================
 
 # Published scalars used only as model parameters / axis anchors.
-T_ON_REF = 146.0     # K, warm-up unfreezing midpoint at r = 1 K/min
+T_ON_REF = 152.0     # K, warm-up unfreezing midpoint at r = 1 K/min
+                     # (digitized rise midpoint; 146 K is the foot, not the midpoint)
 TC0 = 240.0          # K, zero-field first-order collapse of the ordered phase
 EA_EV = 0.45         # eV, effective barrier (Li migration class)
 NU0 = 1.0e13         # 1/s, attempt frequency

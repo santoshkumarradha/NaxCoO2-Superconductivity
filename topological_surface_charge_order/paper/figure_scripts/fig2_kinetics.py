@@ -32,8 +32,13 @@ loop overlaid.
     the driving-force factor adds to it -- so the panel prints the numerically
     obtained slope alone and attributes it to no closed-form expression.
 
-The model curves are unfitted: no parameter below was adjusted to improve
-agreement with the overlaid data.  Panel (b) is model output only.
+The model curves are unfitted in shape and scale: nothing below was adjusted to
+improve agreement with the overlaid data, and the overlay itself carries no
+scale factor or offset (see EXPERIMENTAL OVERLAY).  The single exception, stated
+plainly because it is a calibration and not a fit, is EA_EV, which is fixed
+analytically by the site-saturated onset condition at one scalar -- the measured
+rise midpoint T_on = 152 K -- and is not varied to improve the match anywhere
+else on the curve.  Panel (b) is model output only.
 
 ----------------------------------------------------------------------------
 COOLING BRANCH - why it is drawn at zero, and an open issue
@@ -118,7 +123,18 @@ S.use_house_style()
 # MODEL PARAMETERS - the only place any of these is set.  Changing EA_EV,
 # NU0 or N0_NM2 here alone regenerates both panels and every printed number.
 # ======================================================================
-EA_EV = 0.387       # eV, growth barrier (Li migration class)
+EA_EV = 0.4026      # eV, growth barrier (Li migration class).  NOT free: it is
+                    # fixed by the site-saturated onset condition, which at the
+                    # rise midpoint phi = 1/2 reads pi n0 R_w(T_on)^2 = ln 2,
+                    # i.e. R_w = 4.697 nm at n0 = 1e-2 nm^-2.  Imposing that at
+                    # T_on = 152 K and r = 1 K/min returns Ea = 0.4026 eV.
+                    # T_on = 152 K is the MIDPOINT of the resistance rise in
+                    # the project's own digitization of Crowley et al. Fig. S5
+                    # (0 T loop: 10/50/90 % of the rise at 149.1/152.2/163.4 K).
+                    # The 146 K used previously is the FOOT of that rise -- it
+                    # sits below the 10 % point -- so it was the wrong scalar to
+                    # impose a midpoint condition with, and it put the model
+                    # onset ~6 K below the data.
 NU0 = 1.0e13        # 1/s, attempt frequency
 N0_NM2 = 1.0e-2     # 1/nm^2, areal density of nuclei quenched in on cooling
                     # (n_0); site saturated, so no nucleation term on warming
