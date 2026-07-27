@@ -1,0 +1,87 @@
+% ---------------------------------------------------------------------------
+% dft_numbers.tex
+%
+% Every number in the manuscript that comes from the DFT+U campaign is defined
+% here and nowhere else, in both the article and the Supplemental Material.
+%
+%   campaign (a)  results/dftu_row_ordered      row-ordered Li_{1/2}CoO2
+%   campaign (b)  results/dftu_order_contrast   row / zigzag / clumped, x = 1/2
+%   campaign (c)  results/dftu_x13              sqrt3 x sqrt3 Li_{1/3}CoO2
+%   distillation  results/dftu_summary.json
+%
+% Usage convention: a macro is followed by "~" and then its unit, e.g.
+% \comomentRow~$\mu_{\mathrm{B}}$.  "~" is in the xspace exception list.
+%
+% PROVENANCE NOTE (verification finding B7).  The x = 1/2 site moments, charge
+% split and the moment ceiling derived from them are quoted from the ground
+% state, afmlo_intra_U4.0 in cell B1, and not from the ferromagnetic solution of
+% the seven-atom cell.  \comomentRowRange records the spread across the FM and
+% both AFM configurations, which is the honest measure of how well determined
+% the moment is.
+%
+% RETIRED MACROS, and why.  \deltaEOrder and the original reading of
+% \dosContrast assumed the row motif lies below the zigzag motif and the ordered
+% motif carries the smaller density of states at E_F; neither survived.
+% \dosContrast now names the measured U = 0 ratio, which is the falsification
+% itself.  \momentCellRow, \enmfmRow, \dosRow, \dosZigzag, \dosClumped,
+% \dosXthird and \deltaMdft are retired, the last because the bulk ground states
+% are antiferromagnetic and supply no net Delta M.  \jintraRow and \jinterRow
+% are retired in favour of \eafmIntra and \eafmInter, which are signed energy
+% differences and carry no implicit spin-Hamiltonian convention; \jeffXthird is
+% retired in favour of \splitXthird, the raw splitting per cell.
+% ---------------------------------------------------------------------------
+
+\newcommand{\Uused}{\ensuremath{4.0}\xspace}
+
+% --- (a) row-ordered Li_{1/2}CoO2, ground state AFM within a Co4+ row ------
+\newcommand{\comomentRow}{\ensuremath{0.97}\xspace}       % mu_B on Co4+, ground state
+\newcommand{\comomentThreeRow}{\ensuremath{0.00}\xspace}  % mu_B on Co3+, ground state
+\newcommand{\comomentRowRange}{\ensuremath{0.97}\ to \ensuremath{1.02}\xspace} % across FM and both AFM
+\newcommand{\msatRow}{\ensuremath{0.48}\xspace}           % mu_B per Co if every moment aligned
+\newcommand{\dSbound}{\ensuremath{0.23}\xspace}           % k_B per Co, bulk reading of Eq. (S34)
+\newcommand{\magorderRow}{antiferromagnetic within a Co\ensuremath{^{4+}} row\xspace}
+\newcommand{\efmafmRow}{\ensuremath{28.2}\xspace}         % meV/Co, FM above AFM
+\newcommand{\enmRow}{\ensuremath{63.7}\xspace}            % meV/Co, NM above AFM
+\newcommand{\gapRow}{\ensuremath{0.70}\xspace}            % eV, AFM ground state (0.698)
+\newcommand{\gapRowFM}{\ensuremath{0.43}\xspace}          % eV, FM in the same cell (0.428)
+\newcommand{\eafmIntra}{\ensuremath{-56.5}\xspace}        % meV/Co4+, E(AFM) - E(FM), intra-row
+\newcommand{\eafmInter}{\ensuremath{+41.7}\xspace}        % meV/Co4+, E(AFM) - E(FM), inter-row
+\newcommand{\jintraMag}{\ensuremath{56}\xspace}           % meV, magnitude of the dominant coupling
+\newcommand{\dnRow}{\ensuremath{0.20}\xspace}             % e, d-occupation split, ground state
+\newcommand{\bondRow}{\ensuremath{0.001}\xspace}          % Angstrom, contrast of site-mean Co-O
+\newcommand{\bondSpanRow}{\ensuremath{0.021}\xspace}      % Angstrom, span of individual Co-O bonds
+
+% --- (b) three periodic Li motifs at x = 1/2, 4x2 cell, 8 f.u. ------------
+%     Fixed ideal geometry, ferromagnetic alignment imposed.
+\newcommand{\deltaEZigzag}{\ensuremath{-8.3}\xspace}       % meV/f.u. vs row, U=4
+\newcommand{\deltaEZigzagUzero}{\ensuremath{+8.2}\xspace}  % meV/f.u. vs row, U=0
+\newcommand{\deltaEClumped}{\ensuremath{58.1}\xspace}      % meV/f.u. vs row, U=4
+\newcommand{\deltaEClumpedUzero}{\ensuremath{92.4}\xspace} % meV/f.u. vs row, U=0
+\newcommand{\gapRowMotif}{\ensuremath{0.679}\xspace}       % eV
+\newcommand{\gapZigzag}{\ensuremath{0.800}\xspace}         % eV
+\newcommand{\gapClumped}{\ensuremath{0.675}\xspace}        % eV
+\newcommand{\gapMotifSpread}{\ensuremath{0.13}\xspace}     % eV, 0.800 - 0.675
+\newcommand{\dosRowUzero}{\ensuremath{22.5}\xspace}        % states/eV/cell, U=0
+\newcommand{\dosContrast}{\ensuremath{1.004}\xspace}       % clumped/row at U=0
+\newcommand{\momentRowUzeroA}{\ensuremath{0.3990}\xspace}  % mu_B, row cell at U=0, site 1
+\newcommand{\momentRowUzeroB}{\ensuremath{0.3986}\xspace}  % mu_B, row cell at U=0, site 2
+
+% --- (c) sqrt3 x sqrt3 Li_{1/3}CoO2, ground state ferrimagnetic -----------
+\newcommand{\comomentXthird}{\ensuremath{1.04}\xspace}     % mu_B on each Co4+
+\newcommand{\magorderXthird}{ferrimagnetic, the two Co\ensuremath{^{4+}} moments antiparallel\xspace}
+\newcommand{\efmafmXthird}{\ensuremath{12.4}\xspace}       % meV/Co, FM above ferri
+\newcommand{\enmXthird}{\ensuremath{230}\xspace}           % meV/Co, NM above ferri
+\newcommand{\splitXthird}{\ensuremath{37}\xspace}          % meV per cell, FM above ferri
+\newcommand{\gapXthird}{\ensuremath{1.21}\xspace}          % eV, ferri ground state (1.206)
+\newcommand{\gapXthirdUfour}{\ensuremath{1.179}\xspace}    % eV, FM at U=4
+\newcommand{\gapXthirdUfive}{\ensuremath{1.166}\xspace}    % eV, FM at U=5.5
+\newcommand{\dosXthirdNM}{\ensuremath{7.7}\xspace}         % states/eV/cell, NM
+\newcommand{\dnXthird}{\ensuremath{0.26}\xspace}           % e, d-occupation split
+\newcommand{\bondXthird}{\ensuremath{0.003}\xspace}        % Angstrom, contrast of site-mean Co-O
+
+% --- methodological numbers quoted in the Supplemental Material ------------
+\newcommand{\comomentHighU}{\ensuremath{2.28}\xspace}      % mu_B, Co4+ at U=5.5, high spin
+\newcommand{\momentFMa}{\ensuremath{1.028}\xspace}         % mu_B, inequivalent FM Co4+, supercell
+\newcommand{\momentFMb}{\ensuremath{0.952}\xspace}         % mu_B, the other one
+\newcommand{\forcePlateau}{\ensuremath{78}\xspace}         % meV/Angstrom, residual force plateau
+\newcommand{\primSign}{\ensuremath{3.1}\xspace}            % meV/Co, primitive-cell FM above NM

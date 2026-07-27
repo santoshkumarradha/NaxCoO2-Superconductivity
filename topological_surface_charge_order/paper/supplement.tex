@@ -1,0 +1,1110 @@
+\documentclass[reprint,twocolumn,prb,amsmath,amssymb,superscriptaddress,floatfix]{revtex4-2}
+
+\usepackage{graphicx}
+\usepackage{bm}
+\usepackage[T1]{fontenc}
+% Times-compatible text and math, matching the STIX serif used in the figures,
+% so that a symbol in a caption and the same symbol inside a panel agree.
+\usepackage{newtxtext}
+\usepackage{newtxmath}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{xspace}
+
+% Same pastel link palette as the main text.
+\definecolor{pastellink}{rgb}{0.35,0.45,0.75}
+\definecolor{pastelcite}{rgb}{0.20,0.52,0.45}
+\definecolor{pastelurl}{rgb}{0.52,0.36,0.60}
+
+\usepackage[colorlinks=true,
+            linkcolor=pastellink,
+            citecolor=pastelcite,
+            urlcolor=pastelurl,
+            filecolor=pastelurl,
+            menucolor=pastellink,
+            anchorcolor=pastellink,
+            linktoc=all,
+            breaklinks=true]{hyperref}
+
+% Prefix every PDF destination so that concatenating main.pdf and
+% supplement.pdf cannot produce colliding anchor names.
+\renewcommand*{\HyperDestNameFilter}[1]{supplement.#1}
+
+\graphicspath{{figures/}}
+\input{dft_numbers}
+
+\newcommand{\kB}{k_{\mathrm{B}}}
+\newcommand{\muBs}{\mu_{\mathrm{B}}}
+\newcommand{\Ea}{E_{\mathrm{a}}}
+\newcommand{\Ton}{T_{\mathrm{on}}}
+\newcommand{\Tcol}{T_{\mathrm{ord}}}
+
+% Supplement equation, figure and table numbering.
+\renewcommand{\theequation}{S\arabic{equation}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thesection}{S\arabic{section}}
+
+\begin{document}
+
+\title{Supplemental Material for\\
+``Cold Crystallization of the Lithium Sublattice and the Warming-Only
+Resistance Anomaly of Delithiated Li$_x$CoO$_2$''}
+
+\author{Santosh Kumar Radha}
+\affiliation{Agentfield AI}
+
+\date{\today}
+
+\maketitle
+
+This document gives the derivations that the main text quotes, in the order the main text uses
+them. Equations are numbered S1 onward and are referred to from the main text by those numbers.
+Section~\ref{sec:symbols} lists every symbol once, with its dimension, so that no symbol carries
+two meanings across the two documents.
+
+\section{Mixture formula and the two-probe circuit}
+\label{sec:mixture}
+
+\subsection{Bounds on a two-phase channel}
+
+Let the channel have length $L$ and cross-sectional area $A$, and let a fraction $\phi$ of its
+volume have transformed from the parent phase P, of resistivity $\rho_{\mathrm{P}}$, into the
+ordered phase O, of resistivity $\rho_{\mathrm{O}}$. Two microgeometries bound every other
+one~\cite{Wiener1912,Milton2002}. In the series arrangement the transformed material forms slabs that span
+the cross section, so the resistances add,
+\begin{equation}
+  R_{\mathrm{series}} = \frac{L}{A}\bigl[(1-\phi)\rho_{\mathrm{P}}+\phi\rho_{\mathrm{O}}\bigr].
+  \label{eq:sm-series}
+\end{equation}
+With $R_{\mathrm{P}}\equiv\rho_{\mathrm{P}}L/A$ the resistance the same channel would have with
+nothing transformed, and with the resistivity ratio
+\begin{equation}
+  s \equiv \frac{\rho_{\mathrm{O}}}{\rho_{\mathrm{P}}},
+  \label{eq:sm-sdef}
+\end{equation}
+Eq.~\eqref{eq:sm-series} gives the excess exactly,
+\begin{equation}
+  \frac{\Delta R}{R_{\mathrm{P}}}
+  \equiv \frac{R_{\mathrm{series}}-R_{\mathrm{P}}}{R_{\mathrm{P}}}
+  = \phi\,(s-1).
+  \label{eq:sm-seriesexcess}
+\end{equation}
+In the parallel arrangement the transformed material forms filaments running the length of the
+channel, so the conductances add, and
+\begin{equation}
+  \frac{\Delta R}{R_{\mathrm{P}}}
+  = \frac{\phi\,(1-1/s)}{1-\phi\,(1-1/s)}
+  \;\xrightarrow[\ \phi(1-1/s)\ll1\ ]{}\;
+  \frac{\phi\,(s-1)}{s}.
+  \label{eq:sm-parallel}
+\end{equation}
+Both bounds have the form quoted as Eq.~(2) of the main text,
+$\Delta R/R_{\mathrm{P}}=c\,\phi\,(s-1)$, with the geometry factor $c=1$ for the series limit
+and $c=1/s$ for the parallel limit, so that $c\in(0,1]$ whenever the transformed phase is the
+more resistive one. Both expressions vanish at $\phi=0$ and at $s=1$, as they must, and both are
+monotonic in $\phi$ and in $s$. The quantity the experiment supplies is the product
+$c\,\phi\,(s-1)$, which the zero-field maximum places at approximately unity; the individual
+factors are not separately determined by a single trace.
+
+\subsection{What the two-probe geometry allows}
+
+The measured resistance is the sum in Eq.~(1) of the main text,
+$R_{\mathrm{meas}}=R_{\mathrm{c}}+R_{\mathrm{ch}}$, where $R_{\mathrm{c}}$ collects the two
+Schottky junctions evaluated on the quasilinear branch of their current-voltage characteristic
+and $R_{\mathrm{ch}}$ is the channel. Writing the warming and cooling traces separately and
+subtracting,
+\begin{equation}
+  \Delta R = \bigl[R_{\mathrm{c}}^{\mathrm{w}}-R_{\mathrm{c}}^{\mathrm{c}}\bigr]
+           + \bigl[R_{\mathrm{ch}}^{\mathrm{w}}-R_{\mathrm{ch}}^{\mathrm{c}}\bigr],
+  \label{eq:sm-circuit}
+\end{equation}
+so that any contact resistance that depends on temperature but not on thermal history cancels
+identically. What does not cancel is a contact whose barrier height itself depends on the
+lithium arrangement beneath the electrode, since that arrangement carries the same history
+dependence as the channel. Equation~\eqref{eq:sm-circuit} is therefore an upper bound on the
+channel contribution, and every quantitative statement in the main text is made about
+$\Delta R$ rather than about a resistivity. The two experiments that separate the terms are
+channel-length scaling, under which the second bracket grows linearly with $L$ while the first
+does not, and a four-probe measurement, which removes the first bracket outright.
+
+\section{Unfreezing on the warming branch}
+\label{sec:unfreezing}
+
+\subsection{Growth from a frozen nucleus population}
+
+Start from the growth velocity of Eq.~(7) of the main text, with the sample quenched into the
+untransformed state and the ordered phase thermodynamically favored below $\Tcol$:
+\begin{equation}
+  v(T) = v_{0}\,e^{-\Ea/\kB T}\,q(T),
+  \qquad
+  q(T)\equiv 1-e^{\Delta f/\kB T},
+  \label{eq:sm-master}
+\end{equation}
+in which $v_{0}=\nu a$ is the velocity a domain boundary would have if every attempt succeeded,
+$a=0.28$~nm being the lithium-lithium spacing in the plane, and $\Delta f=f_{\mathrm{O}}-
+f_{\mathrm{P}}$ is the free-energy difference per cobalt, negative below $\Tcol$. The mobility
+factor counts the attempts that clear the migration barrier and the thermodynamic factor $q$
+removes the reverse hops, so that $v$ vanishes at $\Tcol$ as it must and approaches
+$v_{0}e^{-\Ea/\kB T}$ only at undercoolings large enough that $|\Delta f|$ exceeds $\kB T$.
+Close to the boundary $|\Delta f|\simeq\Delta S\,(\Tcol-T)$, so that
+$q=1-e^{-\sigma(\Tcol-T)/T}$ with $\sigma=\Delta S/\kB$ per cobalt.
+
+Nucleation is complete before the warming sweep begins, since the cooldown delivers the sample
+to base temperature already seeded, so the transformation is site saturated: each of the $n_{0}$
+nuclei per unit area grows as a disk of the same radius, and the
+Kolmogorov--Johnson--Mehl--Avrami construction of Sec.~\ref{sec:kjma} collapses to
+\begin{equation}
+  \phi(T) = 1-\exp\bigl[-\pi n_{0}R_{\mathrm{w}}(T)^{2}\bigr],
+  \label{eq:sm-formal}
+\end{equation}
+with $R_{\mathrm{w}}$ the radius accumulated since the start of the sweep. On a linear sweep
+$T(t)=T_{0}+rt$ with $r>0$ the substitution $dt'=dT'/r$ turns that radius into a temperature
+integral,
+\begin{equation}
+\begin{aligned}
+  R_{\mathrm{w}}(T) &= \frac{1}{r}\int_{T_{0}}^{T}v(T')\,dT' \;\equiv\; a\,\Theta(T),\\[2pt]
+  \Theta(T) &= \frac{\nu}{r}\int_{T_{0}}^{T}e^{-\Ea/\kB T'}\,q(T')\,dT'.
+\end{aligned}
+  \label{eq:sm-theta-def}
+\end{equation}
+The integrand of $\Theta$ has dimensions of inverse time, the integration variable has
+dimensions of temperature, and $r$ has dimensions of temperature per time, so $\Theta$ is
+dimensionless, as it must be if $R_{\mathrm{w}}$ is to carry the dimensions of $a$. Its
+physical meaning is the number of successful rearrangement attempts made between $T_{0}$ and
+$T$, net of the reverse hops that $q$ subtracts, and $R_{\mathrm{w}}=a\Theta$ is the distance a
+domain boundary advances over the same interval.
+
+\subsection{Asymptotic evaluation}
+
+Change variable to $y=\Ea/\kB T'$, so that $T'=\Ea/\kB y$ and $dT'=-(\Ea/\kB)y^{-2}dy$.
+Equation~\eqref{eq:sm-theta-def} becomes
+\begin{equation}
+  \Theta(T) = \frac{\nu\Ea}{r\kB}\int_{y}^{y_{0}}
+  q\!\left(\frac{\Ea}{\kB y'}\right)\frac{e^{-y'}}{y'^{2}}\,dy',
+  \qquad
+  y=\frac{\Ea}{\kB T},\ \ y_{0}=\frac{\Ea}{\kB T_{0}}.
+  \label{eq:sm-beta}
+\end{equation}
+Because $y_{0}>y$ and the integrand falls exponentially, the lower limit of the sweep
+contributes a fraction $e^{-(y_{0}-y)}(y/y_{0})^{2}q(T_{0})/q(T)$ of the total. For the
+parameters of interest, $\Ea=0.387$~eV, $T=146$~K and $T_{0}=80$~K, that fraction is
+$7.5\times10^{-12}$, so the lower limit may be replaced by infinity. The thermodynamic factor
+varies slowly on the scale over which the exponential does, and is carried to first order by
+writing the integrand as $e^{h}$ with $h=\ln q-\Ea/\kB T'$; the pure exponential part has the
+standard asymptotic expansion
+\begin{equation}
+  \int_{y}^{\infty}\frac{e^{-y'}}{y'^{2}}\,dy'
+  = \frac{e^{-y}}{y^{2}}\left[1-\frac{2}{y}+O(y^{-2})\right],
+  \label{eq:sm-asymptotic}
+\end{equation}
+obtained by integrating by parts once and bounding the remainder. Substituting
+Eq.~\eqref{eq:sm-asymptotic} into Eq.~\eqref{eq:sm-beta}, restoring $y=\Ea/\kB T$ and keeping
+the first derivative of $q$ gives Eq.~(4) of the main text together with both of its leading
+corrections,
+\begin{equation}
+  \Theta(T) = \frac{\nu}{r}\,\frac{\kB T^{2}}{\Ea}\,q(T)\,e^{-\Ea/\kB T}
+  \left[1-\frac{2\kB T}{\Ea}-\frac{\kB T^{2}}{\Ea}\frac{d\ln q}{dT}+\cdots\right].
+  \label{eq:sm-theta}
+\end{equation}
+The two corrections are of the same size and of opposite sign, and neither may be discarded on
+the ground that the other is small. At
+$T=146$~K and $\Ea=0.387$~eV the expansion parameter is $\kB T/\Ea=1/30.8$, so the Laplace
+correction $2\kB T/\Ea$ is $6.5$ percent; at $\sigma=\dSbound$ and $\Tcol=240$~K the
+thermodynamic factor is $q(146\ \mathrm{K})=0.138$ and $d\ln q/dT=-0.0162$~K$^{-1}$, so the
+second correction is $7.7$ percent with the opposite sign. The two nearly cancel in the value
+of $\Theta$, which is why the leading form suffices for the barrier, but they do not cancel in
+its logarithmic derivative, which is what the rate shift below
+measures, and they are carried separately from here on. The prefactor
+$\kB T^{2}/\Ea$ has dimensions of temperature, so $\nu\kB T^{2}/r\Ea$ is dimensionless.
+
+The value of $q$ matters as much as its derivative. Retaining it rather than setting it to
+unity multiplies $\Theta$ by $0.138$ at the onset, which at fixed $n_{0}$ lowers the barrier
+the onset returns by $\kB\Ton\ln(1/q)=0.025$~eV and at fixed barrier raises the nucleus density
+the onset demands by $q^{-2}$, a factor of $53$. No step of the argument may treat the driving
+force as saturated at 146~K, since the undercooling there is only $94$~K against a latent
+entropy of a fraction of $\kB$.
+
+Two limits confirm Eq.~\eqref{eq:sm-theta}. As $r\to0$ the accumulated radius diverges and
+$\phi\to1$ at every temperature at which $v$ is nonzero, which is the statement that an
+infinitely slow sweep is an equilibrium measurement. As $r\to\infty$ the radius vanishes and the
+sample never transforms, which is the statement that an infinitely fast sweep quenches.
+
+\subsection{The onset and the barrier}
+
+Define the onset as the rise midpoint, $\phi(\Ton)=1/2$, which by Eq.~\eqref{eq:sm-formal}
+requires
+\begin{equation}
+  \pi n_{0}R_{\mathrm{w}}(\Ton)^{2}=\ln 2,
+  \qquad
+  R_{\mathrm{w}}(\Ton)=\sqrt{\frac{\ln2}{\pi n_{0}}} .
+  \label{eq:sm-onsetdef}
+\end{equation}
+The onset therefore fixes not a barrier but a pair, since the same radius can be reached with a
+larger barrier and a denser seeding or with a smaller barrier and a sparser one; at
+$n_{0}=10^{-2}$~nm$^{-2}$, one nucleus per hundred square nanometres, the radius the sweep must
+deliver is 4.70~nm. Inserting Eq.~\eqref{eq:sm-theta} at leading order, taking logarithms and
+solving for $\Ea$ gives Eq.~(5) of the main text,
+\begin{equation}
+  \Ea = \kB\Ton\,\ln\!\left[\frac{\nu\,a\,\kB\Ton^{2}\,q(\Ton)}
+                                 {\Ea\,r\,R_{\mathrm{w}}(\Ton)}\right].
+  \label{eq:sm-Ea}
+\end{equation}
+The argument of the logarithm is dimensionless: $\nu$ carries s$^{-1}$, $a$ and
+$R_{\mathrm{w}}$ carry length, $\kB\Ton^{2}/\Ea$ carries K, $q$ is dimensionless and $r$
+carries K\,s$^{-1}$. Equation~\eqref{eq:sm-Ea} is implicit in $\Ea$ but converges under direct
+iteration because $\Ea$ appears inside a logarithm. Starting from $\Ea=0.40$~eV with
+$\Ton=146$~K, $\nu=10^{13}$~s$^{-1}$, $r=1$~K/min and $n_{0}=10^{-2}$~nm$^{-2}$ the successive
+iterates are 0.3869, 0.3873, 0.3873~eV, so three passes suffice, and numerical integration of
+Eq.~\eqref{eq:sm-theta-def} without any expansion returns 0.3874~eV, the agreement to one part
+in four thousand being what remains of the two corrections in Eq.~\eqref{eq:sm-theta} once they
+have cancelled against one another.
+
+The error budget follows from differentiating Eq.~\eqref{eq:sm-Ea}. Writing
+$\varepsilon=\Ea$, $a_{0}=\kB\Ton$ and $C=\nu a\kB\Ton^{2}q(\Ton)/(r R_{\mathrm{w}})$, so that
+$\varepsilon=a_{0}\ln(C/\varepsilon)$,
+\begin{equation}
+  \frac{\partial\varepsilon}{\partial\ln C}=\frac{a_{0}\,\varepsilon}{\varepsilon+a_{0}},
+  \qquad
+  \frac{\partial\varepsilon}{\partial\Ton}
+  =\frac{\varepsilon/\Ton+2\kB+\kB\Ton\,d\ln q/dT}{1+a_{0}/\varepsilon}.
+  \label{eq:sm-sensitivity}
+\end{equation}
+With $\varepsilon=0.387$~eV and $a_{0}=\kB\Ton=12.58$~meV, the first derivative is 12.19~meV
+per $e$-fold of $C$, that is 28~meV per decade; since $C\propto\nu$ and $C\propto1/r$, a decade
+of attempt frequency and a decade of sweep rate each move $\Ea$ by 0.028~eV, in opposite
+directions, and since $C\propto R_{\mathrm{w}}^{-1}\propto n_{0}^{1/2}$, a decade of nucleus
+density moves it by half as much, 0.014~eV. The second derivative is 2.54~meV/K, whose
+reciprocal is the 393~K/eV that the width analysis below uses, so the $\pm7$~K uncertainty on
+the onset contributes $\pm0.018$~eV, and carrying the latent entropy over 0.10 to 0.69~$\kB$ per cobalt
+through $q(\Ton)$ contributes $-0.010$ to $+0.012$~eV. Added in quadrature these give
+0.047~eV, quoted as $\Ea=0.39\pm0.05$~eV. Solving Eq.~\eqref{eq:sm-Ea} at the corners of the
+plausible ranges $\nu\in[10^{11},10^{14}]$~s$^{-1}$, $r\in[0.5,5]$~K/min and
+$n_{0}\in[10^{-4},10^{-1}]$~nm$^{-2}$ gives 0.28~eV at the low corner and 0.44~eV at the high
+corner, widening to the interval 0.27 to 0.46~eV once the onset and latent-entropy ranges are
+carried to their corners as well.
+
+The degeneracy between the barrier and the nucleus density is exact enough to be written down.
+Holding $\Ton$ at 146~K and everything else at the values above,
+$\Ea=0.387+0.014\log_{10}(n_{0}/10^{-2}\ \mathrm{nm}^{-2})$~eV, so the plausible band
+$n_{0}=10^{-4}$ to $10^{-1}$~nm$^{-2}$, corresponding to nucleus spacings of 100 down to 3~nm,
+maps onto $\Ea=0.36$ to 0.40~eV. Neither number is measured on its own; what the onset measures
+is the combination, and the rate series of the next subsection is what separates the barrier
+from the seeding.
+
+\subsection{The rate shift and its independence of the Avrami exponent}
+
+Take the logarithm of the onset condition Eq.~\eqref{eq:sm-onsetdef}, writing
+$R_{\mathrm{w}}=a\Theta$ and using Eq.~\eqref{eq:sm-theta} at leading order,
+\begin{equation}
+  \ln(\pi n_{0}a^{2})
+  +2\left[\ln\frac{\nu}{r}+\ln\frac{\kB\Ton^{2}q(\Ton)}{\Ea}-\frac{\Ea}{\kB\Ton}\right]
+  =\ln\ln2 .
+  \label{eq:sm-logonset}
+\end{equation}
+Differentiate Eq.~\eqref{eq:sm-logonset} with respect to $\ln r$ at fixed $\Ea$, $\nu$ and
+$n_{0}$. The factor of two divides out; inside the bracket the rate term gives $-1$, the
+prefactor gives $2\,d\Ton/(\Ton\,d\ln r)$, the thermodynamic factor gives
+$(d\ln q/dT)\,d\Ton/d\ln r$ and the exponential gives
+$+\Ea\,d\Ton/(\kB\Ton^{2}\,d\ln r)$, so
+\begin{equation}
+  \frac{d\Ton}{d\ln r}
+  = \left[\frac{2}{\Ton}+\frac{\Ea}{\kB\Ton^{2}}+\frac{d\ln q}{dT}\right]^{-1},
+  \label{eq:sm-rateshift}
+\end{equation}
+which is Eq.~(6) of the main text and reduces, when the driving force is treated as saturated
+and $d\ln q/dT$ is dropped, to the Kissinger relation $\kB\Ton^{2}/(\Ea+2\kB\Ton)$ for a
+first-order rate process~\cite{Kissinger1957}. Numerically, at $\Ton=146$~K the three terms in
+the bracket are $0.0137$, $0.2107$ and $-0.0162$~K$^{-1}$, giving $4.80$~K per $e$-fold, or
+$11.1$~K per decade of warming rate; the thermodynamic factor is what carries the last of the
+three, and dropping it would return $10.3$~K per decade. Across the barrier range that the
+onset admits at $\Ton=146$~K the same expression gives $11.6$, $11.1$ and $10.7$~K per decade
+at $\Ea=0.37$, $0.387$ and $0.40$~eV, and integrating Eq.~\eqref{eq:sm-theta-def} numerically
+over a decade of rate from 0.5 to 5~K/min gives $11.4$~K. The prediction quoted in the main
+text is therefore $11\pm1$~K per decade, the spread being the width of the admissible barrier
+range rather than a fitted uncertainty.
+
+Suppose now that the transformed fraction is $\phi=1-\exp(-A_{0}\Theta^{n})$ for a constant
+$A_{0}$ and exponent $n$, which covers continuous nucleation with growth ($n=3$ in two
+dimensions) and growth from a frozen nucleus population ($n=2$, with $A_{0}=\pi n_{0}a^{2}$),
+as well as the simple relaxation $n=1$. The onset condition becomes $A_{0}\Theta^{n}=\ln2$,
+whose logarithm is
+\begin{equation}
+  n\left[\ln\frac{\nu}{r}+\ln\frac{\kB\Ton^{2}q(\Ton)}{\Ea}-\frac{\Ea}{\kB\Ton}\right]
+  = \ln\frac{\ln2}{A_{0}}.
+  \label{eq:sm-avrami-onset}
+\end{equation}
+Differentiating with respect to $\ln r$ divides out the overall factor $n$ and returns
+Eq.~\eqref{eq:sm-rateshift} unchanged, the constant $A_{0}$ dropping out entirely; direct
+numerical solution of Eq.~\eqref{eq:sm-formal} at $n=1$ and $n=2$ confirms the cancellation to
+four figures. The onset shift per decade of warming rate is therefore a property of the barrier
+and the onset temperature alone, and it does not test which transformation mechanism operates.
+The exponent instead controls the width of the rise, which is what the next subsection
+quantifies, and it shifts the extracted $\Ea$ only through the constant $A_{0}$ inside a
+logarithm, that is by the 0.014~eV per decade of $n_{0}$ already budgeted.
+
+The cancellation carries one condition, and the rate series has to be run so as to respect it.
+Equation~\eqref{eq:sm-avrami-onset} treats $A_{0}$, and with it $n_{0}$, as a constant of the
+protocol, which it is only if the cooldown that seeds the sample is held fixed while the
+warming rate is varied. If the nuclei are thermally seeded then their density falls as the
+cooldown is hurried, $n_{0}\propto1/|r_{\mathrm{c}}|$, and differentiating
+Eq.~\eqref{eq:sm-logonset} with respect to $\ln|r_{\mathrm{c}}|$ instead gives half the shift
+of Eq.~\eqref{eq:sm-rateshift}, that is $+5.5$~K per decade of cooling rate, with the same sign,
+since a sparser seeding forces the sweep to grow larger domains before the midpoint is reached.
+A protocol that slaves the cooldown to the warming rate therefore returns about $16.5$~K per
+decade, half as much again as the growth shift alone, and the two contributions cannot be
+separated after the fact. The measurement that tests Eq.~\eqref{eq:sm-rateshift} is a warming
+series taken at a single fixed cooling rate.
+
+\subsection{Width of the rise}
+
+The bracket of Eq.~\eqref{eq:sm-rateshift} is $d\ln\Theta/dT$, so the extended area
+$A_{\mathrm{ex}}=\pi n_{0}a^{2}\Theta^{2}$ that sits in the exponent of
+Eq.~\eqref{eq:sm-formal} grows by a factor of ten every
+\begin{equation}
+  \delta T_{10\times}=\frac{\ln10}{2}\left(\frac{d\ln\Theta}{dT}\right)^{-1}=5.5\ \mathrm{K}
+  \label{eq:sm-decade}
+\end{equation}
+at $\Ton=146$~K and $\Ea=0.387$~eV, half the 11.1~K that $\Theta$ itself takes. The
+transformed fraction passes from 10 to 90 percent as $A_{\mathrm{ex}}$ runs from
+$-\ln0.9=0.105$ to $\ln10=2.303$, a factor of 21.9, so
+\begin{equation}
+  \Delta T_{10\text{--}90}=\delta T_{10\times}\log_{10}(21.9)=7.4\ \mathrm{K},
+  \label{eq:sm-width}
+\end{equation}
+which becomes 7.3~K when Eq.~\eqref{eq:sm-theta-def} is integrated across the rise rather than
+expanded about the midpoint, and that is the number carried forward; the corresponding width
+for a general exponent is larger by the factor $2/n$, so continuous nucleation would be
+narrower still and simple relaxation twice as broad. The observed width, $19^{+6}_{-9}$~K,
+exceeds all of them. A spread of barriers $\delta\Ea$ broadens the onset by
+$\delta\Ton=\delta\Ea\,(\partial\Ea/\partial\Ton)^{-1}$, the second factor being the 393~K/eV
+that Eq.~\eqref{eq:sm-sensitivity} returns, so
+$\delta\Ea=0.045$~eV contributes 17.5~K, which added in quadrature to
+Eq.~\eqref{eq:sm-width} gives 19.0~K. A barrier spread of that size is not an adjustable
+quantity here: the tetrahedral-site divacancy barrier computed for Li$_{x}$CoO$_{2}$ scatters by
+$\pm0.04$~eV across the local lithium environments of a single
+composition~\cite{VanderVen2001b}, so the width of the rise and the environment dependence of
+the barrier are one statement rather than two. The width is accordingly consistent with growth
+from a frozen nucleus population carrying the environment scatter the first-principles barriers
+already predict, and is not consistent with a sharply cooperative transformation.
+
+\section{Nucleation, growth, and the branch asymmetry}
+\label{sec:kjma}
+
+\subsection{The two-dimensional nucleation barrier}
+
+A circular domain of ordered phase of radius $R$ within the lithium plane costs line tension and
+gains bulk free energy~\cite{Turnbull1949,Turnbull1950},
+\begin{equation}
+  \Delta G(R) = -\pi R^{2}\,|\Delta f_{A}| + 2\pi R\,\lambda ,
+  \label{eq:sm-dg}
+\end{equation}
+with $\Delta f_{A}$ the free-energy difference per unit area, negative below $\Tcol$, and
+$\lambda$ the domain-wall line tension, of dimension energy per length. Setting
+$d\Delta G/dR=0$ gives the critical radius and the barrier,
+\begin{equation}
+  R^{*}=\frac{\lambda}{|\Delta f_{A}|},
+  \qquad
+  W^{*}=\Delta G(R^{*})=\frac{\pi\lambda^{2}}{|\Delta f_{A}|},
+  \label{eq:sm-wstar}
+\end{equation}
+whose dimensions are (energy/length)$^{2}$ divided by (energy/area), that is energy. Close to
+the boundary the driving force is linear in the undercooling,
+$|\Delta f_{A}|\simeq\Delta S_{A}(\Tcol-T)$ with $\Delta S_{A}$ the latent entropy per unit
+area, so
+\begin{equation}
+  \frac{W^{*}}{\kB T}\simeq\frac{\pi\lambda^{2}}{\kB\,\Delta S_{A}}\,
+  \frac{1}{T\,(\Tcol-T)},
+  \label{eq:sm-wkt}
+\end{equation}
+which diverges as $T\to\Tcol^{-}$ and falls monotonically as the undercooling grows.
+
+\subsection{Transformed fraction}
+
+With nucleation rate per unit area $I_{\mathrm{n}}$ and growth velocity $v$ as in Eq.~(7) of the
+main text, the extended area fraction of the
+Kolmogorov--Johnson--Mehl--Avrami construction~\cite{Kolmogorov1937,Johnson1939,Avrami1939,Avrami1940} is
+\begin{equation}
+  A_{\mathrm{ex}}(t)=\pi\int_{0}^{t}I_{\mathrm{n}}(t')
+  \left[\int_{t'}^{t}v(t'')\,dt''\right]^{2}dt',
+  \label{eq:sm-aex}
+\end{equation}
+in which each nucleus born at $t'$ contributes the area of the disk it would have grown by time
+$t$ had it met no other domain, and the transformed fraction is
+\begin{equation}
+  \phi(t)=1-\exp\bigl[-A_{\mathrm{ex}}(t)\bigr].
+  \label{eq:sm-kjma}
+\end{equation}
+The dimensions check: $I_{\mathrm{n}}$ carries (area\,time)$^{-1}$, the bracket carries length,
+and the outer $dt'$ carries time, so $A_{\mathrm{ex}}$ is dimensionless. For constant
+$I_{\mathrm{n}}$ and $v$, Eq.~\eqref{eq:sm-aex} reduces to
+$A_{\mathrm{ex}}=\pi I_{\mathrm{n}}v^{2}t^{3}/3$, the familiar two-dimensional Avrami exponent
+of three. If instead nucleation is complete before growth begins, with a frozen areal density
+$n_{0}$ of nuclei, then
+\begin{equation}
+  A_{\mathrm{ex}}(t)=\pi n_{0}\left[\int_{0}^{t}v\,dt'\right]^{2}
+  =\pi n_{0}R_{\mathrm{w}}^{2},
+  \label{eq:sm-saturated}
+\end{equation}
+which is Eq.~\eqref{eq:sm-formal} and the $n=2$ member of the $A_{0}\Theta^{n}$ family analyzed
+in Sec.~\ref{sec:unfreezing}, with $A_{0}=\pi n_{0}a^{2}$; the onset shift is then
+Eq.~\eqref{eq:sm-rateshift} and only the width changes.
+
+Which of the two limits applies is decided by the nucleation rate, and the point that governs
+the whole of this section is that the nucleation rate carries the same mobility factor as the
+growth velocity,
+\begin{equation}
+  I_{\mathrm{n}}(T) = I_{0}\,e^{-[\Ea+W^{*}(T)]/\kB T},
+  \label{eq:sm-inuc}
+\end{equation}
+with $I_{0}=\nu/a^{2}$ for homogeneous nucleation on the lithium sublattice and $I_{0}=X\nu$
+for heterogeneous nucleation on a template of areal density $X$. Only $W^{*}$ distinguishes
+Eq.~\eqref{eq:sm-inuc} from Eq.~\eqref{eq:sm-master}; the ionic mobility that has to unfreeze
+before a domain can grow has equally to unfreeze before a domain can be born.
+
+\subsection{Why cooling and warming differ}
+
+The two exponentials in Eqs.~\eqref{eq:sm-master} and \eqref{eq:sm-inuc} move in opposite
+directions. By Eq.~\eqref{eq:sm-wkt} the barrier $W^{*}$ is prohibitive just below $\Tcol$ and
+falls monotonically as the undercooling grows, while the mobility factor common to both rates
+collapses as the temperature falls. Their product has a single maximum, the nose of the
+time-temperature-transformation curve~\cite{Uhlmann1972}, which for every line tension considered
+here sits between 178 and 211~K. What it does not have is a second maximum at large
+undercooling: the product
+$T(\Tcol-T)$ in the denominator of Eq.~\eqref{eq:sm-wkt} is itself largest at $\Tcol/2=120$~K,
+so below that temperature $W^{*}/\kB T$ rises again as the sample cools and joins the mobility
+factor rather than opposing it, $dI_{\mathrm{n}}/dT>0$ holds throughout, and the bottom of the
+sweep is where nucleation is least likely rather than most. At 80~K the mobility factor alone is
+$e^{-56}$, and a nucleation event there is as forbidden as a growth event.
+
+The requirement that the smooth cooling trace places on the seeding can therefore be stated as
+a birth temperature. Smoothness demands that the extended area accumulated on the way down stay
+below some $A_{\mathrm{ex}}^{\max}$, which we take as $10^{-2}$, while the warming branch
+demands $\pi n_{0}R_{\mathrm{w}}(\Ton)^{2}=\ln2$; since both are quadratic in the radius, any
+nucleus present at base temperature must have grown on the way down to no more than
+$(A_{\mathrm{ex}}^{\max}/\ln2)^{1/2}=0.12$ of the radius the warming sweep will give it. The
+growth accumulated from a birth temperature $T'$ downward is the same Laplace integral as
+Eq.~\eqref{eq:sm-theta}, evaluated at $T'$ instead of $\Ton$, so the ratio of the two radii is
+$e^{-(\Ea/\kB)(1/T'-1/\Ton)}$ up to algebraic prefactors of order unity, and the condition is
+\begin{equation}
+  \frac{\Ea}{\kB}\left(\frac{1}{T'}-\frac{1}{\Ton}\right)
+  \;\geq\; \frac{1}{2}\ln\frac{\ln2}{A_{\mathrm{ex}}^{\max}} .
+  \label{eq:sm-nose}
+\end{equation}
+The right-hand side is 2.12, and the left-hand side is steep, so the ceiling it sets is almost
+independent of the barrier: $T'\leq136.2$, 136.6, 136.9 and 137.8~K at $\Ea=0.37$, 0.387, 0.40
+and 0.45~eV. Every nucleus the sample carries to base temperature must have been born below
+$\Ton-9$~K. A nucleus born at the nose, by contrast, grows between 0.6~nm and 40~$\mu$m over
+the remainder of a 1~K/min cooldown against the 1.5 to 47~nm that Eq.~\eqref{eq:sm-onsetdef}
+asks of it, so a single such nucleus per flake transforms the sample on the way down and
+destroys the branch asymmetry.
+
+Classical nucleation cannot deliver seeds under that ceiling, and the arithmetic says so
+without appeal. Pushing the maximum of Eq.~\eqref{eq:sm-inuc} below 137~K while $W^{*}$ retains
+the $1/(\Tcol-T)$ form of Eq.~\eqref{eq:sm-wkt} requires $|d(W^{*}/\kB T)/dT|$ to exceed
+$\Ea/\kB T^{2}=0.21$~K$^{-1}$ there, hence $W^{*}/\kB T\simeq100$, and the rate is suppressed
+by $e^{-100}$. Put as a constraint on the one free quantity in Eq.~\eqref{eq:sm-wkt}, the line
+tension is overdetermined: keeping the cooling trace smooth requires $\lambda$ to be at least
+about 53 to 59~meV/nm over the admissible barriers, while delivering the seeding density that
+Eq.~\eqref{eq:sm-onsetdef} needs requires it to be at most 38 to 48~meV/nm. Scanning the whole
+of the plausible parameter space, $\Ea$ from 0.34 to 0.45~eV, $\nu$ from $10^{11}$ to
+$10^{14}$~s$^{-1}$, $\sigma$ from 0.10 to 0.69, $\lambda$ over four decades and the cooling rate
+from 1 to 60~K/min, the two requirements never meet: the shortfall in nucleus density is five
+to eight decades at 1~K/min and never falls below 1.9 decades anywhere in the space, and the
+corner that comes closest does so only by delivering almost no nuclei at all. Heterogeneous
+nucleation does not rescue this. A potency factor $\psi$ that replaces $W^{*}$ by $\psi W^{*}$
+is exactly equivalent to replacing $\lambda$ by $\lambda\sqrt{\psi}$, so it moves within the
+same one-parameter family already scanned, and it does so with a prefactor $X\nu$ smaller than
+$\nu/a^{2}$ by some three orders of magnitude, which costs a further one to one and a half
+decades. In the opposite limit, where the template removes the barrier altogether, the sites
+activate as soon as the sample crosses $\Tcol$, where Eq.~\eqref{eq:sm-tau} gives a relaxation
+time of $3\times10^{-4}$~s, and the flake transforms on the way down.
+
+What the argument leaves is an assumption rather than a derived result.
+The seeds are taken to be athermal: a quenched population of defect-templated embryos, patches
+of ordered lithium pinned to structural imperfections of the flake, which are present at all
+temperatures and go supercritical not by a thermal fluctuation but as soon as the shrinking
+critical radius of Eq.~\eqref{eq:sm-wstar} falls to their own size. That crossing carries no
+mobility factor and therefore no $e^{-\Ea/\kB T}$ suppression, which is precisely the functional
+form the classical estimate cannot supply. At 137~K the critical radius is
+$R^{*}=\lambda/|\Delta f_{A}|=0.67$, 1.01 and 1.35~nm for $\lambda=20$, 30 and 40~meV/nm, that
+is patches of 21, 47 and 83 cobalt sites, so an embryo population whose typical member is of
+that size activates in the right window. The assumption carries a condition of its own: the
+embryo-size distribution has to be cut off above about 1.3~nm, because a single
+2~nm embryo anywhere in the flake goes supercritical near 200~K and sweeps 10~$\mu$m before the
+cooldown ends. A cutoff of that kind is natural for patches templated by a fixed defect
+population and unnatural for thermal fluctuations of the parent phase, which is the sense in
+which the assumption is a physical one rather than a fitted one.
+
+The assumption is not free, because it makes two predictions that the thermal alternative does
+not. If the seeds are athermal then $n_{0}$ is a property of the flake and not of the protocol,
+so $\Ton$ is independent of the cooling rate; if they are thermally nucleated then
+$n_{0}\propto1/|r_{\mathrm{c}}|$ and $\Ton$ moves by $+5.5$~K per decade of cooling rate, by the
+differentiation of Eq.~\eqref{eq:sm-logonset} carried out in Sec.~\ref{sec:unfreezing}. One
+device and one afternoon separate the two.
+Second, the extended area accumulated on the way down scales as $|r_{\mathrm{c}}|^{-3}$ under
+continuous nucleation, so a cooldown slower than about 0.1~K/min must transform the sample on
+the way down and erase the warming anomaly altogether, whichever provenance the seeds have.
+
+On the warming branch none of this is in play. The sample begins at maximum undercooling with
+the nucleus population already present, so Eq.~\eqref{eq:sm-saturated} applies, nucleation is
+not rate limiting, and the only barrier left is the one that controls growth. That is why the
+single-barrier description of Eq.~\eqref{eq:sm-master} is legitimate on warming and not on
+cooling, and it is why the barrier extracted from the onset is a migration barrier rather than
+a sum of migration and nucleation contributions.
+
+\subsection{The isothermal hold}
+
+Stopping the sweep is the sharpest test the mechanism admits, but the two branches test
+different things and only one of them can falsify.
+
+A hold on the cooling branch, between 150 and 170~K, interrogates the nucleation rate, because
+that is the quantity the smooth cooling trace constrains. What it constrains is a lower bound.
+Requiring the extended area accumulated during the sweep's passage through a given temperature
+to stay below $10^{-2}$, with the Avrami exponent of three appropriate to continuous
+nucleation, already places $\tau_{\mathrm{nose}}$ above 78~min at 170~K, 2.9~h at 160~K and
+10~h at 150~K for a 1~K/min cooldown, and above ten to a hundred minutes at 10~K/min. A hold of
+an hour that produces nothing is therefore consistent with the model as it stands; it raises the
+lower bound and nothing more, and a nose time of days is not excluded by any equation here. The
+cooling-branch hold is worth doing, since a hold that does transform the sample fixes
+$\tau_{\mathrm{nose}}$ outright, but a null result there cannot refute the account.
+
+The falsifying test is a hold on the warming branch, below the onset, where the nuclei are
+present by hypothesis and the transformation is growth limited. The half-transformation time is
+then the radius the onset demands divided by the growth velocity at the hold temperature,
+$\tau_{1/2}(T)=R_{\mathrm{w}}(\Ton)/v(T)$, with both factors already fixed by the onset
+analysis. Over the admissible window this is 1 to 11~s at 170~K, 5 to 49~s at 160~K, 27~s to
+4.5~min at 150~K, 3 to 34~min at 140~K and 9~min to 1.9~h at 135~K, so a hold between 135 and
+140~K completes in three minutes to two hours, with the central parameters giving 15 to 50~min.
+That window is short enough to run and long enough to watch, and a hold there that produces
+nothing is fatal to the mechanism rather than merely uninformative. The prediction has a
+parameter-free anchor as well: at the onset itself the sweep has just delivered the critical
+radius, so $\tau_{1/2}(\Ton)=(\kB\Ton^{2}/\Ea)/r$, which is 4 to 5~min at 1~K/min independently
+of $n_{0}$, $\nu$ and $\lambda$. Anything much longer than that at $\Ton$ falsifies the model
+without reference to any of its free parameters.
+
+There is one empirical anchor for these timescales in the sister compound. Isothermal alkali
+ordering in Na$_{0.8}$CoO$_{2}$ proceeds under a hold at 200~K with a time constant near 40~min
+and saturates only after two to three hours, while a quench to any temperature below about 212~K
+suppresses it entirely~\cite{Schulze2008}, which is the same phenomenology at the same order of
+magnitude, displaced upward in temperature as the stronger alkali-alkali interaction of the
+sodium system requires.
+
+\subsection{Quasiequilibrium on the decay side}
+
+At the upper end of the anomaly the relaxation time of the hop that carries
+Eq.~\eqref{eq:sm-master},
+\begin{equation}
+  \tau(T)=\nu^{-1}e^{\Ea/\kB T},
+  \label{eq:sm-tau}
+\end{equation}
+equals $1.4\times10^{-5}$~s at $T=240$~K for $\Ea=0.387$~eV and $\nu=10^{13}$~s$^{-1}$, and
+$3\times10^{-4}$~s at the top of the admissible barrier range, which is shorter than a full
+sweep at 1~K/min by more than seven orders of magnitude. The decay of the
+anomaly is therefore a thermodynamic collapse of $\phi_{\mathrm{eq}}$ together with the shrinking
+transport contrast, as in Eq.~(8) of the main text, and not a second kinetic process.
+
+This also fixes how far the collapse can be dragged by the sweep, which is the prediction entered
+in the first row of Table~II of the main text. A phase boundary crossed at rate $r$ lags its
+equilibrium position by the distance the temperature moves within one relaxation time,
+\begin{equation}
+  \delta\Tcol \simeq \tau(\Tcol)\,r = \nu^{-1}e^{\Ea/\kB\Tcol}\,r ,
+  \label{eq:sm-lag}
+\end{equation}
+which at $\Tcol=240$~K and the fastest rate contemplated here, $r=10$~K/min
+$=0.17$~K\,s$^{-1}$, is $2\times10^{-6}$~K at the central barrier and $5\times10^{-5}$~K at
+0.45~eV. The lag is exponentially sensitive to the barrier and to nothing else, so the bound is
+quoted at the top of the range rather than at the middle of it: even at
+0.50~eV, above the interval the onset admits, Eq.~\eqref{eq:sm-lag} gives $5\times10^{-4}$~K.
+The collapse is therefore immovable below the $10^{-3}$~K level across the whole rate series and
+the whole barrier range, against an onset that moves by 11~K per decade. The contrast between
+Eqs.~\eqref{eq:sm-rateshift} and \eqref{eq:sm-lag} is the sharpest single statement the model
+makes.
+
+\section{Field thermodynamics of the collapse}
+\label{sec:field}
+
+\subsection{Clausius--Clapeyron relation}
+
+Let $f_{\mathrm{P}}$ and $f_{\mathrm{O}}$ be the free energies per cobalt of the two phases in a
+field $B$, with differentials $df=-S\,dT-M\,dB$, where $S$ and $M$ are the entropy and the
+magnetization per cobalt. The coexistence line $\Tcol(B)$ is defined by
+\begin{equation}
+  \Delta f\bigl(\Tcol(B),B\bigr)=0,
+  \qquad \Delta f \equiv f_{\mathrm{O}}-f_{\mathrm{P}} .
+  \label{eq:sm-coex}
+\end{equation}
+Differentiating Eq.~\eqref{eq:sm-coex} totally with respect to $B$,
+\begin{equation}
+  \frac{\partial\Delta f}{\partial T}\frac{d\Tcol}{dB}
+  + \frac{\partial\Delta f}{\partial B} = 0,
+  \label{eq:sm-total}
+\end{equation}
+and using $\partial\Delta f/\partial T=-(S_{\mathrm{O}}-S_{\mathrm{P}})=\Delta S$ and
+$\partial\Delta f/\partial B=-(M_{\mathrm{O}}-M_{\mathrm{P}})=-\Delta M$, with the definitions
+$\Delta S\equiv S_{\mathrm{P}}-S_{\mathrm{O}}$ and $\Delta M\equiv M_{\mathrm{O}}-M_{\mathrm{P}}$
+of the main text, gives Eq.~(9),
+\begin{equation}
+  \frac{d\Tcol}{dB}=\frac{\Delta M(B)}{\Delta S}.
+  \label{eq:sm-cc}
+\end{equation}
+The signs are worth stating explicitly. The ordered phase has fewer accessible configurations,
+so $S_{\mathrm{O}}<S_{\mathrm{P}}$ and $\Delta S>0$. The measured collapse moves upward in
+field, so $d\Tcol/dB>0$, and Eq.~\eqref{eq:sm-cc} then forces $\Delta M>0$: the ordered phase is
+the one with the larger magnetization. Dimensionally, magnetization per site divided by entropy
+per site is (energy/field) divided by (energy/temperature), that is temperature per field, as
+required.
+
+\subsection{Numerical conversion}
+
+Write $\Delta M=m\,\muBs$ and $\Delta S=\sigma\,\kB$ per cobalt. Then
+\begin{equation}
+\begin{aligned}
+  \frac{d\Tcol}{dB} &= \frac{m}{\sigma}\,\frac{\muBs}{\kB},\\[2pt]
+  \frac{\muBs}{\kB} &= \frac{5.788\times10^{-5}\ \mathrm{eV/T}}
+                           {8.617\times10^{-5}\ \mathrm{eV/K}}
+   = 0.6717\ \mathrm{K/T} .
+\end{aligned}
+  \label{eq:sm-convert}
+\end{equation}
+The measured secant slope is $\Delta\Tcol/\Delta B=(7\pm7)\,\mathrm{K}/(5\,\mathrm{T})
+=1.4\pm1.4$~K/T, so
+\begin{equation}
+  m = \frac{1.4\pm1.4}{0.6717}\,\sigma = (2.1\pm2.1)\,\sigma ,
+  \label{eq:sm-dM}
+\end{equation}
+which is Eq.~(10) of the main text.
+
+Everything here is per cobalt \emph{of the phase that transforms}, and the bound below is
+quoted for the reading in which that phase is the bulk. At $x\simeq1/2$ half the bulk cobalt
+sites are Co$^{4+}$ in a low-spin $d^{5}$ configuration carrying $S=1/2$, so the maximum
+magnetization the ordered phase can carry is $m=\msatRow$ per cobalt with every such moment
+aligned, and the parent phase, being a Pauli-paramagnetic metal, contributes negligibly.
+Section~\ref{sec:dftmethods} turns that ceiling from an estimate into a computed quantity, the
+ground state returning \comomentRow~$\muBs$ on the Co$^{4+}$ sites and \comomentThreeRow~$\muBs$
+on the Co$^{3+}$ sites. Equation~\eqref{eq:sm-dM} then bounds the latent entropy,
+\begin{equation}
+  \sigma \;\lesssim\; \frac{\msatRow}{2.1} \;\simeq\; \dSbound ,
+  \label{eq:sm-entropybound}
+\end{equation}
+against the $\ln2=0.69$ per cobalt that complete lithium order and disorder at half filling would
+release, so under the bulk reading the transformation converts at most about a third of the
+available configurational entropy, which is consistent with the partial ordering that the
+broadened rise of Sec.~\ref{sec:unfreezing} also indicates. Equation~\eqref{eq:sm-entropybound}
+is not an independent statement from the headcount derived below: inverting
+Eq.~\eqref{eq:sm-polar} for $\sigma$ gives
+$\sigma(N)=m_{\mathrm{sat}}\tanh(N\muBs B/\kB T)/2.1$, which approaches $m_{\mathrm{sat}}/2.1$
+as the block grows without limit, so $\dSbound$ is the full-polarization end of the same curve
+whose other end fixes $N$. The two are an upper and a lower reading of one relation rather than
+two independent results. The same calculations
+show that this
+ceiling is never approached in the bulk, since the dominant coupling is antiferromagnetic,
+$E_{\mathrm{AFM}}-E_{\mathrm{FM}}=\eafmIntra$~meV per Co$^{4+}$ within a row, and both computed
+ground states carry zero net moment, so the magnetization that tilts the collapse line has to
+come from elsewhere. If it resides in a surface gas, the measured slope refers to surface cobalt
+and the latent entropy per bulk cobalt is smaller by the surface-to-volume ratio, about
+$10^{-2}$ for a flake 20 to 60~nm thick. Section~VII of the main text pairs calorimetry with the
+thickness series to decide between the two readings.
+
+\subsection{Induced moments}
+
+If the phases carry no permanent moments and respond only through their susceptibilities, the
+field term in the free-energy difference is $-\tfrac12\Delta\chi B^{2}$ rather than
+$-\Delta M B$, and Eq.~\eqref{eq:sm-cc} integrates to
+\begin{equation}
+  \Tcol(B)-\Tcol(0)=\frac{\Delta\chi\,B^{2}}{2\,\Delta S}.
+  \label{eq:sm-induced}
+\end{equation}
+The quantity extracted from a single 5~T datum is then a secant, and the terminal slope at 5~T
+is twice as large, so the moment demanded at 5~T becomes $m=(4.2\pm4.2)\sigma$. The
+induced-moment reading therefore requires more magnetization, not less, and strengthens rather
+than weakens the headcount of the next subsection. Equation~\eqref{eq:sm-induced} also predicts
+that the collapse shift grows quadratically with field, which the field series of the main text
+distinguishes from the saturating shift of aligned permanent moments.
+
+\subsection{Moment headcount}
+
+The question the headcount answers is one of polarization rather than of energy balance. The
+free-energy comparison is already exhausted by the Clausius--Clapeyron relation, which fixes the
+product $\Delta M\,B$ against $\Delta S\,d\Tcol$ and says nothing about how many moments carry
+the magnetization; what the measurement additionally demands is that the ordered phase actually
+be magnetized by $m=2.1\,\sigma$ in units of $\muBs$ per cobalt at 5~T, and an independent spin
+cannot deliver it. At $B=5$~T the single-moment Zeeman energy is
+$g\muBs B=2\times5.788\times10^{-5}\times5=0.579$~meV against $\kB T$ of 12.93, 15.77 and
+20.68~meV at 150, 183 and 240~K, the onset of the ordered phase, the peak of the field-doubled
+excess, and the collapse, so a lone spin is outmatched by factors of 22, 27 and 36 and is
+polarized only to $\tanh(\muBs B/\kB T)=0.022$, 0.018 and 0.014. The field-coupled unit must
+therefore be a block of $N$ moments locked parallel by exchange, whose Zeeman energy is
+$N\muBs B$ and whose polarization along the field is correspondingly larger.
+
+Write $m_{\mathrm{sat}}$ for the magnetization per cobalt the ordered phase would carry with
+every Co$^{4+}$ moment aligned, which Sec.~\ref{sec:dftmethods} computes as
+$m_{\mathrm{sat}}=\msatRow$. A block of $N$ such moments is polarized to
+\begin{equation}
+  m = m_{\mathrm{sat}}\tanh\!\left(\frac{N\muBs B}{\kB T}\right),
+  \label{eq:sm-polar}
+\end{equation}
+and setting this equal to the $m=2.1\,\sigma$ that Eq.~\eqref{eq:sm-dM} demands and solving for
+$N$ gives Eq.~(11) of the main text,
+\begin{equation}
+  N = \frac{\kB T}{\muBs B}\,
+  \operatorname{arctanh}\!\left(\frac{2.1\,\sigma}{m_{\mathrm{sat}}}\right),
+  \label{eq:sm-headcount}
+\end{equation}
+which reduces to $N\simeq(2.1\sigma/m_{\mathrm{sat}})(\kB T/\muBs B)$ whenever the block is far
+from saturation. The criterion carries no arbitrary constant: the latent entropy $\sigma$ enters
+explicitly, so that quoting a headcount requires quoting the entropy it assumes.
+Table~\ref{tab:headcount} evaluates Eq.~\eqref{eq:sm-headcount} across the entropies the
+transformation admits and the three temperatures of the window.
+
+\begin{table}[t]
+  \caption{The size of the field-coupled block, Eq.~\eqref{eq:sm-headcount}, at $B=5$~T and
+  $m_{\mathrm{sat}}=\msatRow$, against the latent entropy $\sigma=\Delta S/\kB$ per cobalt and
+  the three temperatures at which the field effect is read. The last row is the ceiling
+  $\sigma=m_{\mathrm{sat}}/2.1=\dSbound$ of Eq.~\eqref{eq:sm-entropybound}, at which the block
+  is fully polarized and $N$ diverges.}
+  \label{tab:headcount}
+  \renewcommand{\arraystretch}{1.10}
+  \begin{ruledtabular}
+  \begin{tabular}{lccc}
+    $\sigma$ ($\kB$/Co) & $N$ at 150~K & $N$ at 183~K & $N$ at 240~K \\
+    \colrule
+    0.02 & 3.9 & 4.8 & 6.3 \\
+    0.05 & 9.9 & 12.1 & 15.9 \\
+    0.08 & 16.3 & 19.9 & 26.1 \\
+    0.10 & 21.0 & 25.6 & 33.5 \\
+    0.15 & 35.1 & 42.8 & 56.2 \\
+    0.20 & 60.5 & 73.8 & 96.8 \\
+    \dSbound & $\infty$ & $\infty$ & $\infty$ \\
+  \end{tabular}
+  \end{ruledtabular}
+\end{table}
+
+At the latent entropy of about a tenth of $\kB$ per cobalt that the calorimetry row of Table~II
+of the main text carries, the block holds twenty-one moments at 150~K and twenty-six at 183~K;
+at half that entropy it holds ten and twelve. Across the entropies that a partial conversion
+allows, 0.02 to 0.10~$\kB$ per cobalt, and across the 150 to 183~K window in which the
+field-doubled excess is read, $N$ runs from about four to about twenty-six, so the field-coupled
+object holds of order ten aligned moments and the range worth quoting is five to twenty-five.
+Figure~3(b) of the main text draws Eq.~\eqref{eq:sm-polar} against $N$ at
+150~K together with the magnetization the measured slope demands, and marks the crossings at
+$N\simeq10$ for $\sigma=0.05$ and $N\simeq21$ for $\sigma=0.10$, the curve saturating at
+$m_{\mathrm{sat}}$.
+
+The energy scale required of the field-induced change in transport is a separate calculation
+that happens to share a logarithm. Doubling an activated conductivity ratio requires an extra
+\begin{equation}
+  \delta E = \kB T\ln 2 =
+  \begin{cases}
+    9.0\ \mathrm{meV}, & T=150\ \mathrm{K},\\
+    10.9\ \mathrm{meV}, & T=183\ \mathrm{K},
+  \end{cases}
+  \label{eq:sm-gapshift}
+\end{equation}
+of transport gap in the ordered phase, which is what Eq.~(12) of the main text asks the block of
+Eq.~\eqref{eq:sm-headcount} to supply. The $\ln2$ here is the factor of two in a conductivity
+ratio and nothing else; it is not a criterion for $N$, and it is unrelated to the $\ln2$ that
+defines the rise midpoint in Eq.~\eqref{eq:sm-onsetdef} or to the $\ln2$ per cobalt of complete
+lithium disorder in Eq.~\eqref{eq:sm-entropybound}. The three appear in three different
+equations for three different reasons.
+
+\section{Density-functional computational details}
+\label{sec:dftmethods}
+
+All calculations use \textsc{Quantum ESPRESSO} 7.3.1~\cite{Giannozzi2009,Giannozzi2017} with
+the PBE exchange-correlation functional~\cite{PBE1996} and projector augmented-wave
+datasets~\cite{Blochl1994} for Co, O and Li, plane-wave cutoffs of 60~Ry for the wave functions
+and 480~Ry for the charge density, Marzari--Vanderbilt cold smearing~\cite{Marzari1999} of width
+0.01~Ry, and a self-consistency threshold of $10^{-8}$~Ry. The Hubbard term is applied to the Co
+$3d$ shell in the rotationally invariant simplified form~\cite{Dudarev1998} with atomic
+projectors.
+
+\subsection{Why $U=\Uused$~eV, and why it is not a free parameter}
+
+The value is fixed by a physical requirement rather than chosen for agreement. A scan over
+$U=0$, 2.5, 4.0 and 5.5~eV gives four qualitatively different materials. At $U=0$ every cell is
+an itinerant metal with no site resolution. At $U=2.5$~eV the moment settles on the lithium-rich
+cobalt rather than the lithium-poor one, so that the sign of the charge disproportionation is
+inverted, and the $x=1/3$ cell is a half-metallic ferromagnet with a noninteger moment. At
+$U=5.5$~eV the Co$^{4+}$ site is driven high spin, carrying \comomentHighU~$\muBs$, and the
+$x=1/2$ cell is metallic again. Only near $U=\Uused$~eV does the calculation return the low-spin
+$S=1/2$ Co$^{4+}$ and $S=0$ Co$^{3+}$ pair that the chemistry of Li$_x$CoO$_2$ requires. The
+Hubbard parameter is therefore calibrated to a known spin state, and every number reported below
+carries that calibration with it. A metal-insulator transition sits between $U=2.5$ and 4.0~eV at
+$x=1/3$; above the transition the gap is nearly independent of $U$, moving from \gapXthirdUfour{} to
+\gapXthirdUfive~eV between 4.0 and 5.5~eV while the moment continues to grow, which is the signature of a
+gap set by the ordering pattern rather than by $U$ itself.
+
+\subsection{Cells}
+
+The row-ordered $x=1/2$ structure is the one-layer monoclinic cell of the Reimers--Dahn and Van
+der Ven ground state~\cite{Reimers1992,VanderVen1998}, space group $P2/m$, with two Co, four O
+and one Li at the experimental $a_{\mathrm{hex}}=2.808$~\AA{} and $c_{\mathrm{hex}}=14.24$~\AA.
+The third lattice vector carries the O3 interlayer offset, so a single CoO$_2$ layer reproduces
+the ABC stacking and the cell is a one-layer setting equivalent to the reported monoclinic cell,
+with $\beta_{\mathrm{m}}=108.9^{\circ}$. The two cobalt sites are inequivalent by lithium
+coordination, two neighbors against four, which permits charge order without imposing it; they are given distinct
+species labels sharing one pseudopotential and one $U$, purely so that symmetrization cannot
+average them. Antiferromagnetic arrangements are treated in two supercells, one doubled along
+the row direction so that Co$^{4+}$ moments alternate within a row at 2.808~\AA, and one doubled
+across the rows so that adjacent rows alternate at 4.864~\AA, each carrying its own ferromagnetic
+and nonmagnetic references so that every comparison is made inside a single cell. Sampling is
+$12\times8\times8$ for self-consistency and $16\times10\times10$ for the density of states in
+the primitive cell, with equivalent densities in the supercells.
+
+The motif comparison uses a $4\times2$ in-plane supercell, eight Co, sixteen O and four Li, that
+is twenty-eight atoms and eight formula units. A $2\times2$ cell cannot do this job: on a
+triangular lattice at half filling all six placements of two lithium among four sites are
+nearest-neighbor pairs generating the same stripe order in one of three equivalent directions,
+so row, zigzag and clumped are literally the same structure there. In the $4\times2$ cell the
+row and zigzag arrangements both achieve the minimum lithium-lithium coordination of two, while
+the clumped arrangement has four. Sampling is $3\times6\times4$ for self-consistency and
+$4\times8\times4$ for the density of states, equivalent to $12\times12\times4$ and
+$16\times16\times4$ in the primitive cell. In the row arrangement every cobalt sees
+exactly three lithium, so the lithium potential is uniform over the cobalt sublattice and any
+charge order there is spontaneous; the $U=0$ control confirms this, the row cell relaxing to a
+uniform cobalt sublattice with moments of \momentRowUzeroA{} and \momentRowUzeroB~$\muBs$.
+
+The $x=1/3$ calculation uses the $\sqrt3\times\sqrt3\,R30^{\circ}$ ordering with three Co, six O
+and one Li per cell, sampled at $7\times7\times6$ and $12\times12\times8$.
+
+\subsection{Caveats}
+
+The $x=1/2$ cells are built at $c_{\mathrm{hex}}=14.24$~\AA, which rounds the 14.2235~\AA{}
+interlayer spacing reported for Li$_{0.68}$CoO$_{2}$~\cite{Takahashi2007} rather than the value at
+the half-lithiated composition, where the measurements give 14.42 to
+14.44~\AA~\cite{Reimers1992,Motohashi2009}. The calculations
+therefore sit at an interlayer distance compressed by about one percent relative to the
+composition they describe, and since both the tetrahedral-site migration barrier and the
+oxygen-mediated interlayer coupling are known to respond to the $c$ parameter, this is a
+geometry limitation that attaches to every number computed in the row-ordered and motif cells.
+No number reported here has been rescaled to compensate for it, and the comparisons that carry
+the argument are made between cells sharing the same geometry, so the residual enters as a
+common offset rather than as a contrast.
+
+Hubbard projectors are atomic rather than orthogonalized atomic. Orthogonalized projectors were
+tried first and were unaffordable, a single force evaluation on the fourteen-atom cell running
+beyond twenty-three minutes because the derivative of the orthogonalization matrix is not
+accelerated in this release, and on the ten-atom cell they also prevented self-consistency from
+converging because two near-degenerate $t_{2g}$ Hubbard eigenvalues rotate into each other
+between iterations. Every comparison reported here uses atomic projectors throughout, so the
+choice is internally consistent, but absolute occupation traces are projector-dependent and the
+charge-order claim rests on the differences between cobalt sites, which are corroborated
+independently by L\"owdin $d$ occupancies and by atomic-sphere charges.
+
+The ionic relaxation of the $x=1/2$ cell was stopped on a force plateau. The total energy became
+stationary to 0.27~meV per cell over the last six steps while the reported force settled at
+\forcePlateau~meV/\AA{} rather than reaching the 25~meV/\AA{} target. The residual sits entirely on the
+oxygen $z$ coordinates in exact inversion pairs with the energy flat, so it is a systematic
+force-expression residual rather than a real displacement, and displacements consistent with it
+change the energy by less than 0.1~meV, far below the magnetic differences of tens of meV
+reported here. Cobalt and lithium sit on inversion centers and carry identically zero force.
+
+The motif comparison is made at fixed ideal geometry, identical for the three arrangements, so
+that the comparison is internally consistent; the residual forces are nearly the same in all
+three and are dominated by the common Co-O breathing that accompanies charge order rather than
+by anything specific to the lithium configuration, so relaxation should shift the three energies
+together. Ferromagnetic alignment is imposed in that campaign, and antiferromagnetic alignments
+of the Co$^{4+}$ moments were not explored there.
+
+Both the motif cells and the $x=1/3$ cell carry one CoO$_2$ layer. In the motif cells the third
+lattice vector is the true O3 rhombohedral translation, so those are bulk O3 crystals rather
+than slabs, but the lithium pattern is forced to repeat identically in every layer and the
+specific monoclinic interlayer registry of real Li$_{0.5}$CoO$_2$ is not sampled. The $x=1/3$
+cell has the exact interlayer spacing but O1 rather than O3 registry; the gap of 1.2~eV is far
+larger than any plausible interlayer bandwidth and the exchange splitting is an in-plane
+quantity, so neither conclusion is at risk.
+
+Runs seeded from the high-spin start prescribed at the outset, in which
+\texttt{starting\_magnetization} $=0.3$ places $5.1\,\muBs$ on every cobalt because this cobalt
+dataset carries seventeen valence electrons, mostly failed to converge: seven of twenty-three
+runs were abandoned after sixty to a hundred and sixteen iterations with residuals stuck between
+$10^{-2}$ and $10^{-4}$~Ry, and are excluded. Where such a run stabilized enough to be read, it
+sat about 1.35~eV per cobalt above the converged low-spin state, so the low-spin manifold is the
+right one by a wide margin, but the high-spin branch was not exhaustively excluded at every $U$.
+
+One methodological warning is worth recording on its own. In the seven-atom primitive cell the
+ferromagnetic state comes out \primSign~meV per cobalt \emph{above} the nonmagnetic one at
+$U=\Uused$~eV, which taken alone would say the ordered phase is nonmagnetic. Both supercells say
+the opposite, by 26 to 36~meV per cobalt, and the nonmagnetic anchor itself agrees across all
+three cells to better than 0.1~meV per cobalt. What differs is how much symmetry the magnetic
+solution is permitted to break: four symmetry operations survive in the primitive cell against
+two in the supercells, and the supercell solution indeed carries inequivalent Co$^{4+}$ moments
+of \momentFMa{} and \momentFMb~$\muBs$, which the primitive cell cannot express. The same primitive cell
+puts the magnetic state below the nonmagnetic one at every other $U$ tested. A direct control
+with symmetry switched off did not converge and is reported as inconclusive, so the conclusion
+rests on the agreement of the two supercells and on the cell independence of the nonmagnetic
+anchor. The practical lesson holds regardless: a single primitive-cell calculation would have
+returned the wrong sign for the magnetic instability in this material.
+
+Finally, the disproportionation is about $0.2\,e$ rather than the $1\,e$ of a formal-valence
+picture, the usual situation in DFT$+U$ charge-ordered oxides where the formal difference is
+screened by oxygen rehybridization. The labels Co$^{3+}$ and Co$^{4+}$ describe the moment
+cleanly and the charge only qualitatively. Gaps at $U=\Uused$~eV are larger than experiment
+suggests for Li$_{0.5}$CoO$_2$ and should not be quoted as predictions of a gap magnitude; what survives the choice of $U$ is that the magnetic charge-ordered solutions are gapped while the
+nonmagnetic ones are metallic, and that the three lithium motifs are indistinguishable, the
+latter holding at $U=0$ as well.
+
+\section{Predictions and discriminating measurements}
+\label{sec:sm-predictions}
+
+Table~\ref{tab:sm-predictions} collects the out-of-sample predictions that Sec.~VII of the main
+text draws from the model, each set beside the measurement that decides it and with the numbers
+and the tolerances that the derivations above supply. Every entry is out of sample in the sense
+that no number in it was used in fixing the four parameters of the model, and every entry can be
+performed on existing devices with existing instrumentation.
+
+\begin{table*}[t]
+  \caption{Out-of-sample predictions of the model and what each measurement decides. Rates are
+  warming rates; fields are applied perpendicular to the flake unless stated.}
+  \label{tab:sm-predictions}
+  \renewcommand{\arraystretch}{1.15}
+  \footnotesize
+  \begin{ruledtabular}
+  \begin{tabular}{p{0.25\textwidth}p{0.39\textwidth}p{0.28\textwidth}}
+    Measurement & Prediction & What it decides \\
+    \colrule
+    Warming-rate series, 0.2 to 10~K/min, cooling protocol held fixed &
+    Onset moves by $11\pm1$~K per decade, Eq.~(6) of the main text with the thermodynamic factor
+    retained, steepening toward 16~K per decade if the cooldown is slaved to the warm-up and
+    the seeds are thermally born;
+    the collapse does not move, its residual kinetic lag $\tau(\Tcol)\,r$ of Eq.~\eqref{eq:sm-lag} being no
+    larger than $5\times10^{-5}$~K at 10~K/min and $5\times10^{-6}$~K at 1~K/min anywhere in the
+    admitted barrier range, and below $10^{-3}$~K even at 0.50~eV &
+    A flat onset kills kinetic unfreezing; a collapse that follows the onset kills the
+    thermodynamic assignment of $\Tcol$. The alkali order-disorder transition of the sister
+    compound is sluggish enough to have been followed at more than one sweep
+    rate~\cite{Ying2008} \\
+    Isothermal hold at 135 to 140~K on the warming branch &
+    Growth from seeds already present completes in three minutes to two hours, centrally fifteen
+    to fifty minutes, after which the remaining rise is absent. A hold at 150 to 170~K on the way
+    down is a different measurement, bounded only from below at one to ten hours at 1~K/min. The
+    measured anchor in the sister compound is a time constant of 40~min at 200~K, with ordering
+    suppressed entirely by a quench below 212~K~\cite{Schulze2008} &
+    A null result on the warming branch kills the growth-from-seeds account of
+    Sec.~IV\,C of the main text; a null result on the cooling branch excludes nothing \\
+    Cooling-rate series, 0.05 to 10~K/min, warming rate held fixed &
+    Athermal, defect-templated seeds leave the onset where it is; thermally born seeds accumulate
+    as $1/|r_{\mathrm{cool}}|$ and raise the onset by 5.5~K per decade of cooling rate. A
+    cooldown slower than about 0.1~K/min transforms the flake on the way down and erases the
+    warming anomaly &
+    Settles the provenance of the seeds, which is the one ingredient of
+    Sec.~IV\,C of the main text assumed rather than derived \\
+    Field series at 1, 2, 3, 5, 7, 9~T, fixed protocol &
+    Saturating Brillouin growth for aligned permanent moments, $B^{2}$ growth for an induced
+    moment, threshold behavior for spin-dependent percolation &
+    Separates the three field couplings with no adjustable parameter \\
+    In-plane against perpendicular field &
+    Nearly isotropic response for spin coupling, $\cos\theta$ for orbital coupling &
+    Selects spin against orbital coupling \\
+    Thickness series at fixed batch &
+    Excess sheet conductance proportional to thickness for a volume phase,
+    thickness-independent for a surface phase &
+    Decides volume against surface, and thereby whether the surface electron gas is the
+    ordered phase \\
+    Channel-length scaling, four-probe measurement, and a bias-history series &
+    $\Delta R$ proportional to channel length for a channel origin and independent of it for a
+    contact origin; amplitude independent of read voltage and of dwell time at bias if no lithium
+    space charge accumulates at the electrodes &
+    Confirms or kills the contact-artifact alternative of Sec.~II of the main text, including
+    the Debye-thin space-charge layer that the blocking-contact argument leaves standing \\
+    Batch series in $x$ at fixed protocol &
+    $\Ton$ moves only through the composition dependence of $\Ea$, at $d\Ton/d\Ea=393$~K/eV, so
+    the $\pm0.04$~eV environment scatter of the divacancy barrier~\cite{VanderVen2001b} allows at
+    most about $\pm16$~K across $x=0.37$ to 0.48, and the same $\delta\Ea$ must appear in the
+    width of the rise; $\Tcol$ may move by tens of kelvin &
+    An onset shift beyond about 20~K, or one uncorrelated with the width, implicates
+    inhomogeneity or a second transition rather than a single kinetic edge \\
+    Calorimetry across the warming anomaly, read together with the thickness series &
+    A bulk transformation gives a latent entropy of order $0.1\,\kB$ per Co, that is a latent
+    heat of 2.1~meV per Co, 0.20~kJ/mol or 2.1~J/g, some twenty times a routine sensitivity of
+    0.1~J/g and comparable with the 82 and 272~J/mol measured on bulk crystals at $x=0.50$ and
+    $0.67$~\cite{Motohashi2009}, together with a relative excess independent of thickness; a
+    surface one gives 0.02~J/g, five times below sensitivity, together with a relative excess
+    inversely proportional to thickness &
+    The two measurements together fix which cobalt population Eq.~(10) of the main text refers to, and
+    convert it from a ratio into a measurement of $\Delta M$. No ordering exotherm on warming has
+    been reported in any alkali cobaltate, so this is a new measurement rather than a
+    confirmation \\
+    Diffraction or phonon spectroscopy across the anomaly, set against tunneling spectroscopy &
+    Three separable observables. The interlayer spacing and the $(00l)$ positions do not move.
+    The in-plane metric changes by at most a tenth of a percent, with a shear below one degree,
+    and the lithium-contrast superlattice reflections are weak enough to require electron
+    diffraction. The site-mean Co-O bond lengths of the two cobalt sites are computed to differ
+    by only \bondRow{} to \bondXthird~\AA, a magnitude that is strongly $U$-sensitive and is not
+    itself a prediction of the method, while a hard gap opens in the local spectrum &
+    Separates electronic charge order from a displacive or Jahn-Teller transition, which would
+    contrast the two sites by tens of picometers, and from a stacking glide, which would collapse
+    the interlayer spacing by six percent \\
+    Electron or synchrotron diffraction on one flake at 100~K and at 300~K &
+    Weak lithium-contrast superlattice intensity present in the warmed-through low-temperature
+    state and absent in the as-cooled state, with the interlayer spacing and the $(00l)$
+    positions unchanged to better than half a percent throughout &
+    Confirms that what orders is the lithium sublattice, and excludes the O3 to H1-3 stacking
+    glide of Sec.~II\,A of the main text, which collapses the interlayer spacing by about six
+    percent \\
+  \end{tabular}
+  \end{ruledtabular}
+\end{table*}
+
+\section{Symbols}
+\label{sec:symbols}
+
+Table~\ref{tab:symbols} collects every symbol that carries physical content in the main text and
+in this Supplemental Material, together with its dimension, so that a symbol appearing in a
+caption and the same symbol appearing inside a derivation can be checked against one another.
+
+\begin{table*}[t]
+  \caption{The symbols that carry physical content in the main text and in this Supplemental
+  Material, with their dimensions. The left panel collects the transport and rate quantities,
+  the right panel the nucleation, thermodynamic and electronic-structure quantities. Purely
+  local auxiliaries introduced and discharged inside a single derivation, such as the
+  integration variable $y$ of Eq.~\eqref{eq:sm-beta} and the substitutions $\varepsilon$,
+  $a_{0}$ and $C$ of Eq.~\eqref{eq:sm-sensitivity}, are defined where they appear and are not
+  repeated here. No symbol in the list below carries a second meaning anywhere in either
+  document.}
+  \label{tab:symbols}
+  \renewcommand{\arraystretch}{1.10}
+  \footnotesize
+  \begin{ruledtabular}
+  \begin{tabular}{lll@{\qquad}lll}
+    Symbol & Meaning & Dimension & Symbol & Meaning & Dimension \\
+    \colrule
+    $\phi$ & transformed volume fraction & dimensionless & $I_{\mathrm{n}}$, $I_{0}$ & nucleation rate per area and its prefactor & m$^{-2}$s$^{-1}$ \\
+    $\phi_{\mathrm{eq}}$ & equilibrium transformed fraction & dimensionless & $v$, $v_{0}$ & domain growth velocity and its prefactor & m\,s$^{-1}$ \\
+    $x$ & lithium content of Li$_{x}$CoO$_{2}$ & dimensionless & $n_{0}$ & frozen nucleus areal density & m$^{-2}$ \\
+    $q$ & thermodynamic factor $1-e^{\Delta f/\kB T}$ & dimensionless & $a$ & lithium-lithium spacing in the plane & m \\
+    $s$ & resistivity ratio $\rho_{\mathrm{O}}/\rho_{\mathrm{P}}$ & dimensionless & $\lambda$ & domain-wall line tension & eV\,m$^{-1}$ \\
+    $c$ & mixture geometry factor & dimensionless & $W^{*}$, $R^{*}$ & nucleation barrier and critical radius & eV, m \\
+    $R_{\mathrm{meas}}$ & measured two-probe resistance & $\Omega$ & $A_{\mathrm{ex}}$ & extended area fraction & dimensionless \\
+    $R_{\mathrm{P}}$ & channel resistance of the parent phase & $\Omega$ & $A_{0}$, $n$ & Avrami prefactor and exponent & dimensionless \\
+    $R_{\mathrm{c}}$, $R_{\mathrm{ch}}$ & contact and channel resistance & $\Omega$ & $\Delta f$ & free-energy difference per cobalt & eV \\
+    $\Delta R$ & warming-minus-cooling excess & $\Omega$ & $\Delta f_{A}$ & free-energy difference per unit area & eV\,m$^{-2}$ \\
+    $L$, $A$ & channel length and cross section & m, m$^{2}$ & $\Delta S$ & latent entropy per cobalt & eV\,K$^{-1}$ \\
+    $k(T)$ & rearrangement rate & s$^{-1}$ & $\Delta S_{A}$ & latent entropy per unit area & eV\,K$^{-1}$m$^{-2}$ \\
+    $\nu$ & attempt frequency & s$^{-1}$ & $\sigma$ & $\Delta S$ in units of $\kB$ & dimensionless \\
+    $\Ea$ & effective migration barrier & eV & $\Delta M$ & magnetization difference per cobalt & eV\,T$^{-1}$ \\
+    $\delta\Ea$ & spread of barriers across the sample & eV & $m$ & $\Delta M$ in units of $\muBs$ & dimensionless \\
+    $r$ & sweep rate & K\,s$^{-1}$ & $\Delta\chi$ & susceptibility difference per cobalt & eV\,T$^{-2}$ \\
+    $T_{0}$ & temperature at which the sweep starts & K & $B$ & applied magnetic field & T \\
+    $\Theta$ & accumulated attempts on the sweep & dimensionless & $g$ & spectroscopic splitting factor & dimensionless \\
+    $\delta T_{10\times}$ & temperature per decade of $A_{\mathrm{ex}}$ & K & $N$ & moments in the field-coupled block & dimensionless \\
+    $\Delta T_{10\text{--}90}$ & 10 to 90 percent rise width & K & $\delta E$ & field-induced change of transport gap & eV \\
+    $R_{\mathrm{w}}$ & growth radius accumulated on warming & m & $m_{\mathrm{sat}}$ & $\Delta M$ with every Co$^{4+}$ moment aligned & dimensionless \\
+    $\Ton$ & rise midpoint of the anomaly & K & $U$ & Hubbard parameter on Co $3d$ & eV \\
+    $\Tcol$ & first-order collapse temperature & K & $D(E_{F})$ & density of states at the Fermi level & eV$^{-1}$ \\
+    $\delta\Tcol$ & kinetic lag of the collapse & K & $n_{d}$ & cobalt $3d$ occupation & dimensionless \\
+    $\tau$ & relaxation time $\nu^{-1}e^{\Ea/\kB T}$ & s & $\beta_{\mathrm{m}}$ & monoclinic cell angle & degrees \\
+    $\tau_{\mathrm{nose}}$ & transformation time at the nose & s & $\mathcal{H}$ & thermal history of the sample & dimensionless \\
+    $\tau_{1/2}$ & isothermal half-transformation time & s & $X$ & areal density of nucleation templates & m$^{-2}$ \\
+    $\psi$ & heterogeneous nucleation potency & dimensionless & & & \\
+  \end{tabular}
+  \end{ruledtabular}
+\end{table*}
+
+\clearpage
+
+\bibliographystyle{apsrev4-2}
+\bibliography{refs}
+
+\end{document}

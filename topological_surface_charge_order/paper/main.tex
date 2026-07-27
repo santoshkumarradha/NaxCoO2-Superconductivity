@@ -1,0 +1,1300 @@
+\documentclass[reprint,twocolumn,prb,amsmath,amssymb,superscriptaddress,floatfix]{revtex4-2}
+
+\usepackage{graphicx}
+\usepackage{bm}
+\usepackage[T1]{fontenc}
+% Times-compatible text and math, matching the STIX serif used in the figures,
+% so that a symbol in a caption and the same symbol inside a panel agree.
+\usepackage{newtxtext}
+\usepackage{newtxmath}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{xspace}
+
+% ---------------------------------------------------------------------------
+% Pastel link inks.  Soft enough to sit quietly in 10pt text, saturated enough
+% that a link never reads as plain type.  Three hues separate the kind of link:
+%   pastellink  desaturated blue    internal cross-references (Eq., Fig., Sec.)
+%   pastelcite  desaturated teal    bibliography citations
+%   pasteurl    desaturated purple  URLs, DOIs, file links
+% ---------------------------------------------------------------------------
+\definecolor{pastellink}{rgb}{0.35,0.45,0.75}
+\definecolor{pastelcite}{rgb}{0.20,0.52,0.45}
+\definecolor{pastelurl}{rgb}{0.52,0.36,0.60}
+
+% hyperref last (RevTeX 4-2 supports it natively).
+\usepackage[colorlinks=true,
+            linkcolor=pastellink,
+            citecolor=pastelcite,
+            urlcolor=pastelurl,
+            filecolor=pastelurl,
+            menucolor=pastellink,
+            anchorcolor=pastellink,
+            linktoc=all,
+            breaklinks=true]{hyperref}
+
+\graphicspath{{figures/}}
+
+% Every number still owed by the running DFT+U campaign lives here.
+\input{dft_numbers}
+
+% ---------------------------------------------------------------------------
+% Figure-or-placeholder helper.  The figure set is produced by a separate pass;
+% until a file appears, a labelled box holds its place and the document still
+% compiles.  #1 file base name, #2 width.
+% ---------------------------------------------------------------------------
+\newcommand{\figorpending}[2]{%
+  \IfFileExists{figures/#1.pdf}{\includegraphics[width=#2]{#1}}%
+  {\fbox{\parbox[c][0.40\linewidth][c]{0.94#2}{\centering\ttfamily\small
+   [figure \detokenize{#1}.pdf pending]}}}%
+}
+
+% ---------------------------------------------------------------------------
+% Float placement.  Two of the column figures are tall and carry long captions,
+% so at the LaTeX defaults figure-plus-caption exceeds \topfraction, no top slot
+% is ever legal, and the floats queue up and cascade past the bibliography.
+% Relaxing the fractions and raising the per-page counters restores top
+% placement on the page where each float is discussed.
+% ---------------------------------------------------------------------------
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.9}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.75}
+\renewcommand{\dbltopfraction}{0.9}
+\renewcommand{\dblfloatpagefraction}{0.75}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+\setcounter{dbltopnumber}{3}
+
+\newcommand{\kB}{k_{\mathrm{B}}}
+\newcommand{\muBs}{\mu_{\mathrm{B}}}
+\newcommand{\Ea}{E_{\mathrm{a}}}
+\newcommand{\Ton}{T_{\mathrm{on}}}
+\newcommand{\Tcol}{T_{\mathrm{ord}}}
+
+\begin{document}
+
+\title{Cold Crystallization of the Lithium Sublattice and the Warming-Only
+Resistance Anomaly of Delithiated Li$_x$CoO$_2$}
+
+\author{Santosh Kumar Radha}
+\affiliation{Agentfield AI}
+
+\date{\today}
+
+\begin{abstract}
+Chemically exfoliated Li$_x$CoO$_2$ nanoflakes carry a resistance anomaly that appears only on
+the warming branch of a thermal loop, rising near 146~K, collapsing near 240~K, and roughly
+doubling in a 5~T field while the cooling baseline moves by a few percent. We read the loop as
+cold crystallization of the lithium sublattice: nucleation and growth are never favorable
+together along a cooling sweep, so the flake reaches base temperature as a disordered matrix
+carrying quenched, defect-templated embryos, and those embryos grow as soon as lithium
+unfreezes, converting the channel to a more resistive ordered phase that a first-order boundary
+later removes. The unfreezing condition fixes an effective migration barrier of
+$0.39\pm0.05$~eV, which is the divacancy value in this material, and requires the onset to move
+by $11\pm1$~K per decade of warming rate at fixed cooling protocol while the collapse stays
+fixed to better than $10^{-3}$~K. Density-functional calculations place charge order, a
+low-spin Co$^{4+}$ moment of \comomentRow~$\muBs$ and a hard gap on one transition, and leave
+frustration of that charge order by aperiodic lithium as the surviving account of the resistive
+contrast. The field-shifted collapse would require the ordered phase to carry the larger
+magnetization in a unit of order ten correlated moments, but at $1.4\pm1.4$~K/T the shift is
+consistent with zero at one standard deviation, so that chain and the surface electron gas it
+points to remain conditional. A warming-rate series at fixed cooling protocol decides the
+central claim with no new instrumentation.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+\label{sec:intro}
+
+A resistance that depends on which way the thermometer is moving cannot be a property of an
+equilibrium state. Chemically exfoliated Li$_x$CoO$_2$ nanoflakes prepared by slow
+delithiation show exactly that behavior: the cooling trace from room temperature is smooth and
+featureless, while the warming trace of the same device develops an excess resistance near
+146~K, reaches a maximum comparable in size to the cooling baseline itself, and disappears
+again near 240~K~\cite{Crowley2020,RadhaPerspective2021}. The loop repeats over thermal cycles
+without degradation, so no irreversible chemistry is involved. A perpendicular field of 5~T
+roughly doubles the excess while leaving the cooling baseline within a few percent of its
+zero-field value, and it pushes the high-temperature collapse upward without moving the
+low-temperature onset. Those temperatures, the amplitude and the field response are read from
+the published figures of Refs.~\cite{Crowley2020,RadhaPerspective2021} by the digitization
+described with Fig.~\ref{fig:kinetics}; 146~K is the midpoint of the rise rather than its foot,
+a distinction worth about 0.02~eV in the barrier extracted below, and the warming rate was not
+recorded, so it is carried throughout as an explicit unknown. Reanalysis of the raw traces would
+tighten every number quoted below.
+
+Two of those observations already dictate the shape of any explanation. A feature that exists
+on one branch of a loop and not the other belongs to a transformation that the cooling sweep
+outruns, which in the language of calorimetry is cold crystallization: the transformation is
+suppressed on cooling by slow kinetics, is stored in the quenched sample as a metastable
+state, and completes on reheating as soon as the relevant degree of freedom regains
+mobility~\cite{Wunderlich1958,Wellen2014,Angell1995,Debenedetti2001}. The term belongs to
+molecular glasses and polymers~\cite{Wunderlich1958}, to metallic glasses~\cite{Greer1995} and to
+the chalcogenide phase-change materials whose crystallization on warming is itself read as a
+resistance step~\cite{Wuttig2007,Friedrich2000,Klym2015}, and is used here by analogy, no cation
+or vacancy sublattice of an inorganic layered oxide having been described that way before. A
+field that acts on the excess and not on the
+background belongs to a thermodynamic phase boundary rather than to the carriers of the parent
+metal, because a magnetoresistance that doubled the anomaly by acting on the conduction channel
+as a whole would have moved the baseline by the same factor; the inference is sound against a
+bulk-carrier magnetoresistance and not against one localized at the contacts, which
+Sec.~\ref{sec:constraints} takes up separately.
+
+The slow degree of freedom is not hard to identify. Lithium in layered Li$_x$CoO$_2$ migrates
+at intermediate concentration by a divacancy hop whose barrier first-principles calculations
+place at 0.41~eV, with a scatter of about $\pm0.04$~eV across local lithium and vacancy
+environments; the isolated-vacancy path is roughly twice as costly, 0.83~eV, and operates only
+near full lithiation~\cite{VanderVen2000,VanderVen2001,VanderVen2001b}. Lithium and vacancy
+ordering at $x\simeq1/2$ is established by
+diffraction~\cite{Reimers1992,ShaoHorn2003,VanderVen1998}, while the ordering that cluster
+expansion predicts at $x\simeq1/3$ has never been observed, its computed boundary lying at or
+below room temperature~\cite{VanderVen1998,Wolverton1998,Motohashi2009,Takahashi2007}. Bulk
+Li$_x$CoO$_2$ over $0.46\le x\le0.71$ shows a first-order anomaly between 155 and 185~K, placed
+near 155~K and nearly independent of composition in one series of crystals and at 175 to 185~K in
+another~\cite{Miyoshi2010,Motohashi2009}, together with a distinct and lower lithium-freezing
+scale near 130~K below which the magnetization depends on how fast the crystal was cooled and
+above which $^{7}$Li motional narrowing and muon-detected diffusion set lithium
+moving~\cite{Miyoshi2010,Nakamura2006,Sugiyama2009}; that pair of scales is the bulk counterpart
+of the two edges analyzed here. In the sister compound Na$_x$CoO$_2$ the alkali pattern controls
+the charge order of the CoO$_2$ sheets directly~\cite{Foo2004,Roger2007}, so an ionic ordering
+transition is expected to carry an electronic signature.
+
+This paper builds the minimal model that respects all of those constraints and extracts its
+parameters. Section~\ref{sec:constraints} states what the measurement establishes and what the
+two-probe geometry prevents it from establishing. Section~\ref{sec:mixture} writes the channel
+as a two-phase mixture and fixes the size of the transformation. Section~\ref{sec:kinetics}
+derives the unfreezing condition, extracts the barrier, and shows why the cooling branch is
+featureless. Section~\ref{sec:field} treats the field as a thermodynamic variable, converts
+the observed shift of the collapse into a magnetization difference, and counts how many
+correlated moments the field must be addressing. Section~\ref{sec:dft} reports the
+density-functional test of the microscopic ingredients, and Sec.~\ref{sec:tests} lists the
+measurements that decide the question. An earlier account of this material matched the onset
+temperature to an equilibrium electronic crossover computed for a nine-site cluster, and we
+disagree with it for a reason internal to the present model, that an onset set by ionic kinetics
+moves with sweep rate while no equilibrium electronic scale does.
+
+Throughout, the complete derivations are given in the Supplemental Material~\cite{SM}, whose
+equations are numbered S1 onward; the main text carries the physical content and the results.
+
+\section{What the measurement constrains}
+\label{sec:constraints}
+
+The device is a chemically exfoliated single-crystal flake of thickness in the 20 to 60~nm
+class, contacted by two nickel electrodes across a channel of order 5~$\mu$m on
+Si/SiO$_2$~\cite{Crowley2020}, made and read out by the fabrication and transport pipeline the
+same laboratory had established on exfoliated oxide nanoflakes~\cite{Crowley2018}. Every contact
+metal tried on this material is Schottky-like,
+with a quasilinear current-voltage branch appearing only above about 2.5~V, and the resistance
+is read from that branch. The measured quantity is therefore
+\begin{equation}
+  R_{\mathrm{meas}}(T;\mathcal{H})
+  = R_{\mathrm{c}}(T,V;\mathcal{H}) + R_{\mathrm{ch}}(T;\mathcal{H}),
+  \label{eq:circuit}
+\end{equation}
+where $R_{\mathrm{c}}$ is the series resistance of the two junctions on that branch,
+$R_{\mathrm{ch}}$ is the channel, and $\mathcal{H}$ denotes the thermal history. The excess
+\begin{equation*}
+  \Delta R(T) \equiv R_{\mathrm{meas}}^{\,\mathrm{warm}}(T)
+  - R_{\mathrm{meas}}^{\,\mathrm{cool}}(T)
+\end{equation*}
+cancels every history-independent term in Eq.~\eqref{eq:circuit}, including any smooth
+$R_{\mathrm{c}}(T)$, but it does not cancel a history-dependent contact: lithium rearranging
+under the electrode obeys the same kinetics with the same barrier as the channel mechanism, and
+would therefore reproduce the branch asymmetry, the amplitude and the rate shift alike. Hysteresis
+in a layered-crystal device need not be ionic at all, interfacial charge transfer alone having
+been shown to produce a gate-induced loop in van der Waals heterostructures~\cite{Kumar2020}, so
+neither the presence of a loop nor its size identifies the mechanism on its own. Two
+observations are consistent with a channel origin without settling it. The anomaly correlates
+with the delithiation protocol rather than with contact processing, and it survives a change of
+contact material, a graphene-contacted device from the same batch showing an anomaly above
+1~M$\Omega$ with the same phenomenology~\cite{Crowley2020,RadhaPerspective2021}. Neither
+observation carries much weight on its own: that device is a single one, its two edges sit
+nearer 185 and 200~K than the 146 and 240~K quoted here, and a larger anomaly obtained with a
+different contact metal reads to a skeptic as an effect that scales with contact quality, so
+the second observation cuts both ways. Only channel-length scaling and a four-probe measurement
+discriminate, neither has been done, and both are listed in Sec.~\ref{sec:tests}. Joule heating
+is negligible, since microampere currents at volt-scale bias deposit microwatts into a
+substrate-mounted flake.
+
+The channel is also a lithium-ion conductor read at 2.5~V across 5~$\mu$m, so bias-driven
+lithium redistribution has to be considered, and slowness is not what excludes it. The
+Nernst--Einstein relation applied to the same hop model that fixes the barrier below gives a
+diffusivity of $2\times10^{-10}$~cm$^{2}$/s at room temperature, inside the measured chemical
+diffusivity band of this material, and a drift velocity of 0.4~$\mu$m/s at the naive channel
+field of 5~kV/cm, so an unscreened field would carry lithium millimeters over a single sweep
+from 80 to 300~K, a thousand channel lengths. What excludes it is the boundary condition rather
+than the rate. Nickel electrodes are ion blocking, so lithium moves only until its own space
+charge cancels the applied field, which it does over a Debye length of 0.04~nm within
+microseconds above 240~K and at a total displacement of $3\times10^{-14}$~m; the interior of the
+channel carries no sustained field and no sustained ionic current. Two Schottky contacts in
+series reinforce the conclusion, since most of the applied 2.5~V drops across depletion regions
+tens of nanometers wide rather than across the channel. What is not excluded is a Debye-thin
+lithium space-charge layer at each electrode modulating its barrier, which is the
+history-dependent contact term of Eq.~\eqref{eq:circuit} once more, and a bias-history series,
+the amplitude measured against read voltage and against dwell time at bias, is the direct test.
+Every quantitative statement below is a statement about $\Delta R$ and never about an absolute
+resistivity, which is the limit of what a two-probe experiment establishes.
+
+The anomaly is also selective in preparation. Flakes delithiated slowly, over a three-day soak
+in dilute acid, to $x$ between about 0.37 and 0.48 show it; flakes taken rapidly in stronger
+acid to nearly the same composition do not, and the onset moves upward as $x$
+decreases~\cite{RadhaPerspective2021}. Composition alone therefore does not control the anomaly.
+What distinguishes the preparations is how much time the lithium sublattice spent near
+equilibrium, which is the first hint that the physics is kinetic. The drift of the onset with
+composition is not in conflict with reading it as a clock, because composition reaches the onset
+only through the barrier: the divacancy barrier rises as lithium is removed below half filling,
+and at the sensitivity $d\Ton/d\Ea=393$~K/eV derived in Sec.~\ref{sec:kinetics} the $\pm0.04$~eV
+environment scatter of that barrier~\cite{VanderVen2001b} moves the onset by at most about
+$\pm16$~K across the window in play, with the same spread necessarily widening the rise.
+The batch series of Table~S2 in Ref.~\cite{SM} turns that into a test.
+
+\subsection{The lithium sublattice in these flakes}
+\label{sec:lisublattice}
+
+Nothing below requires the parent phase to be structurally featureless, but everything below
+requires its lithium sublattice to be positionally disordered between 250 and 300~K, and that is
+what the literature reports at these compositions. The row-ordered monoclinic structure occupies
+a narrow field around $x=1/2$, bounded by two-phase plateaus near $x=0.48$ and
+$x=0.55$~\cite{Motohashi2009}; room-temperature single-crystal diffraction returns the
+rhombohedral solid solution at $x=0.48$ and at $x=0.35$, with the monoclinic distortion
+explicitly absent at the first of these and only diffuse superlattice intensity too weak to
+refine~\cite{Takahashi2007}; potentiostatically deintercalated single crystals carry no
+lithium-vacancy superlattice at the electronically stable composition
+$x=0.72$~\cite{OuYang2012}; and polycrystals at $x=0.35$ and
+$x=0.40$ are rhombohedral~\cite{Motohashi2009}. The margin is thin even at exact half filling,
+where the measured order-disorder temperature is only about 60~$^{\circ}$C, low for an oxide
+because charge transfer from lithium to the host screens the lithium-lithium
+interaction~\cite{Reimers1992,VanderVen1998}. Four atomic percent of aluminium on the cobalt site
+removes the hexagonal-to-monoclinic transition altogether~\cite{ErRami2022}, and an
+aluminium-substituted shell reaching only a few hundred angstroms in from the particle surface
+does the same~\cite{Cho2001}, so chemical and site disorder is established as a destroyer of this
+order while the separate question of finite size is not, and the exfoliation route used here is
+known to leave the flakes cobalt deficient~\cite{Pachuta2019}.
+
+The flakes' own material says the same thing directly. Electron diffraction of as-exfoliated
+Li$_{0.37}$CoO$_2$ from this preparation finds only the rhombohedral pattern and its slightly
+sheared monoclinic companion, the lithium-vacancy superstructure appearing only on annealing
+near 200~$^{\circ}$C~\cite{Volkova2021,RadhaPerspective2021}; that anneal runs on a clock
+incommensurable with a 1~K/min ramp and is not a measurement of the collapse temperature, but it
+fixes both the initial state and the direction of the transformation. Independent chemical
+delithiation by the same acid route to $x=0.34$ finds no monoclinic
+distortion~\cite{Basch2014}, and restacking single layers destroys interlayer registry by
+construction~\cite{Cheng2016}. What forms on warming is therefore not the clean row-ordered
+ground state but a partially ordered, domain-textured version of it, which is what the
+sub-$\kB\ln2$ latent entropy of Sec.~\ref{sec:field} requires, what the mazed microstructure of
+Ref.~\cite{ShaoHorn2003} looks like in real space, and what the coexisting ordered and
+disordered regions imaged in Ref.~\cite{Iwaya2013} show.
+
+The sublattice is also mobile in the window where the parent phase has to be disordered.
+$^{7}$Li motional narrowing and muon-spin spectroscopy place the onset of lithium hopping between
+130 and 150~K~\cite{Miyoshi2010,Nakamura2006,Sugiyama2009}, and the one series that covers a
+range of compositions finds it nearly independent of them over $0.46\le
+x\le0.71$~\cite{Miyoshi2010}, so by 250~K the ions are moving freely and whatever order they hold
+is equilibrated rather than frozen. The sister compound makes the point quantitatively and from
+the other side. In Na$_{0.8}$CoO$_2$ the alkali sublattice orders isothermally below an arrest
+temperature, with a measured ordering time constant near 40~min at 200~K that lengthens more than
+tenfold across the 190 to 210~K interval and a quench below 212~K that suppresses the ordering
+entirely~\cite{Schulze2008}. At a different composition and five orders of magnitude higher in
+cooling rate, the vacancy liquid that Na$_x$CoO$_2$ carries above 335~K can be frozen on a
+nanocalorimeter into what its authors call a sodium vacancy glass~\cite{Galeski2016}, so the
+alkali sublattice of this family arrests over a range of protocols rather than at a single
+temperature; and the family's high-temperature alkali order-disorder transition, at 427~K in
+Na$_{0.66}$CoO$_2$, is sluggish enough to have been followed at more than one heating and cooling
+rate~\cite{Ying2008}. Lithium orders more weakly than sodium for the screening reason given
+above, which is why sodium cobaltates show well-defined vacancy superlattices where the lithium
+compound shows none~\cite{Motohashi2009,OuYang2012}.
+
+One alternative slow degree of freedom deserves disposing of explicitly. Delithiated
+Li$_x$CoO$_2$ undergoes a stacking transformation from the O3 sequence to H1-3 and then to O1,
+and that transformation is first order, hysteretic and sluggish, so it would produce the same
+Kissinger phenomenology as an ionic ordering. It is not available here. The H1-3 phase is
+measured near $x=0.12$ and predicted over $0.12$ to $0.19$, O1 appears only at $x=0$, and the O3
+host is stable throughout $x>0.3$~\cite{Motohashi2009,VanderVen1998,Chen2002,Amatucci1996}, so
+flakes at $x=0.37$ to 0.48 sit a factor of three away from the nearest composition at which a
+slab glide is thermodynamically available, and the glide barriers are small only once the
+lithium planes are empty. Were one available it would be unmistakable, collapsing the interslab
+spacing from 4.81 to 4.52~\AA~\cite{Motohashi2009} and doubling the $c$ axis, against the tenth
+of a percent of metric change that lithium ordering produces; that contrast is the content of the two
+diffraction entries of Table~S2 in Ref.~\cite{SM}.
+
+\section{The channel as a two-phase mixture}
+\label{sec:mixture}
+
+Take the channel to contain two phases: a parent phase P, positionally disordered on the
+lithium sublattice as Sec.~\ref{sec:lisublattice} documents, with resistivity
+$\rho_{\mathrm{P}}$, and an ordered phase O in which
+lithium and vacancy order is accompanied by Co$^{3+}$/Co$^{4+}$ charge order, with resistivity
+$\rho_{\mathrm{O}}>\rho_{\mathrm{P}}$. Let $\phi$ be the volume fraction transformed. For any
+microgeometry the mixture conductance lies between the series and parallel bounds on a
+two-component composite~\cite{Wiener1912,Milton2002}, and both bounds give
+\begin{equation}
+  \frac{\Delta R}{R_{\mathrm{P}}} = c\,\phi\,(s-1),
+  \qquad s \equiv \frac{\rho_{\mathrm{O}}}{\rho_{\mathrm{P}}},
+  \label{eq:mixture}
+\end{equation}
+exactly for the series arrangement with $c=1$, and to first order in $\phi(1-1/s)$ for the
+parallel arrangement with $c=1/s$; the derivation and the sense in which $c\in(0,1]$ is a
+geometry factor are given in Eqs.~(S1)--(S4) of Ref.~\cite{SM}. Equation~\eqref{eq:mixture}
+has the two limits it must have, vanishing when nothing has transformed and vanishing when the
+two phases conduct alike.
+
+At the zero-field maximum the excess equals the cooling baseline at the same temperature, so
+$c\,\phi(s-1)\simeq1$. The transformation is therefore not a perturbation. Either a volume
+fraction of order unity converts with a modest resistivity contrast, or a smaller fraction
+converts with a large contrast and is arranged so that the current must cross it. A single
+reconstructed surface layer on a flake tens of nanometers thick cannot generically produce a
+relative excess of order unity unless that layer already carries at least half the total
+conductance, which is precisely what the thickness series of Sec.~\ref{sec:tests} decides. The
+volume reading is carried below as the simpler of the two and without prejudice, and the two are
+not interchangeable. Equation~\eqref{eq:mixture} itself survives either way, with $\phi$ read as
+the transformed fraction of whatever cross-section carries the current, but the per-cobalt
+normalizations of Sec.~\ref{sec:field} do not: if the transformation is confined to the
+surfaces, the magnetization and entropy densities in Eq.~\eqref{eq:cc} refer to surface cobalt
+rather than to all of them, and the thickness dependence of $\Delta R/R_{\mathrm{P}}$ inverts.
+Section~\ref{sec:field} keeps both readings open, and Sec.~\ref{sec:tests} gives the pair of
+measurements that separates them.
+
+Equation~\eqref{eq:mixture} takes $s>1$ from the measurement and does not explain it, but the
+same mixture bounds that produced it also bound how large it can be. In the parallel
+arrangement the excess cannot exceed $\phi/(1-\phi)$ however large the contrast grows, so an
+excess of order unity already demands that at least half the current-carrying cross-section
+transform, and combining that limit with the series one leaves $s$ between about 2 and 5 with
+$\phi$ between 0.25 and 0.75. The contrast the data ask for is therefore modest, which by itself
+excludes reading the resistivity of the ordered phase as activated across the gap the
+calculations of Sec.~\ref{sec:dft} return: half of a 0.7~eV gap would give $s$ between $10^{7}$
+and $10^{13}$ across this temperature window, seven to thirteen orders of magnitude from what is
+measured, and the published traces decay with an apparent activation scale far below any gap in
+the problem~\cite{Crowley2020}. Both phases must therefore conduct through low-energy weight
+that a periodic Kohn-Sham gap does not describe, and $s$ between 2 and 5 says that the ordered
+phase retains between a fifth and a half of the weight the frozen phase carries. The
+first-principles calculations of Sec.~\ref{sec:dft} narrow what can be responsible for even that
+much: the contrast is not a property of which periodic lithium arrangement the ordered phase
+adopts, since those arrangements are indistinguishable in the one quantity that controls
+conduction, and the surviving candidate is the frustration that aperiodic lithium occupation
+imposes on the cobalt charge order of the frozen phase. The kinetic and thermodynamic arguments
+that follow use only the sign of $s-1$ and are unaffected by which microscopic account of its
+size proves correct.
+
+\begin{figure}[!tbp]
+  \centering
+  \figorpending{fig1_mechanism}{\columnwidth}
+  \caption{Schematic of the two-phase free-energy landscape and of the two paths a thermal loop
+  takes through it. The functional is drawn for legibility rather than computed, and no
+  temperature read off it is a result of this work. (a) Free energy per cobalt as a function of
+  the ordering coordinate $\phi$ at three temperatures spanning the first-order boundary
+  $\Tcol=240$~K, on an expanded free-energy scale so that the barrier is visible. Above $\Tcol$
+  the ordered minimum survives as a metastable well up to a spinodal set by the drawn
+  functional, while the disordered parent phase P at $\phi=0$ becomes the global minimum; below
+  $\Tcol$ the ordered phase O at large $\phi$ is the deeper of the two. They are separated by
+  the nucleation barrier $W^{*}=\pi\lambda^{2}/|\Delta f_{A}|$ of Eq.~(S21), which diverges as
+  $T\to\Tcol$ from below and falls as the undercooling grows. (b) Transformed fraction along a
+  complete thermal loop. The cooling branch stays at $\phi=0$ because the region in which a
+  classical nucleus can form and the region in which it can grow do not overlap along the sweep,
+  so the flake reaches base temperature untransformed and carrying the quenched, defect-templated
+  embryos of Sec.~\ref{sec:asymmetry}. The warming branch rises at the kinetic onset $\Ton$,
+  where those embryos grow, holds near complete conversion, and falls at the thermodynamic
+  boundary $\Tcol$ where $\phi_{\mathrm{eq}}$ itself collapses. The onset is a clock reading and
+  moves with sweep rate; the collapse is a phase boundary and does not.}
+  \label{fig:mechanism}
+\end{figure}
+
+\section{Kinetics of the transformation}
+\label{sec:kinetics}
+
+\subsection{Unfreezing on warming}
+
+Ordering requires lithium to move. Write the minimal relaxation of the transformed fraction
+toward its equilibrium value,
+\begin{equation}
+  \frac{d\phi}{dt} = k(T)\,\bigl[\phi_{\mathrm{eq}}(T,B)-\phi\bigr],
+  \qquad
+  k(T) = \nu\,e^{-\Ea/\kB T},
+  \label{eq:master}
+\end{equation}
+with $\nu$ an attempt frequency of order a lithium hop-attempt or phonon frequency, $\Ea$ the
+effective barrier, and $\phi_{\mathrm{eq}}$ the equilibrium fraction, equal to unity below the
+first-order boundary $\Tcol(B)$ and to zero above it. Detailed balance is respected because
+forward and reverse processes share the barrier top, the ratio of their rates being carried
+entirely by $\phi_{\mathrm{eq}}$. Section~\ref{sec:asymmetry} explains why
+Eq.~\eqref{eq:master} with a single effective barrier is legitimate on the warming branch and
+not on the cooling branch.
+
+Start the warming sweep in the quenched state, $\phi=0$ with $\phi_{\mathrm{eq}}=1$, and let
+$T(t)=T_{0}+rt$. Integrating Eq.~\eqref{eq:master} and evaluating the resulting integral by
+Laplace's method at its upper endpoint, which is controlled by the large parameter
+$\Ea/\kB T\simeq31$, gives
+\begin{equation}
+  \phi(T) = 1-e^{-\Theta(T)},
+  \qquad
+  \Theta(T) \simeq \frac{\nu}{r}\,\frac{\kB T^{2}}{\Ea}\,e^{-\Ea/\kB T},
+  \label{eq:theta}
+\end{equation}
+with the subleading correction of order $2\kB T/\Ea$, a few percent here; the steps are
+Eqs.~(S6)--(S11) of Ref.~\cite{SM}. The dimensionless $\Theta$ is the number of successful
+rearrangement attempts accumulated along the sweep, and it scales inversely with the warming
+rate, as it must: sweeping twice as fast halves the time spent at every temperature.
+
+Defining the onset $\Ton$ by the rise midpoint, $\Theta(\Ton)=\ln2$, and solving for the
+barrier gives
+\begin{equation}
+  \Ea = \kB\Ton\,
+  \ln\!\left[\frac{\nu\,\kB\Ton^{2}}{\ln2\;\Ea\,r}\right],
+  \label{eq:Ea}
+\end{equation}
+an implicit relation solved by iteration in two or three steps. With $\Ton=146$~K, an attempt
+frequency $\nu=10^{13}$~s$^{-1}$, and a warming rate $r=1$~K/min, which is a typical
+cryostat value carried here as an explicit unknown because the rate was not recorded,
+Eq.~\eqref{eq:Ea} returns 0.450~eV if the growth velocity is taken to have saturated at the
+onset. It has not saturated there. At 146~K the thermodynamic factor $1-e^{\Delta f/\kB T}$ of
+Eq.~\eqref{eq:kjmarates} still stands at 0.14, and the transformation on the warming branch is
+growth from a fixed areal density $n_{0}$ of seeds rather than the single-exponential relaxation
+of Eq.~\eqref{eq:master}, so the condition that fixes the barrier is $\pi n_{0}
+R_{\mathrm{w}}^{2}(\Ton)=\ln2$, with $R_{\mathrm{w}}$ the radius a growth front sweeps along the
+ramp. Retaining both corrections lowers the barrier to 0.387~eV at $n_{0}=10^{-2}$~nm$^{-2}$,
+the two quantities entering together as
+$\Ea=0.387+0.014\log_{10}(n_{0}/10^{-2}\,\mathrm{nm}^{-2})$~eV, so the barrier has to be quoted
+as one member of a pair and never on its own. Propagating the uncertainties gives
+\begin{equation*}
+  \Ea = 0.39 \pm 0.03\,(\nu) \mp 0.03\,(r) \pm 0.02\,(\Ton) \pm 0.01\,(n_{0})\ \mathrm{eV},
+\end{equation*}
+per decade of attempt frequency, per decade of warming rate, for $\pm7$~K on the onset and per
+decade of seed density, which combine in quadrature to $\Ea=0.39\pm0.05$~eV with a
+corner-to-corner range of 0.27 to 0.46~eV; the accompanying $n_{0}$ runs from $10^{-4}$ to
+$10^{-1}$~nm$^{-2}$, which is seeds 3 to 100~nm apart, or $10^{2}$ to $10^{5}$ of them per
+square micrometer.
+
+That value lands on a mechanism rather than merely inside a band. The divacancy hop that carries
+lithium at intermediate concentration has a computed barrier of 0.41~eV with an
+environment-dependent scatter of $\pm0.04$~eV, and averages 0.36 to 0.39~eV over the composition
+window $x=0.37$ to 0.50 that these flakes occupy, against 0.83~eV for the isolated-vacancy path
+that operates only near full lithiation~\cite{VanderVen2001b}, so the extracted number
+identifies the mechanism and not only the species. The identification should not be pressed
+hard. With $\nu$, $r$ and $n_{0}$ all free, the quoted interval very nearly fills the range of
+plausible lithium barriers in this material, so the coincidence has little discriminating power
+until the warming-rate series of Sec.~\ref{sec:tests} pins the slope. What it does support is
+reading the onset as an ionic clock rather than as an electronic energy scale.
+
+\subsection{The rate shift, and why it is parameter-free}
+
+Because $\Ea$ enters Eq.~\eqref{eq:Ea} only inside a logarithm, the onset is insensitive to the
+prefactors and sensitive to the sweep rate in a way that is easy to measure. Differentiating
+the condition $\Theta(\Ton)=\ln2$ at fixed $\Ea$ and $\nu$ gives
+\begin{equation}
+  \frac{d\Ton}{d\ln r} = \frac{\kB\Ton^{2}}{\Ea+2\kB\Ton},
+  \label{eq:rateshift}
+\end{equation}
+which is the Kissinger relation for a first-order rate process~\cite{Kissinger1957}. At
+$\Ton=146$~K and $\Ea=0.39$~eV this is 4.4~K per $e$-fold. The thermodynamic factor of
+Eq.~\eqref{eq:kjmarates} carries its own temperature dependence at the onset,
+$d\ln f/dT=0.016$~K$^{-1}$ there, which steepens the slope by 7.7~percent, slightly larger than
+the $2\kB T/\Ea$ correction the Laplace evaluation already retains and of the opposite sign; keeping
+both gives 11.1~K per decade of warming rate, and across the barrier range admitted above the
+prediction is $11\pm1$~K per decade.
+
+That prediction holds only if the cooling protocol is held fixed while the warming rate is
+varied. Should the cooldown be slaved to the warm-up, athermal seeding leaves the slope where
+it is, but thermally born seeds would thin as $n_{0}\propto1/|r|$ and steepen the shift to about
+16.5~K per decade, so a series run without that precaution measures a number whose
+interpretation depends on the very seeding mechanism the series is meant to probe. Subject to the
+protocol, the shift is parameter-free in the sense that matters: the same differentiation
+applied to a transformation whose exponent is $\Theta^{n}$ rather than $\Theta$ returns
+Eq.~\eqref{eq:rateshift} unchanged, because the factor $n$ multiplies the rate dependence and
+the temperature dependence alike and cancels, which the algebra of Eq.~(S17) of
+Ref.~\cite{SM} shows and which we have confirmed numerically for $n=1$ and $n=2$. The predicted
+shift therefore does not depend on whether the transformation is growth-limited from quenched
+seeds or governed by continuous nucleation, which makes it the sharpest single test of the whole
+picture.
+
+The width of the rise is not equally insensitive. Growth in two dimensions from a fixed density
+of seeds is quadratic in $\Theta$, and at this barrier such a transformation spans its 10 to 90
+percent range over 7.3~K. The measured width, $19^{+6}_{-9}$~K, sits well above that, and a
+spread of barriers of about $\pm0.045$~eV closes the gap at the sensitivity
+$d\Ton/d\Ea=393$~K/eV, which compositional inhomogeneity of the kind seen across
+batches~\cite{RadhaPerspective2021} would naturally supply. The same spread is what limits how
+far the onset can move with composition, so the width of the rise and the batch dependence of
+the onset are one statement rather than two. Strongly cooperative kinetics, which would sharpen
+the rise, is not required by the data and is mildly disfavored by it.
+
+\subsection{Why the cooling branch is featureless}
+\label{sec:asymmetry}
+
+Equation~\eqref{eq:master} is symmetric under reversal of the sweep and cannot by itself
+produce an anomaly on one branch only, which is the step most discussions of thermal hysteresis
+leave out. Applied to the cooling branch,
+Eq.~\eqref{eq:master} would predict that the sample transforms immediately below $\Tcol$, where
+the relaxation time $\nu^{-1}e^{\Ea/\kB T}$ is at most $3\times10^{-4}$~s across the admitted
+barrier range and shorter than $10^{-4}$~s at its center. The asymmetry
+therefore cannot come from a single rate; it comes from the two-step structure of a real
+first-order transformation, in which a nucleus must appear before anything can grow.
+
+For two-dimensional ordering in the lithium plane the nucleation rate per unit area and the
+growth velocity are
+\begin{equation}
+\begin{aligned}
+  I_{\mathrm{n}} &= I_{0}\,e^{-[\Ea+W^{*}(T)]/\kB T},\\
+  v &= v_{0}\,e^{-\Ea/\kB T}\bigl(1-e^{\Delta f/\kB T}\bigr),
+\end{aligned}
+  \label{eq:kjmarates}
+\end{equation}
+with $\Delta f=f_{\mathrm{O}}-f_{\mathrm{P}}$ the free-energy difference per cobalt, negative
+below $\Tcol$, and $W^{*}(T)=\pi\lambda^{2}/|\Delta f_{A}(T)|$ the barrier to forming a
+critical disk of ordered phase, $\lambda$ being the domain-wall line tension and $\Delta f_{A}$
+the free-energy difference per unit area. The growth velocity vanishes at $\Tcol$, as it must,
+and saturates at $v_{0}e^{-\Ea/\kB T}$ deep in the ordered regime. Feeding
+Eq.~\eqref{eq:kjmarates} into the Kolmogorov--Johnson--Mehl--Avrami construction for the
+transformed fraction~\cite{Kolmogorov1937,Johnson1939,Avrami1939,Avrami1940}, given as Eqs.~(S23)--(S25)
+of Ref.~\cite{SM}, yields the asymmetry directly.
+
+The two factors in Eq.~\eqref{eq:kjmarates} pull in opposite directions, and that opposition is
+the whole argument, but the place where they cross has to be located correctly. Nucleation needs
+a large undercooling, because $W^{*}$ diverges at $\Tcol$ and falls only as the driving force
+grows; growth needs a high temperature, because the mobility factor $e^{-\Ea/\kB T}$ collapses
+on cooling. The nucleation rate, however, carries that same mobility factor, so it is not large
+at the bottom of the sweep: below about half the collapse temperature $I_{\mathrm{n}}$ increases
+monotonically with temperature, and nucleation at base temperature is the least likely event in
+the problem rather than the most. The only window on the cooling branch in which a classical
+nucleus can form at all is the nose of the transformation curve, which for every admissible line
+tension sits between 178 and 211~K. A nucleus born there sweeps between 0.6~nm and 40~$\mu$m
+through the remainder of a 1~K/min cooldown, while the warming branch needs its seeds to grow
+only 1.7 to 20~nm to reach half conversion at 146~K, so a nucleus born at the nose would
+transform the flake on the way down and destroy the very asymmetry it was invoked to explain.
+The requirement is quantitative and nearly independent of the barrier: every seed present at
+base temperature must have been born below $\Ton-9$~K, which is below about 137~K.
+
+Classical nucleation cannot put them there. Forcing the maximum of $I_{\mathrm{n}}$ below 137~K
+demands $W^{*}/\kB T\simeq100$ at that temperature, which suppresses the rate by $e^{-100}$, and
+a scan over the barrier from 0.34 to 0.45~eV, the attempt frequency over three decades, the
+latent entropy from 0.1 to 0.69~$\kB$, the line tension over four decades and the cooling rate
+from 1 to 60~K/min leaves the delivered seed density short of what the warming branch requires
+by five to eight decades at 1~K/min, and by 1.9 decades in the single most favorable corner.
+Heterogeneous nucleation does not repair it, since a potency factor multiplying $W^{*}$ is the
+same one-parameter family as a reduced line tension while its prefactor is smaller by the areal
+density of the sites themselves, so the shortfall grows by about a decade rather than closing.
+Formal closure would need a cooldown of order $10^{3}$~K/min, which is a plunge quench and not a
+cryostat.
+
+What the model needs, and what we adopt as an assumption rather than derive, is that the seeds
+are not thermal at all. Any barrier of the classical form $W^{*}\propto1/(\Tcol-T)$ is excluded
+by the argument above, so the escape has to break the functional form: a quenched population of
+defect-templated embryos, present in the flake before the loop begins, each of which goes
+supercritical when the critical radius $R^{*}=\lambda/|\Delta f_{A}|$ falls to its own size,
+with no mobility factor to pay. At 137~K that radius is 0.7 to 1.3~nm, twenty to eighty cobalt
+sites, and the assumption carries an explicit condition that should be stated with it: the
+embryo distribution must be cut off above about 1.3~nm, since one 2~nm embryo anywhere in the
+flake would go supercritical near 200~K and sweep ten micrometers. Such a cut-off is natural for
+patches templated by the defect population that exfoliation leaves behind, whose sizes are set
+by the defects and not by the temperature, and unnatural for thermal fluctuations of the parent
+phase. On warming, nucleation has in either case already been paid for, the only remaining
+barrier is the one that controls growth, and that is exactly the situation
+Eq.~\eqref{eq:master} describes with a single $\Ea$. This is cold crystallization, and it
+accounts for the branch asymmetry with no electronic ingredient whatever.
+Figure~\ref{fig:mechanism} draws the two paths.
+
+That assumption is the weakest joint in the account, and it converts into two predictions, both
+of them cheap. If the seeds are athermal the
+onset cannot depend on how fast the flake was cooled, whereas thermally born seeds accumulate as
+$n_{0}\propto1/|r_{\mathrm{cool}}|$ and would raise the onset by 5.5~K per decade of cooling
+rate, the faster cooldown delivering the fewer seeds and hence the higher onset; one device and
+one afternoon settle the provenance of the seeds. And because the area swept on the cooling
+branch grows as $|r_{\mathrm{cool}}|^{-3}$, a cooldown slower than about 0.1~K/min must
+transform the flake on the way down and erase the warming anomaly altogether, which is the
+sharpest consequence of the picture that nobody has yet looked for.
+
+The picture also makes an isothermal prediction. With seeds already present, a hold anywhere on
+the warming branch is growth limited and its half-conversion time is the radius the warming
+branch needs divided by the growth velocity, so a hold at 135 to 140~K, six to eleven kelvin
+below the onset, should complete in between three minutes and two hours, centrally between
+fifteen and fifty minutes, and a hold that produces nothing there is genuinely falsifying. A
+hold between 150 and 170~K on the way down is a different measurement, because it probes the
+nucleation rate rather than growth, and the model supplies only a lower bound on its timescale,
+at least one to ten hours at 1~K/min; a null result there excludes nothing. The sister compound
+supplies the empirical anchor the model cannot: in Na$_x$CoO$_2$ the alkali sublattice orders
+isothermally with a measured time constant near 40~min at 200~K, and a quench below 212~K
+suppresses the ordering entirely~\cite{Schulze2008}.
+
+\subsection{The high-temperature collapse}
+
+Above the formation window the ordered phase is in quasiequilibrium, since its relaxation time
+at 240~K is at most $3\times10^{-4}$~s, shorter than any laboratory sweep by seven orders of
+magnitude,
+so the decay of the anomaly is thermodynamic rather than kinetic. Combining Eq.~\eqref{eq:mixture} with the equilibrium
+fraction gives
+\begin{equation}
+  \Delta R(T) = c\,R_{\mathrm{P}}(T)\,\phi_{\mathrm{eq}}(T,B)\,\bigl[s(T,B)-1\bigr],
+  \label{eq:decay}
+\end{equation}
+in which two factors shrink as the temperature rises: the transport contrast $s-1$ of the more
+resistive phase measured against an increasingly conductive parent, and the equilibrium fraction
+itself, which collapses at $\Tcol(B)$ over a range broadened by the spread of local
+compositions. The published traces~\cite{Crowley2020} decay with an apparent activation scale
+far below any gap in the problem, which
+is what Eq.~\eqref{eq:decay} leads one to expect, since it convolves three temperature
+dependences and none of them is an activated conductivity on its own. No gap should be read from
+that slope, and quantifying it calls for the raw traces rather than published figures; still
+less should the gap the calculations of Sec.~\ref{sec:dft} return be read into it, since the
+modest contrast the mixture bounds permit is incompatible with activation across 0.7~eV by seven
+orders of magnitude and more. What is
+interpretable without them is the ordering of the two branches: the 5~T decay is steeper and
+sits higher in temperature, which is what a field that raises $\Tcol$ and increases the contrast
+produces, and which a field acting on the ionic kinetics could not produce, since that would
+have moved the onset.
+
+The collapse places $\Tcol(0)=240\pm10$~K for this flake, and the bulk comparison has to be made
+against the right scale, because bulk Li$_x$CoO$_2$ carries two. The lower one, near 130~K, is
+kinetic: below it the magnetization depends on how fast the crystal was cooled, and it coincides
+with the temperature at which $^{7}$Li motional narrowing and muon-detected diffusion report the
+lithium ions coming to rest~\cite{Miyoshi2010,Nakamura2006,Sugiyama2009}. The upper one, between
+155 and 185~K, is thermodynamic: it is first order and hysteretic, and the differential scanning
+calorimetry that places it at 175 to 185~K returns a latent heat of 82~J/mol at $x=0.50$ and
+272~J/mol at $x=0.67$~\cite{Motohashi2009}.
+Mapped onto that pair, the flake's kinetic edge at 146~K and the bulk kinetic scale agree with
+nothing adjusted, and only the thermodynamic edge is displaced, 240~K against 155 to 185~K. Which
+flake edge is kinetic and which is thermodynamic is therefore not in question; what needs
+explaining is a single shifted phase boundary.
+
+Four candidates for that shift can be ranked, and one that is often offered should be dropped.
+Composition comes first and is the only one already evidenced: the ordered volume fraction in
+bulk crystals shrinks continuously below $x\simeq0.45$ and the ordering field itself is bounded
+near $x=0.48$~\cite{Miyoshi2010,Motohashi2009}, so flakes at $x=0.37$ to 0.48 do not sit on the
+bulk boundary at all but drift toward the $\sqrt3\times\sqrt3$ arrangement at $x=1/3$, whose
+energy scale Sec.~\ref{sec:dft} computes separately. Second is the cobalt-site disorder that the
+exfoliation route introduces, which is a mechanism and not an analogy: exfoliation removes
+cobalt along with lithium~\cite{Pachuta2019}, and four atomic percent of aluminium on the cobalt
+site is enough to remove the hexagonal-to-monoclinic transition of the bulk
+entirely~\cite{ErRami2022}. Third is surface stabilization of the order, for which there
+is independent precedent, two groups having concluded that the 155 to 185~K anomaly of
+chemically delithiated material is a surface-stabilized phase of significant thermal hysteresis
+and aging character, absent from homogeneous potentiostatic single
+crystals~\cite{Hertz2008,OuYang2012}. Proton co-intercalation from the acid route is fourth,
+with evidence on both sides, proton insertion at deep delithiation having been measured by
+prompt gamma activation analysis~\cite{Choi2006} while hydrogen evolution during acid
+delithiation argues against an exchange~\cite{Takahashi2007}, and no proton content has been
+measured in these flakes; strain we keep only as a formal possibility, a flake lying unclamped
+on SiO$_2$ having none measured. Dimensional confinement, on the other hand, carries the wrong
+sign and should not be listed: finite-size scaling depresses an ordering temperature rather than
+raising it by 40 percent, so what can help is a specific surface enhancement, which is the
+third candidate, and not confinement itself.
+
+The model separates the two edges by their rate dependence rather than by their temperature.
+$\Ton$ is fixed by $\Ea$, $\nu$, $r$ and the seed density $n_{0}$, and composition reaches it
+only through $\Ea$, so a batch series across $x=0.37$ to 0.48 should move it by at most about
+$\pm16$~K and should widen its rise by the same amount, while $\Tcol$ tracks the phase boundary
+and may move by tens of kelvin. A batch series therefore moves the two edges by very different
+amounts, and a warming-rate series moves only one of them at all.
+
+\begin{figure}[!tbp]
+  \centering
+  \figorpending{fig2_kinetics}{\columnwidth}
+  \caption{Model resistance loops from the kinetic equations, set against the published traces.
+  (a) Excess $\Delta R/R_{\mathrm{P}}$ obtained by carrying the growth velocity of
+  Eq.~\eqref{eq:kjmarates} through the transformed fraction along a
+  cooling and a warming sweep with $\Ea=0.39$~eV, $\nu=10^{13}$~s$^{-1}$ and $\Tcol=240$~K, and
+  converting to resistance through Eqs.~\eqref{eq:mixture} and \eqref{eq:decay}, at three
+  warming rates. Overlaid is the measured loop of the $x=0.48$ device of Ref.~\cite{Crowley2020},
+  digitized from its Fig.~S5 and expressed in the same variable,
+  $(R_{\mathrm{warm}}-R_{\mathrm{cool}})/R_{\mathrm{cool}}$, so that the cooling branch is the
+  zero of the plot by construction; nothing is fitted, and the model curve carries only the
+  parameters listed above. The 5~T trace of the same figure is drawn for reference and is not
+  described by a zero-field model. The model cooling branch, which is common to all three rates
+  and is therefore drawn once, stays flat for as long
+  as the sweep outruns the nose of Sec.~\ref{sec:asymmetry}, and the bar marks the 10 to 90
+  percent rise width of the 1~K/min warming curve. The model peak sits somewhat above the
+  $c\phi(s-1)\simeq1$ of Sec.~\ref{sec:mixture} because it is integrated at fixed contrast rather
+  than normalized to that condition. (b) Rise midpoints against $\log_{10}r$ over more than two
+  decades of warming rate at fixed cooling protocol. The line is Eq.~\eqref{eq:rateshift} with
+  the thermodynamic factor retained, giving 11~K per decade at $\Ea=0.39$~eV and containing no
+  parameter beyond the barrier already fixed by the onset itself; the collapse temperature, being
+  thermodynamic, does not move at all. Separating these two slopes is the measurement that
+  distinguishes a kinetic onset from an equilibrium one.}
+  \label{fig:kinetics}
+\end{figure}
+
+\section{The magnetic field and the ordered phase}
+\label{sec:field}
+
+\subsection{What the shifted collapse implies}
+
+Treat the collapse as a first-order line in the temperature-field plane, defined by
+$\Delta f(\Tcol,B)=0$. Equating the differentials of the two free energies along that line,
+with entropy and magnetization per cobalt, gives the Clausius--Clapeyron relation in its
+magnetic form,
+\begin{equation}
+  \frac{d\Tcol}{dB} = \frac{\Delta M(B)}{\Delta S},
+  \qquad
+  \begin{aligned}
+    \Delta M &\equiv M_{\mathrm{O}}-M_{\mathrm{P}},\\
+    \Delta S &\equiv S_{\mathrm{P}}-S_{\mathrm{O}},
+  \end{aligned}
+  \label{eq:cc}
+\end{equation}
+derived as Eqs.~(S30)--(S32) of Ref.~\cite{SM}. The latent entropy $\Delta S$ is positive
+because the ordered phase is the one with fewer configurations available to it, so an upward
+shift of the collapse in field requires $\Delta M>0$: the ordered, more resistive phase would
+then be the one carrying the larger magnetization. That is the opposite of what happens in
+the manganites, where a field melts charge order because the competing metallic phase is the
+ferromagnet~\cite{Kuwahara1995,Tokura2006}; here the field stabilizes the resistive phase, so
+the moments have to live inside it.
+
+The measured shift, $\Delta\Tcol/\Delta B=1.4\pm1.4$~K/T, converts with
+$\muBs/\kB=0.672$~K/T into
+\begin{equation}
+  \Delta M = (2.1\pm2.1)\,\frac{\Delta S}{\kB}\;\muBs\ \text{per Co}.
+  \label{eq:dM}
+\end{equation}
+The error bar is dominated by the uncertainty in reading the collapse from published figures,
+and at one standard deviation the shift is consistent with zero, so its sign is not yet
+established. The consequences drawn below therefore follow from a shift that a field series has
+still to confirm. What the present data do establish robustly is
+the other field fact, that 5~T roughly doubles the amplitude of the excess while leaving the
+cooling baseline within a few percent of itself, and it is the series at 1, 2, 3, 5, 7 and 9~T
+listed in Sec.~\ref{sec:tests} that turns the chain from conditional into quantitative.
+
+Equation~\eqref{eq:dM} constrains a ratio of densities. Both $\Delta M$ and $\Delta S$ are per
+cobalt of the phase that transforms, so what the measured slope means depends on where the
+transformation lives, and the two possibilities differ by two orders of magnitude. Read as a
+bulk transformation, the ceiling is set by the Co$^{4+}$ count: at $x\simeq1/2$ half the cobalt
+sites are Co$^{4+}$ in a low-spin $d^{5}$ configuration carrying \comomentRow~$\muBs$ apiece, as
+Sec.~\ref{sec:dft} confirms, so the largest magnetization available is \msatRow~$\muBs$ per Co
+with every moment aligned, and Eq.~\eqref{eq:dM} bounds the latent entropy at
+$\Delta S\lesssim\dSbound\,\kB$ per Co, about a third of the $\kB\ln2$ that complete lithium
+order and disorder at half filling would release. That reading carries a difficulty of its own,
+which Sec.~\ref{sec:dft} sets out and does not resolve: the computed bulk ground states carry no
+net moment, so the ceiling is never approached and a purely bulk account of the field shift is
+not available in the form the calculation returns.
+
+Read instead as a transformation whose magnetization resides in the surface electron gas, the
+same slope means something different. A flake 20 to 60~nm thick holds forty to a hundred and
+twenty CoO$_2$ layers between its two surfaces, so a magnetization of order one Bohr magneton
+per surface cobalt is about a hundredth of that per cobalt of the whole sample, and the latent
+entropy per bulk cobalt implied by Eq.~\eqref{eq:dM} falls by the same factor. The bulk reading
+predicts a latent entropy of order a tenth of $\kB$ per cobalt, which is a latent heat
+$T\Delta S=2.1$~meV per cobalt, 0.20~kJ per mole of cobalt, or 2.1~J/g, some twenty times a
+routine differential-scanning-calorimetry sensitivity of 0.1~J/g and of the same order as the 82
+and 272~J/mol measured on bulk crystals at $x=0.50$ and $x=0.67$~\cite{Motohashi2009}; the
+surface reading predicts 0.02~J/g, five times below that sensitivity. Since the two also make
+opposite predictions for how the excess scales with thickness, calorimetry and the thickness
+series form a discriminating pair rather than two separate checks, and Sec.~\ref{sec:tests}
+states them that way.
+
+Neither reading allows the parent metal to be the source. Pauli paramagnetism cannot supply a
+magnetization of this size, and the magnetic phase diagram of bulk Li$_x$CoO$_2$ places the
+boundary between a Pauli-paramagnetic and a Curie-Weiss metal between $x=0.35$ and
+$x=0.40$~\cite{Motohashi2009}, overlapping the composition window in which the anomaly appears.
+The transformation is in either case a partial ordering, since the entropy it releases is at
+most about a third of the $\kB\ln2$ that complete lithium order and disorder at half filling
+would give. Two nearby statements should be kept apart from that one. The broadened rise and the
+compositional spread of the batches are a width and not an entropy, and the near-degenerate
+manifold of stripe variants found in Sec.~\ref{sec:dft} is sub-extensive, accounting for the
+domain texture of the ordered phase and for no part of the entropy deficit.
+
+\subsection{How many moments the field addresses}
+
+The magnetization inferred from Eq.~\eqref{eq:dM} cannot be delivered by independent spins. At
+5~T the Zeeman energy of a single $g=2$ moment is $g\muBs B=0.579$~meV, while the thermal energy
+over the window in which the field effect operates runs from $\kB T=12.9$~meV at 150~K to
+20.7~meV at 240~K, so a single spin is outmatched by a factor between 22 and 36 and is polarized
+to about two percent. What follows from that is a question of polarization rather than of energy
+balance, since Eq.~\eqref{eq:cc} has already exhausted the free-energy comparison. A block of
+$N$ moments locked parallel by exchange polarizes as $m=\rho\tanh(N\muBs B/\kB T)$, with
+$\rho=\msatRow~\muBs$ per cobalt the moment density that Sec.~\ref{sec:dft} computes, and
+requiring it to reach the magnetization $2.1\,\sigma$ that Eq.~\eqref{eq:dM} demands of a latent
+entropy $\sigma=\Delta S/\kB$ per cobalt gives
+\begin{equation}
+  N \simeq \frac{\kB T}{\muBs B}\,
+  \operatorname{arctanh}\!\left(\frac{2.1\,\sigma}{\rho}\right),
+  \label{eq:headcount}
+\end{equation}
+which at 5~T and 150~K, where the ordered phase forms, returns $N\simeq10$ for $\sigma=0.05$ and
+$N\simeq21$ for $\sigma=0.10$, rising to 16 and 34 at the 240~K collapse. The number to carry
+forward is that the field-coupled object holds of order ten aligned moments rather than one,
+with a range of five to twenty-five. The ceiling $\sigma\lesssim\dSbound$ used above is
+not an independent fact about the material but the $N\to\infty$ limit of
+Eq.~\eqref{eq:headcount}, the point at which the block is fully polarized and further moments
+buy nothing, so the two statements are two ends of one curve rather than two findings that
+corroborate each other. Two structures in this material could supply such a block. One is a
+ferromagnetically correlated Co$^{4+}$ domain inside the charge-ordered phase, which
+Eq.~\eqref{eq:headcount} sizes at a few lattice constants across. The other is the
+spin-polarized two-dimensional electron gas predicted to form on CoO$_2$-terminated surfaces of
+this material~\cite{Radha2021}, on whose surface angle-resolved photoemission independently finds
+an electronic reconstruction of the kind a polar termination
+demands~\cite{Okamoto2017}, a native reservoir of polarizable moments in a band whose
+exchange splitting is already built in, load-bearing here for its spin physics rather than for
+the hopping scale it also supplies. Only the second survives Sec.~\ref{sec:dft}, which finds the
+bulk Co$^{4+}$ moments held antiparallel by an exchange a hundred times the 5~T Zeeman energy.
+
+\subsection{Which coupling, and how to tell}
+
+The field roughly doubles the anomaly while moving the cooling baseline by a few percent and
+leaving the onset where it was. Read through Eq.~\eqref{eq:decay}, with $\phi$ on the rising
+side field-independent and $R_{\mathrm{P}}$ nearly so, the doubling requires the transport
+contrast of the ordered phase itself to double,
+\begin{equation}
+  \frac{s(T,5\,\mathrm{T})-1}{s(T,0)-1} \simeq 1.9\ \text{to}\ 2.1 ,
+  \label{eq:contrast}
+\end{equation}
+over and above the upward shift of $\Tcol$ already counted. Doubling an activated conductivity
+ratio asks for an extra $\kB T\ln2$ of transport gap, which is 9~meV at 150~K and 11~meV at
+183~K, a laboratory-scale energy and not an implausible one for a field acting on a correlated
+domain of order ten moments.
+
+Four mechanisms can produce it, and they are distinguished by their field dependence and
+anisotropy rather than by their size. A field that enhances the order parameter or aligns
+domains through their net moment gives a Brillouin-like growth of the excess that saturates,
+together with a nearly isotropic response. A field that stabilizes the ordered phase through an
+induced moment contributes $-\tfrac12\Delta\chi B^{2}$ to the free-energy difference and
+therefore grows quadratically without saturating at laboratory fields. A field acting on a
+parent network near its percolation threshold~\cite{Kirkpatrick1973} amplifies a small change
+in connectivity nonlinearly, and predicts threshold behavior, sensitivity to the sweep
+protocol, and large device-to-device scatter. Any mechanism tied to flux through carrier
+orbits carries a $\cos\theta$ dependence on field angle, which the spin mechanisms do not. Only
+perpendicular-field data exist, so the angular test has never been performed. A field series at
+1, 2, 3, 5, 7, and 9~T under a fixed thermal protocol, together with one in-plane run,
+separates all four with no adjustable parameters, and is the single most informative
+measurement available on this system.
+
+\begin{figure*}[!t]
+  \centering
+  \figorpending{fig3_field}{\textwidth}
+  \caption{Field thermodynamics of the ordered phase and the measurements that identify the
+  coupling. (a) Clausius--Clapeyron construction of Eq.~\eqref{eq:cc}. The collapse line
+  $\Tcol(B)$ tilts upward with slope $\Delta M/\Delta S$, separating the ordered phase O, which
+  carries the larger magnetization, from the parent phase P; the contours are lines of constant
+  $\Delta M$ per cobalt at a latent entropy of $0.2\,\kB$ per cobalt, near the ceiling
+  Eq.~(S35) permits, and the measured shift, whose one-standard-deviation interval includes
+  zero, selects a band of them rather than one.
+  (b) The polarization construction of Eq.~\eqref{eq:headcount}. The magnetization
+  $\rho\tanh(N\muBs B/\kB T)$ of a block of $N$ exchange-locked moments at 5~T and 150~K is drawn
+  against $N$, with the moment density $\rho=\msatRow~\muBs$ per cobalt as its ceiling; the
+  horizontal lines are the magnetizations $2.1\,\sigma$ that Eq.~\eqref{eq:dM} requires at latent
+  entropies of $0.05$ and $0.10\,\kB$ per cobalt, and they are crossed at $N\simeq10$ and
+  $N\simeq21$; the dashed curve repeats the construction at 183~K, the upper end of the
+  anomaly, where thermal disordering pushes the same two crossings out to $N\simeq12$ and
+  $N\simeq26$. The ceiling is approached only as $N\to\infty$, which is the $\dSbound\,\kB$ bound
+  of Eq.~(S35) seen from the other end rather than an independent statement. (c) The predicted
+  shapes of the excess amplitude against field, all normalized to agree at the one field that has
+  been measured so that only the shape distinguishes them: Brillouin curves for aligned permanent
+  moments at $N=20$ and $N=100$, a quadratic curve for an induced moment, and a threshold curve
+  for spin-dependent percolation. Saturation is weak at the smaller block size, the excess at 9~T
+  exceeding that at 5~T by a factor 1.64 against the linear value 1.80, while $N=100$ gives 1.05.
+  The shaded band is the precision the proposed series would have to reach: at $\pm4.5$~percent,
+  which is $\pm3.2$~percent on each measured amplitude, all four cases separate at two standard
+  deviations, whereas at a more realistic $\pm10$~percent the series still separates $N=20$ from
+  $N=100$ and from the quadratic case but not from the linear limit, so resolving weak saturation
+  is the demanding part of the measurement.}
+  \label{fig:field}
+\end{figure*}
+
+\section{Microscopic structure from first principles}
+\label{sec:dft}
+
+The model of Secs.~\ref{sec:mixture} to \ref{sec:field} rests on three microscopic statements,
+each a well-posed density-functional question. There must be a lithium ordering transition at
+all, with an energy scale that puts its boundary near the observed collapse. The ordered phase
+must carry Co$^{4+}$ local moments, since Eq.~\eqref{eq:dM} asks it for a magnetization and
+Eq.~\eqref{eq:headcount} asks that the magnetization be collective. And it must be the more
+resistive of the two phases, which is the one point where Eq.~\eqref{eq:mixture} touches the
+electronic structure. The first two statements come back confirmed, the third does not, and the
+way in which it fails changes what the transport model is allowed to claim.
+
+The calculations are spin-polarized, in the generalized gradient
+approximation~\cite{PBE1996} with projector augmented-wave datasets~\cite{Blochl1994} and a
+Hubbard $U$ on the cobalt $3d$
+shell~\cite{Anisimov1991,Dudarev1998,Cococcioni2005,Zhou2004,Wang2006}, as implemented in
+\textsc{Quantum ESPRESSO}~\cite{Giannozzi2009,Giannozzi2017}, with Marzari--Vanderbilt
+smearing~\cite{Marzari1999} and plane-wave cutoffs of 60 and 480~Ry. Three cells are treated:
+the row-ordered $x=1/2$ structure of Reimers and Dahn~\cite{Reimers1992,VanderVen1998} with its
+antiferromagnetic supercells; a $4\times2$ supercell of eight formula units in which the row
+arrangement is compared at fixed composition against a zigzag and a clumped lithium
+arrangement; and the $\sqrt3\times\sqrt3$ ordered structure at $x=1/3$, the composition toward
+which the slowly delithiated batches move. Convergence settings, cell geometries, the magnetic
+seeding protocol, and the caveats that attach to each number are in Sec.~S5 of
+Ref.~\cite{SM}. Table~\ref{tab:dft} collects the results and Fig.~\ref{fig:dftu} displays them.
+
+\begin{table}[!tbp]
+  \caption{Density-functional results, at $U=\Uused$~eV on the cobalt $3d$ shell unless a row
+  states otherwise. Magnetic energies are per cobalt relative to the ground state of the same
+  cell, lithium-arrangement energies per formula unit relative to the row arrangement, and
+  magnetic energy differences between alignments per Co$^{4+}$; no spin-Hamiltonian convention
+  is used anywhere, so the last are plain energy differences and carry their signs. Every value
+  in this table enters the text through a single macro defined in \texttt{dft\_numbers.tex}. The
+  three blocks come from separate campaigns and are not directly comparable: the first is
+  relaxed with the magnetic order converged, whereas the motif block is at fixed ideal geometry
+  with ferromagnetic alignment imposed, which is why the row structure appears there with a
+  slightly different gap. Section~S5 of Ref.~\cite{SM} carries the caveats, of which the most
+  important is that $U$ is fixed by the requirement that the low-spin state be reproduced.}
+  \label{tab:dft}
+  \renewcommand{\arraystretch}{1.14}
+  \begin{ruledtabular}
+  \begin{tabular}{lr}
+    Quantity & Value \\
+    \colrule
+    \multicolumn{2}{l}{\textit{Row-ordered} $x=1/2$, \textit{AFM ground state}}\\
+    Co$^{4+}$ / Co$^{3+}$ local moment ($\muBs$) & \comomentRow{} / \comomentThreeRow \\
+    $d$-occupation difference ($e$)              & \dnRow \\
+    Co-O bond-length contrast (\AA)              & \bondRow \\
+    Gap, AFM / FM (eV)                           & \gapRow{} / \gapRowFM \\
+    $E_{\mathrm{FM}}-E_{\mathrm{AFM}}$ (meV/Co)  & $+$\efmafmRow \\
+    $E_{\mathrm{NM}}-E_{\mathrm{AFM}}$ (meV/Co)  & $+$\enmRow \\
+    $E_{\mathrm{AFM}}-E_{\mathrm{FM}}$, intra-row & \eafmIntra \\
+    $E_{\mathrm{AFM}}-E_{\mathrm{FM}}$, inter-row & \eafmInter \\
+    \quad both in meV per Co$^{4+}$              & \\
+    \colrule
+    \multicolumn{2}{l}{\textit{Lithium motifs at} $x=1/2$, \textit{fixed geometry, FM imposed}}\\
+    $E_{\mathrm{zigzag}}-E_{\mathrm{row}}$       & \deltaEZigzag{} / \deltaEZigzagUzero \\
+    $E_{\mathrm{clumped}}-E_{\mathrm{row}}$      & $+$\deltaEClumped{} / $+$\deltaEClumpedUzero \\
+    \quad meV per f.u., $U=\Uused$~/~$0$         & \\
+    Gap, row / zigzag / clumped (eV)             & \gapRowMotif/\gapZigzag/\gapClumped \\
+    $D_{\mathrm{clumped}}/D_{\mathrm{row}}$ at $U=0$ & \dosContrast \\
+    \colrule
+    \multicolumn{2}{l}{$\sqrt3\times\sqrt3$ $x=1/3$, \textit{ferrimagnetic ground state}}\\
+    Co$^{4+}$ local moment ($\muBs$)             & \comomentXthird \\
+    $d$-occupation difference ($e$)              & \dnXthird \\
+    Co-O bond-length contrast (\AA)              & \bondXthird \\
+    Gap (eV)                                     & \gapXthird \\
+    $E_{\mathrm{FM}}-E_{\mathrm{ferri}}$ (meV/Co) & $+$\efmafmXthird \\
+    $E_{\mathrm{NM}}-E_{\mathrm{ferri}}$ (meV/Co) & $+$\enmXthird \\
+    \quad the same per cell (meV)                & $+$\splitXthird \\
+    $D_{\mathrm{NM}}(E_{F})$ (eV$^{-1}$/cell)    & \dosXthirdNM \\
+  \end{tabular}
+  \end{ruledtabular}
+\end{table}
+
+\begin{figure}[!tbp]
+  \centering
+  \figorpending{fig4_dftu}{\columnwidth}
+  \caption{Density-functional results for the ordered phases, at $U=\Uused$~eV on the cobalt
+  $3d$ shell. (a) Energies of the magnetic configurations, per cobalt and relative to the ground
+  state of each composition. At $x=1/2$ the antiferromagnetic alignment within a Co$^{4+}$ row
+  is lowest, the ferromagnetic alignment lies \efmafmRow~meV per cobalt above it, and the
+  nonmagnetic solution lies \enmRow~meV above; at $x=1/3$ the ferrimagnetic arrangement is
+  lowest, with the ferromagnetic one \efmafmXthird~meV and the nonmagnetic one \enmXthird~meV
+  per cobalt above. (b) Energies of the three lithium motifs at $x=1/2$, per formula unit and
+  relative to the row arrangement, filled markers at $U=\Uused$~eV and open markers at $U=0$.
+  Clumping the stripes costs \deltaEClumped~meV per formula unit, above the reference line at
+  $\kB\times240$~K${}=20.7$~meV, while the zigzag variant changes sign between the two values of
+  $U$ and is therefore degenerate with the row arrangement. (c) Gap and Co$^{4+}$ moment for each
+  phase, \gapRow~eV with \comomentRow~$\muBs$ at $x=1/2$ and \gapXthird~eV with
+  \comomentXthird~$\muBs$ at $x=1/3$, against the nonmagnetic solutions, which have no gap at
+  all; the panel prints the gaps to three decimals where the text rounds them to two. Moment, gap and charge order appear together, and removing the moment removes the other
+  two.}
+  \label{fig:dftu}
+\end{figure}
+
+The Hubbard parameter is calibrated rather than chosen. At $U=2.5$~eV the moment settles on the
+lithium-rich cobalt instead of the lithium-poor one, inverting the charge order, and the
+$x=1/3$ cell is metallic; at $U=5.5$~eV the Co$^{4+}$ site is driven high spin, with a moment
+above $2\,\muBs$, and the $x=1/2$ cell is metallic again. Only near $U=\Uused$~eV does the
+calculation reproduce the low-spin $S=1/2$ Co$^{4+}$ and $S=0$ Co$^{3+}$ configuration that the
+chemistry of this material requires. That one requirement fixes the parameter, and every number
+quoted below is quoted at that value and is meaningless without it. The Hubbard term remains a
+stand-in for the screened exchange that a quasiparticle self-consistent $GW$ treatment with
+electron-hole interactions supplies directly for the stoichiometric
+parent~\cite{Radha2021c,Radha2023erratum}, so the gaps reported below label the charge-ordered
+magnetic state and are not offered as predictions of a gap magnitude.
+
+\subsection{Charge order, moment, and gap arrive together}
+
+In every cell examined, the charge disproportionation, the local moment, and the gap appear
+together or not at all. At $x=1/2$ the ground state is \magorderRow, carrying
+\comomentRow~$\muBs$ on the lithium-poor cobalt against \comomentThreeRow~$\muBs$ on the
+lithium-rich one, a $d$-occupation difference of \dnRow~electrons, and a gap of \gapRow~eV. The
+moment is well determined, running from \comomentRowRange~$\muBs$ across the ferromagnetic and
+both antiferromagnetic configurations, so nothing below turns on which of them is chosen. Aligning the same moments ferromagnetically costs \efmafmRow~meV per cobalt and
+narrows the gap to \gapRowFM~eV, and removing them altogether costs \enmRow~meV per cobalt and
+closes the gap: the nonmagnetic solution of the same cell is a metal. At $x=1/3$ the
+$\sqrt3\times\sqrt3$ structure repeats the pattern, its ground state \magorderXthird, with the
+cobalt beneath the lithium nonmagnetic and the other two carrying $\pm\,$\comomentXthird~$\muBs$, a $d$-occupation
+difference of \dnXthird~electrons, and a gap of \gapXthird~eV, while its nonmagnetic solution is
+a good metal with \dosXthirdNM~states per eV per cell at the Fermi level lying \enmXthird~meV
+per cobalt higher. Forcing the moment to vanish closes the gap and erases the charge order at
+one stroke. The phase the transport model calls O is therefore a magnetic semiconductor and not
+a band insulator, and its three signatures are one transition seen from three directions.
+
+The moment is the one the thermodynamics asked for. Values of \comomentRow{} and
+\comomentXthird~$\muBs$ are the low-spin $S=1/2$ result for a $d^{5}$ cobalt in an octahedral
+field, and the companion sites sit within \comomentThreeRow~$\muBs$ of zero, which is the $S=0$
+$d^{6}$ value. Half the cobalt sites at $x=1/2$ thus carry a full spin one-half, so the ceiling of
+\msatRow~$\muBs$ per cobalt that Eq.~(S35) uses to bound the latent entropy of a bulk
+transformation is a computed quantity rather than an estimate.
+
+The charge order is electronic and not structural. The site-mean Co-O bond lengths of the two
+cobalt sites differ by \bondRow~\AA{} at $x=1/2$ and \bondXthird~\AA{} at $x=1/3$ while their
+$d$~occupations differ by \dnRow{} and \dnXthird~electrons. Individual bonds are not that
+uniform, spanning \bondSpanRow~\AA{} within a single octahedron, so what is nearly absent is the
+contrast between the two cobalt sites rather than displacement in general; a displacive or
+Jahn-Teller transition carrying the same electronic contrast would separate the two sites by
+tens of picometers. That difference is measurable, and it becomes the spectroscopic
+entry of Table~S2 in Ref.~\cite{SM}: diffraction and phonon spectroscopy should see almost nothing
+across this transformation while tunneling spectroscopy sees a hard gap open.
+
+\subsection{The energy scale of the ordering}
+
+Breaking the lithium stripes into clumps costs \deltaEClumped~meV per formula unit at
+$U=\Uused$~eV and \deltaEClumpedUzero~meV per formula unit at $U=0$, both with ferromagnetic
+alignment imposed and at fixed ideal geometry. That is the same order as the thermal scale of
+the collapse, $\kB$ times 240~K being 20.7~meV, so a configurational excitation of a few tens of
+meV per formula unit places the order-disorder boundary in the few-hundred-kelvin range with
+nothing adjusted, and it is this energy that supplies the driving force $\Delta f$ of
+Eq.~\eqref{eq:kjmarates} and the nucleation barrier of Eq.~(S21). The clumped pattern is a
+clustering proxy and not a disordered state, so the comparison fixes an order of magnitude
+rather than a transition temperature.
+
+Rerouting a stripe, by contrast, costs almost nothing at all. The zigzag arrangement lies \deltaEZigzag~meV per
+formula unit from the row arrangement at $U=\Uused$~eV and \deltaEZigzagUzero~meV per formula
+unit at $U=0$, so the sign reverses with the Hubbard parameter and the two motifs are degenerate
+within the resolution of the method. The ordered phase is accordingly not one arrangement but a
+manifold of nearly degenerate stripe variants, which is what makes it domain textured. That
+degeneracy is not an entropy reservoir: $\kB\ln3$ per domain amounts to $2\times10^{-4}\,\kB$
+per cobalt for domains 20~nm across, four hundred times below the entropy scale the field
+measurement works with. What the field measurement
+states is the separate and stronger proposition that the transformation converts only part of
+the material, its latent entropy bounded by Eq.~(S35) at $\dSbound\,\kB$ per cobalt under the
+bulk reading of Sec.~\ref{sec:field}, which is about a third of the $\kB\ln2$ that complete
+lithium order and disorder at half filling would release.
+
+\subsection{What the calculations exclude}
+
+There are two things the mechanism might have been and is not.
+
+The first is that the resistive contrast comes from which periodic lithium motif is present, and
+the calculations do not support it. The comparison has to be made in the quantity that controls
+conduction, and since transport here is not activated across a gap, which Sec.~\ref{sec:mixture}
+establishes from the size of the measured excess alone, that quantity is the density of states
+at the Fermi level. At $U=0$, where all three arrangements are metals, their densities of states
+at the Fermi level agree to within one percent, the clumped-to-row ratio being \dosContrast{} on
+an absolute value of \dosRowUzero~states per eV per cell, so the three motifs are
+indistinguishable in the one number that could have produced $s>1$. At $U=\Uused$~eV all three
+are instead charge-ordered insulators, with gaps of \gapRowMotif, \gapZigzag{} and
+\gapClumped~eV for the row, zigzag and clumped patterns and a density of states at the Fermi
+level that is numerically zero in each; that spread of gaps is not a transport statement, since
+a gap-activated channel would give the contrasts of $10^{7}$ and larger that the measurement
+excludes, and what the three insulating solutions establish instead is that the charge-ordered
+character of the ordered phase is itself motif independent. Independent evidence points the same
+way, bulk Li$_{0.5}$CoO$_2$ remaining metallic through its own ordering transition, its in-plane
+resistivity staying between 0.75 and 0.95~m$\Omega$~cm from 4.2 to 300~K with no metal-insulator
+transition anywhere~\cite{OuYang2012}. Whatever makes the ordered phase more resistive, it is not
+the lithium pattern acting on the cobalt bands, because the cobalt charge order forms equally
+well on top of any of these patterns and is indifferent to which. The factor $s>1$ in
+Eq.~\eqref{eq:mixture} cannot be assigned to a motif.
+
+A different mechanism survives, and these calculations do not test it. All three arrangements
+are periodic, so a commensurate cobalt charge order is available in every one of them, whereas
+genuine lithium disorder is not representable in a cell this size. The natural reading is that
+in the kinetically frozen phase the aperiodic lithium occupation frustrates the commensurate
+cobalt charge order, leaving weight inside the gap and a conductivity higher than the cleanly
+ordered phase achieves, so that the transformation raises the resistance by removing frustration
+rather than by opening a gap where none existed. That reading is a hypothesis and not a
+result, and the price of routing the exclusion through the metallic densities of states is that
+the calculations then supply no estimate of $s$ at all: the contrast of 2 to 5 is read off the
+measurement, and the fifth to a half of the low-energy weight that it says the ordered phase
+retains is the target the quasirandom calculation has to hit. The calculation that decides it is
+a special quasirandom structure large enough to carry an aperiodic lithium occupation at fixed
+$x=1/2$, with its density of states at the Fermi level compared against the row-ordered cell at
+the same $U$; the $4\times2$ cell used here cannot. What the gap the calculations do return is
+good for is labelling the charge-ordered magnetic state, and not for setting a transport scale.
+
+The second exclusion concerns the field, and it turns on a sign rather than on a magnitude. We
+report the magnetic energetics as plain energy differences per Co$^{4+}$, so that no
+spin-Hamiltonian convention is smuggled in. Within a Co$^{4+}$ row at $x=1/2$ the
+antiferromagnetic alignment lies below the ferromagnetic one,
+$E_{\mathrm{AFM}}-E_{\mathrm{FM}}=\eafmIntra$~meV per Co$^{4+}$; between rows the sign reverses,
+\eafmInter~meV per Co$^{4+}$; and at $x=1/3$ the ferrimagnetic ground state lies \splitXthird~meV
+per cell below the ferromagnetic one. The dominant coupling is antiferromagnetic at both
+compositions, and both computed ground states therefore carry zero net moment.
+
+A large exchange is not in itself an obstacle to a field response; it is the very thing that
+would hold a cluster of twenty moments rigidly parallel so that a weak field could turn the
+cluster whole, and the ferromagnetically correlated Co$^{4+}$ domain of Sec.~\ref{sec:field}
+would be helped by it. What excludes the bulk sublattice is that its moments are not parallel:
+Eq.~\eqref{eq:cc} asks the ordered phase for more magnetization than the parent, and an
+antiferromagnet offers none. The magnitude adds only the separate statement that 5~T, whose
+Zeeman energy is 0.58~meV against couplings near \jintraMag~meV, cannot rearrange that spin
+structure into one that would.
+
+A ferromagnetically polarized reservoir is therefore required, and the most natural candidate in
+this material is the spin-polarized two-dimensional electron gas of CoO$_2$-terminated
+surfaces~\cite{Radha2021}, polarized by construction and resident on the surfaces of a flake
+thin enough for surfaces to carry a large share of the conductance. It is the best of the
+candidates considered here rather than the only one the material admits: oxygen $2p$ holes,
+which delithiation is known to create~\cite{Salagre2023}, and moments on lithium-vacancy
+clusters, domain walls or flake edges have not been examined here, and any of them could in
+principle supply a polarized cluster. What distinguishes a surface reservoir from all of them is
+its thickness dependence, which Sec.~\ref{sec:tests} turns into the measurement that decides the
+question.
+
+\section{Predictions and discriminating measurements}
+\label{sec:tests}
+
+The model as it stands reproduces four numbers read from published traces, the onset, the
+collapse, the amplitude, and the field ratio, using four parameters, the barrier, the collapse
+temperature, the product $c\phi(s-1)$, and the magnetization difference. That is a
+parameterization and not yet a theory; it respects every
+constraint, which no previous description of these data did, and it becomes a theory only
+through predictions that were not used in building it.
+Table~S2 of Ref.~\cite{SM} collects them, each set beside the measurement that decides it. Every
+entry is out of sample, and every entry can be performed on existing devices with existing
+instrumentation.
+
+Three of them carry most of the weight. The warming-rate series tests the central claim
+that the onset is a clock reading rather than a phase boundary, and Eq.~\eqref{eq:rateshift}
+predicts its slope with no freedom beyond the barrier already fixed by the onset itself; a flat
+onset across a factor of fifty in rate, at a cooling protocol held fixed throughout, would end
+the kinetic account outright. The warming-branch hold tests the growth-from-seeds picture in the
+most direct way available, by giving the transformation the one thing a sweep denies it, which
+is time at a fixed temperature. The thickness series has been promoted
+by the first-principles results of Sec.~\ref{sec:dft}, which leave the surface electron gas as
+the only remaining reservoir of field-coupled moments: if the excess sheet conductance is
+independent of thickness, the ordered phase and its moments live on the surfaces, and if it
+scales with thickness, the field response needs an explanation this paper does not have.
+
+The other entries each remove one surviving alternative: a cooling-rate series at fixed warming
+rate settles the provenance of the seeds, which is the one ingredient of
+Sec.~\ref{sec:asymmetry} assumed rather than derived, since athermal templates leave the onset
+where it is while thermally born ones raise it by 5.5~K per decade; a field series at 1, 2, 3,
+5, 7 and 9~T, read together with a single in-plane run, separates the three couplings of
+Sec.~\ref{sec:field} by the shape of the amplitude alone; channel-length scaling, a four-probe
+measurement and a bias-history series close the contact-artifact alternative of
+Sec.~\ref{sec:constraints}, including the Debye-thin space-charge layer that the
+blocking-contact argument leaves standing; calorimetry across the anomaly, read together with
+the thickness series, fixes which cobalt population Eq.~\eqref{eq:dM} refers to, a bulk
+transformation carrying 2.1~J/g against the 0.02~J/g of a surface one; a batch series in $x$ at
+fixed protocol tests whether the onset moves only through the composition dependence of $\Ea$,
+so that a shift beyond about 20~K, or one uncorrelated with the width of the rise, implicates
+inhomogeneity or a second transition rather than a single kinetic edge; and electron or
+synchrotron diffraction on one flake at 100~K and again at 300~K, with weak lithium-contrast
+superlattice intensity expected in the warmed-through low-temperature state and absent in the
+as-cooled state at an interlayer spacing that does not move, confirms that what orders is the
+lithium sublattice and excludes the stacking glide of Sec.~\ref{sec:lisublattice}.
+
+\section{Discussion}
+\label{sec:discussion}
+
+Three features of this account deserve emphasis because they are what distinguish it from the
+description it replaces.
+
+The first is that the onset temperature carries no information about any electronic energy
+scale. It is a solution of Eq.~\eqref{eq:Ea}, a transcendental relation among a barrier, an
+attempt frequency, a sweep rate and a seed density, and it moves when any of the four moves, so
+matching such a number against an equilibrium crossover computed for an electronic model is a
+category error independent of how close the two numbers happen to fall. The bulk material offers
+the same test on better material. Its 155 to 185~K anomaly is first order, hysteretic and
+latent-heat bearing, and the rate dependence reported for those crystals belongs to the separate
+and lower lithium-freezing scale near 130~K~\cite{Miyoshi2010,Motohashi2009}, so the bulk
+anomaly is not itself an unfreezing. What the present model predicts for it is specific: a
+warming-rate series on bulk crystals should move a kinetic edge near 155~K by about 12~K per
+decade while a thermodynamic edge stays fixed to better than $10^{-4}$~K, which decides the
+character of each bulk scale on its own terms. The mapping carries a cost, in that the causal
+order proposed for the bulk runs opposite to the one used here, cobalt charge order
+below the upper scale templating the lithium order below the lower~\cite{Miyoshi2010}, whereas
+this account has the lithium sublattice ordering first and the cobalt charge order following.
+What we offer against it is the finding of Sec.~\ref{sec:dft} that the cobalt charge order forms
+equally well on every lithium motif examined and so cannot be slaved to the lithium pattern,
+which reads more naturally as a cooperative transition than as one order templating the other;
+the same bulk warming-rate series decides that too.
+
+The second is that the field argument has become sharper by losing a candidate, and that it
+remains conditional on the sign of a shift the present data do not establish. It asks only that
+the ordered phase carry a magnetization the parent phase does not, which Eq.~\eqref{eq:cc}
+converts into a tilt of the collapse, and that the moments be correlated over blocks of order
+ten, which Eq.~\eqref{eq:headcount} obtains from polarization arithmetic alone. The
+first-principles calculations supply the moment, \comomentRow~$\muBs$ of low-spin $S=1/2$ on
+half the cobalt sites, and then take away the obvious place to put it, since within the bulk
+those moments prefer to be antiparallel and an antiferromagnet presents nothing for a field to
+grip. A strong exchange would help rather than hinder, holding a block of moments rigid enough
+for a weak field to turn it whole, so it is the sign of the coupling and not its size that does
+the excluding. A ferromagnetically polarized reservoir is therefore required if the shift is
+real, and the spin-polarized surface electron gas~\cite{Radha2021} is the candidate named in
+Sec.~\ref{sec:dft}, a polarized sheet of correlated moments on exactly the surfaces that
+dominate a flake tens of nanometers thick.
+
+The third is a failure that changes what the model claims, and it is reported here in full. The
+calculations were meant to show that the lithium-ordered arrangement has the smaller density of
+states at the Fermi level, and they show no such thing: at $U=0$, where the comparison bears on
+transport at all, the row, zigzag and clumped arrangements are metals whose densities of states
+at the Fermi level agree to within one percent, and at $U=\Uused$~eV all three are instead
+charge-ordered insulators with gaps within \gapMotifSpread~eV of one another. The cobalt charge
+order forms on top of any lithium pattern and does not care which. What the transport model
+needs, therefore, is not lithium order but the difference between order and genuine disorder,
+and the mechanism left standing is that aperiodic lithium occupancy frustrates the commensurate
+cobalt charge order and leaves conducting weight in the gap, in the amount, a fifth to a half of
+the weight the frozen phase carries, that the measured contrast requires. That is a testable
+claim about a calculation, not a rhetorical retreat: a special quasirandom supercell at $x=1/2$
+either shows in-gap weight relative to the row-ordered cell or it does not.
+
+Scanning tunneling spectroscopy of this surface finds the ordered region conducting and the
+structurally disordered region gapped~\cite{Iwaya2013}, whereas the transformation analyzed here
+makes the ordering raise the resistance. These are different orders and different observables,
+a surface cobalt registry probed by local density of states in the first case and volume lithium
+and charge order probed by two-terminal transport in the second. They are not in contradiction,
+and the frustration mechanism proposed above in fact predicts a disordered region with weight
+inside the gap, but only the thickness series decides which of the two the flake anomaly
+reports.
+
+Beyond this material, the argument is a reminder that cathode oxides are routinely cooled
+through their ionic ordering temperatures at rates nobody records, and that the calorimetric
+tools built for glasses apply to them without modification. Nothing about the readout is peculiar
+to this system either, a structural transition of a mobile cation sublattice having already been
+followed through the two-terminal conductance of a single Ag$_2$Te
+nanowire~\cite{Premasiri2019}. A hysteresis loop whose warming
+branch differs from its cooling branch is not a curiosity to be noted and set aside; it is a
+measurement of a barrier, provided one records the sweep rate.
+
+\section{Conclusions}
+\label{sec:conclusions}
+
+The warming-only resistance anomaly of slowly delithiated Li$_x$CoO$_2$ nanoflakes follows from
+cold crystallization of the lithium sublattice. Classical nucleation and growth are never
+favorable together along the cooling sweep, so the flake reaches base temperature as an
+untransformed matrix carrying a quenched population of defect-templated embryos, which the
+model adopts as an assumption and which a cooling-rate series can confirm, and the warming sweep
+grows them into a more resistive ordered phase as soon as lithium moves. The unfreezing
+condition fixes an effective barrier of $0.39\pm0.05$~eV, together with a seed density between
+$10^{-4}$ and $10^{-1}$~nm$^{-2}$, which identifies the divacancy hop as the mechanism and
+predicts an onset shift of $11\pm1$~K per decade of warming rate at fixed cooling protocol,
+independent of the Avrami exponent. A field-shifted collapse would require the ordered phase to
+carry the larger magnetization, bounding the latent entropy below about $\dSbound\,\kB$ per Co
+if the transforming phase is the bulk and by two orders of magnitude less if it is the surfaces,
+and the polarization arithmetic would require the field-coupled unit to hold of order ten
+correlated moments; the measured shift is consistent with zero at one standard deviation, so
+that whole chain waits on a field series.
+
+Density-functional calculations with a Hubbard $U$ fixed by the low-spin requirement confirm the
+ingredients and remove two readings. Charge order, a Co$^{4+}$ moment of \comomentRow~$\muBs$,
+and a gap of \gapRow~eV at $x=1/2$ and \gapXthird~eV at $x=1/3$ appear and vanish together, the
+nonmagnetic solutions being metals; clumping the lithium stripes costs \deltaEClumped~meV per
+formula unit, the same order as the thermal scale of the collapse, while rerouting them costs
+nothing measurable, so the transformation is a partial ordering within a nearly degenerate
+stripe manifold; and the charge order contrasts the site-mean Co-O bond lengths by only
+\bondRow{} to \bondXthird~\AA, so it is electronic and nearly invisible to diffraction. Against
+this, the three periodic lithium motifs are indistinguishable in the density of states at the
+Fermi level that controls conduction, so the resistive contrast is not a matter of which motif
+is present, and the surviving candidate is frustration of the cobalt charge order by aperiodic
+lithium, which a large quasirandom supercell can test and this work has not. The bulk Co$^{4+}$
+moments are coupled antiferromagnetically and so present no net magnetization for a field to act
+on, which leaves a ferromagnetically polarized reservoir as a requirement and the surface
+electron gas of CoO$_2$-terminated Li$_x$CoO$_2$ as its most natural realization among the
+candidates considered. A warming-rate series at fixed cooling protocol, a cooling-rate series, a
+hold on the warming branch, a field series, and a thickness series read together with
+calorimetry decide the picture with measurements that need no new instrumentation.
+
+\section*{Data availability}
+
+The scripts that generate every figure, the traces digitized from the published figures of
+Refs.~\cite{Crowley2020,RadhaPerspective2021}, and the \textsc{Quantum ESPRESSO} input files,
+structure files and distilled outputs behind every number in Table~\ref{tab:dft} are available
+from the author and are deposited in the repository accompanying this manuscript. The raw
+resistance traces underlying Refs.~\cite{Crowley2020,RadhaPerspective2021} are held by the
+originating collaboration.
+
+\begin{acknowledgments}
+The author thanks [acknowledgments to be completed] for discussions. This work was supported by
+[funding to be completed]. Computational resources were provided by [computing allocation to be
+completed].
+\end{acknowledgments}
+
+\bibliographystyle{apsrev4-2}
+\bibliography{refs}
+
+\end{document}
